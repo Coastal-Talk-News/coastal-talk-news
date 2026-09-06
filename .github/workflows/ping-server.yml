@@ -11,4 +11,4 @@ jobs:
 
     steps:
       - name: Ping API health endpoint
-        run: curl --fail --silent --show-error https://YOUR-API.onrender.com/health
+        run: curl --fail --silent --show-error https://coastal-talk-news-api.onrender.com/health
