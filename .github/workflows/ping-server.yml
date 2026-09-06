@@ -1,0 +1,14 @@
+name: Ping Server
+
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ping API health endpoint
+        run: curl --fail --silent --show-error https://YOUR-API.onrender.com/health
