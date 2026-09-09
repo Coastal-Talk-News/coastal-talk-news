@@ -75,6 +75,23 @@ reflexively during a repo audit; confirm whether it's actually used first.
 
 Never hardcode these into application code — use the project's existing env/config approach.
 
+**`.env` files live only in `apps/*`. Never create one under `packages/*`.**
+
+All backend configuration — `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `R2_*`, and the
+`SEED_*` values — lives in a single `apps/api/.env` (template: `apps/api/.env.example`).
+`packages/db/prisma.config.ts` reads that file, so the Prisma CLI, the seed script, and
+the running API always share one connection string. A duplicated `DATABASE_URL` is the
+hazard this avoids: migrations and the API silently drift onto different databases, and
+the resulting "column does not exist" looks like a code bug rather than a config one.
+
+When a shared package needs configuration, read it from the consuming app's `.env` or
+take it as an argument (as `createPrismaClient(url)` does) — don't give the package its
+own `.env`. `apps/web` and `apps/cms` each get their own `.env` for the public API base
+URL; that follows this rule rather than breaking it.
+
+None of this affects deployment: Render, Vercel, and Netlify inject real environment
+variables and no `.env` file is read there.
+
 ## 5. Non-negotiable rule: understand before you code
 
 On any non-trivial task, before touching a file:
