@@ -264,8 +264,12 @@ export function DashboardPage() {
                       </p>
                       <p className="text-xs text-ink-muted">
                         {item.isActive
-                          ? `Ends ${formatRelative(item.endAt)}`
-                          : `Ended ${formatRelative(item.endAt)}`}
+                          ? item.endAt
+                            ? `Ends ${formatRelative(item.endAt)}`
+                            : 'No end date'
+                          : new Date(item.startAt) > new Date()
+                            ? `Starts ${formatRelative(item.startAt)}`
+                            : `Ended ${formatRelative(item.endAt)}`}
                       </p>
                     </div>
                     <Badge tone={item.isActive ? 'green' : 'slate'}>

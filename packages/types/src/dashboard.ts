@@ -26,7 +26,8 @@ export interface DashboardBreakingNewsDto {
   id: Id;
   headline: string;
   startAt: IsoDateTime;
-  endAt: IsoDateTime;
+  /** Null means the item runs indefinitely from startAt until deleted. */
+  endAt: IsoDateTime | null;
   isActive: boolean;
 }
 

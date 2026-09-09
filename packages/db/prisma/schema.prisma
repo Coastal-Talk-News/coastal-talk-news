@@ -120,14 +120,20 @@ model Article {
 
 /// articleUrl is a plain URL, deliberately not an FK — breaking news can point
 /// outside the article system.
+///
+/// endAt is nullable by product decision: an admin can leave it unset to run
+/// the item indefinitely from startAt, and take it down by deleting the row
+/// rather than by setting an end time. Still no is_active column — active
+/// state is startAt <= now <= (endAt ?? never), computed at query time
+/// (CLAUDE.md §13).
 model BreakingNews {
-  id         String   @id @default(uuid(7))
+  id         String    @id @default(uuid(7))
   headline   String
-  articleUrl String   @map("article_url")
-  startAt    DateTime @map("start_at")
-  endAt      DateTime @map("end_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  articleUrl String    @map("article_url")
+  startAt    DateTime  @map("start_at")
+  endAt      DateTime? @map("end_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
 
   @@index([startAt, endAt])
   @@map("breaking_news")

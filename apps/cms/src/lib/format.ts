@@ -4,6 +4,12 @@ const dateFormatter = new Intl.DateTimeFormat('en-IN', {
   year: 'numeric',
 });
 
+const timeFormatter = new Intl.DateTimeFormat('en-IN', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+});
+
 const RELATIVE_UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ['year', 365 * 24 * 60 * 60 * 1000],
   ['month', 30 * 24 * 60 * 60 * 1000],
@@ -18,6 +24,10 @@ const relativeFormatter = new Intl.RelativeTimeFormat('en', {
 
 export function formatDate(iso: string | null): string {
   return iso ? dateFormatter.format(new Date(iso)) : '—';
+}
+
+export function formatTime(iso: string | null): string {
+  return iso ? timeFormatter.format(new Date(iso)) : '—';
 }
 
 export function formatRelative(iso: string | null): string {
