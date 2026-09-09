@@ -1,8 +1,21 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Turborepo runs package scripts in parallel, and pnpm's pre-run dependency
+# check fires a concurrent `pnpm install` for each one, which races on symlink
+# creation. CI enforces dependency freshness with --frozen-lockfile instead.
+verifyDepsBeforeRun: false
+
 allowBuilds:
-  bcrypt: false
-  esbuild: false
+  # bcrypt and esbuild are native/platform binaries fetched by their install
+  # scripts. With builds disallowed, bcrypt throws at require() and Vite has no
+  # bundler, so both must stay enabled.
+  '@prisma/engines': true
+  bcrypt: true
+  esbuild: true
+  prisma: true
+  # Optional accelerators only — their absence degrades performance, not
+  # correctness, so leave their install scripts off.
   msgpackr-extract: false
   workerd: false

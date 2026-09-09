@@ -4,32 +4,42 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch --env-file=.env src/server.ts",
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "lint": "eslint . --max-warnings 0",
+    "check-types": "tsc --noEmit"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1127.0",
+    "@coastal-talk-news/db": "workspace:*",
     "@coastal-talk-news/types": "workspace:*",
     "@coastal-talk-news/validation": "workspace:*",
+    "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
+    "@fastify/multipart": "^10.1.1",
+    "@fastify/rate-limit": "^11.2.0",
     "@fastify/swagger": "^9.8.1",
     "@fastify/swagger-ui": "^6.1.1",
     "@fastify/type-provider-typebox": "^6.1.0",
     "@sinclair/typebox": "^0.34.52",
     "bcrypt": "^6.0.0",
     "fastify": "^5.12.3",
-    "node-cron": "^4.6.0",
+    "fastify-plugin": "^6.0.0",
+    "file-type": "^22.0.2",
     "pino": "^10.3.1",
     "sharp": "^0.35.4"
   },
   "devDependencies": {
+    "@coastal-talk-news/eslint-config": "workspace:*",
     "@coastal-talk-news/typescript-config": "workspace:*",
     "@types/bcrypt": "^6.0.0",
     "@types/node": "^26.4.1",
+    "eslint": "^10.9.1",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   }

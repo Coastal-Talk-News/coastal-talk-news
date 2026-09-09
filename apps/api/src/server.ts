@@ -1,19 +1,19 @@
 import { buildApp } from './app.js';
+import { loadEnv } from './config/env.js';
 
-const app = buildApp();
+const start = async (): Promise<void> => {
+  const env = loadEnv();
+  const app = await buildApp(env);
 
-const start = async () => {
-  console.log(process.env.PORT);
-  
   try {
-    await app.listen({
-      port: Number(process.env.PORT) || 3000,
-      host: '0.0.0.0',
-    });
+    await app.listen({ port: env.PORT, host: '0.0.0.0' });
   } catch (error) {
     app.log.error(error);
     process.exit(1);
   }
 };
 
-start();
+start().catch((error: unknown) => {
+  console.error(error);
+  process.exit(1);
+});

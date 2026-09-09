@@ -39,6 +39,55 @@ follow it rather than introducing a new layout per feature.
 - Document every route with Swagger/OpenAPI via the TypeBox schema.
 - Avoid unnecessary round trips.
 
+### 2.1 API contract — finalised, applies to every endpoint
+
+This is settled. Don't invent a second response shape for a new resource.
+
+**Base path** — everything is served under `/api/v1`.
+
+| Surface     | Prefix             | Auth                              |
+| ----------- | ------------------ | --------------------------------- |
+| Reader site | `/api/v1/public/*` | none; always filtered server-side |
+| Admin panel | `/api/v1/cms/*`    | session cookie required           |
+
+`GET /health` is the one deliberate exception: unversioned and unenveloped, because
+it is a platform liveness probe (the `ping-server` workflow hits it), not client API.
+
+**Response envelope** — every endpoint returns one of three shapes, never a bare payload:
+
+```jsonc
+// single resource
+{ "success": true, "data": { ... } }
+
+// list
+{ "success": true, "data": [ ... ], "meta": { "page": 1, "limit": 20, "total": 57,
+  "totalPages": 3, "hasNextPage": true, "hasPreviousPage": false } }
+
+// failure
+{ "success": false, "error": { "code": "NOT_FOUND", "message": "...", "details": { } } }
+```
+
+Clients branch on `success` before touching the body. Build the envelopes with
+`SuccessResponse()` / `ListResponse()` / `commonErrorResponses` from
+`packages/validation`, and the runtime values with `dataEnvelope()` / `listEnvelope()`
+from `apps/api/src/lib/pagination.ts` — don't hand-roll the object literal.
+
+**Conventions**
+
+- **Pagination**: `page` + `limit` query params. `limit` is capped at 100 so a client
+  cannot force the API to materialise a whole table. Defaults: page 1, limit 20.
+- **Dates**: ISO 8601 strings on the wire, always. Never a Date object, never an epoch
+  number. Declare them with the `IsoDateTime` schema.
+- **IDs**: strings in every payload, never numbers.
+- **JSON naming**: camelCase. The database stays snake_case — Prisma `@map` bridges the
+  two, so the wire format never leaks column names.
+- **Validation**: TypeBox / JSON Schema, on the backend, every time.
+- **Errors**: one `code` per failure mode, a human-readable `message`, and optional
+  `details` for machine-readable context (e.g. which references blocked a delete).
+  A 5xx never carries internal detail — that goes to the Pino log instead.
+- **Auth**: httpOnly session cookie. No `Authorization` header path — accepting one
+  would reintroduce the JS-readable token the cookie design exists to avoid.
+
 ## 3. Validation
 
 - Validate on the backend always — frontend validation is UX only, never the security
@@ -148,6 +197,30 @@ premature optimizations without a concrete, current bottleneck.
 ## 10. Two-developer collaboration protocol
 
 Both of you run Claude Code against the same repository and the same `CLAUDE.md`/`docs/`.
+
+**CMS sessions live in the API process.** Sign-in state is an in-memory store, not
+JWTs and not a table, so a session can be revoked from the Signed-in devices screen.
+Two consequences to keep in mind, and to keep out of the CMS interface:
+
+- Every deploy or restart signs everyone out. That is expected, not a bug.
+- The API cannot run more than one instance; a session created on one would not
+  exist on another.
+
+Surface this to developers here, never in the UI. The client only needs the
+sign-in page's "Your session expired" message when it actually happens.
+
+**Shared development database.** Both developers point at the same Supabase project, so
+the database is shared state in exactly the way the codebase is not:
+
+- Migrations are global. Before running `pnpm db:migrate`, say so — it applies to the
+  other developer's running app immediately, and a migration that renames or drops a
+  column will break their in-flight work without warning.
+- Never run `prisma migrate reset` on the shared database. It drops every table and all
+  seeded content, including the admin account.
+- Treat seeded/test content as shared. Deleting "your" test article may remove the row
+  someone else is debugging against.
+- A free Supabase project pauses after about a week of inactivity; if connections start
+  timing out, un-pause it from the dashboard before assuming the code is broken.
 
 - Don't modify code outside the scope of the current task.
 - Treat any change to `packages/*`, the Prisma schema, or an existing API response shape as

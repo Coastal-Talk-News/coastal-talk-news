@@ -1,0 +1,9 @@
+{
+  "extends": "@coastal-talk-news/typescript-config/base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts", "prisma/**/*.ts", "prisma.config.ts"],
+  "exclude": ["node_modules", "dist", "src/generated"]
+}

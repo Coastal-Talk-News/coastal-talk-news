@@ -5,7 +5,8 @@ import turboPlugin from 'eslint-plugin-turbo';
 import onlyWarn from 'eslint-plugin-only-warn';
 
 /**
- * A shared ESLint configuration for the repository.
+ * Parses with Babel, not typescript-eslint, which does not support the
+ * TypeScript 7 this repo is on. Type errors are caught by check-types, not lint.
  *
  * @type {import("eslint").Linter.Config[]}
  * */
@@ -30,11 +31,13 @@ export const config = [
     },
   },
   {
+    // only-warn downgrades every rule to a warning; --max-warnings 0 in each
+    // lint script is what still makes them fail.
     plugins: {
       onlyWarn,
     },
   },
   {
-    ignores: ['dist/**'],
+    ignores: ['dist/**', 'node_modules/**'],
   },
 ];

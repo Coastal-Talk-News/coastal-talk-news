@@ -1,16 +1,27 @@
 {
   "name": "@coastal-talk-news/validation",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
+  "description": "Shared TypeBox request/response schemas for Coastal Talk News",
   "license": "ISC",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0"
+  },
   "dependencies": {
     "@sinclair/typebox": "^0.34.52"
+  },
+  "devDependencies": {
+    "@coastal-talk-news/eslint-config": "workspace:*",
+    "@coastal-talk-news/typescript-config": "workspace:*",
+    "eslint": "^10.9.1",
+    "typescript": "7.0.2"
   }
 }

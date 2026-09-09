@@ -1,0 +1,196 @@
+/* Design tokens shared by the CMS and the reader site.
+ *
+ * Colours are declared twice: raw values on :root / .dark, and `@theme inline`
+ * aliases that point at them. The indirection is what makes a single utility
+ * like `bg-surface` resolve correctly in both themes — without it Tailwind
+ * inlines the light value at build time and dark mode needs `dark:` everywhere.
+ *
+ * Two accents, kept separate on purpose:
+ *   --accent  editorial red: brand mark, active nav, links, breaking news
+ *   --action  near-black ink: primary buttons
+ * Sharing one would make red mean both "confirm" and "delete" on one screen.
+ */
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --brand-50: #fdf4f2;
+  --brand-100: #fbe4e0;
+  --brand-200: #f6c9c0;
+  --brand-300: #eb9d8f;
+  --brand-400: #dc6d59;
+  --brand-500: #c74a35;
+  --brand-600: #a32d1d;
+  --brand-700: #862217;
+
+  --canvas: #faf8f5;
+  --surface: #ffffff;
+  --surface-sunken: #f4f1ec;
+  --surface-raised: #ffffff;
+
+  --ink: #1a1512;
+  --ink-muted: #5a534d;
+  --ink-subtle: #8b837b;
+  --hairline: #e8e3dc;
+
+  --accent: var(--brand-600);
+  --accent-hover: var(--brand-700);
+  --accent-fg: #ffffff;
+  --accent-soft: var(--brand-50);
+  --accent-text: var(--brand-700);
+
+  --action: #1f1a16;
+  --action-hover: #332b25;
+  --action-fg: #faf8f5;
+
+  --success-soft: #edf5ee;
+  --success-text: #2f6b3c;
+  --warn-soft: #fdf5e6;
+  --warn-text: #8a5c12;
+  --danger: #b3261e;
+  --danger-hover: #8f1d17;
+  --danger-soft: #fdf1ef;
+  --danger-text: #99201a;
+}
+
+.dark {
+  --canvas: #14100e;
+  --surface: #1c1714;
+  --surface-sunken: #171310;
+  --surface-raised: #241e1a;
+
+  --ink: #f2ede7;
+  --ink-muted: #a89f96;
+  --ink-subtle: #7a716a;
+  --hairline: #332b26;
+
+  /* brand-600 is unreadable on a dark ground; step up to 400/300. */
+  --accent: var(--brand-400);
+  --accent-hover: var(--brand-300);
+  --accent-fg: #1a1210;
+  --accent-soft: color-mix(in srgb, var(--brand-400) 16%, transparent);
+  --accent-text: var(--brand-300);
+
+  /* Inverted: a light button is the strongest call to action on a dark ground. */
+  --action: #f2ede7;
+  --action-hover: #ffffff;
+  --action-fg: #171310;
+
+  --success-soft: color-mix(in srgb, #4ea862 16%, transparent);
+  --success-text: #86d09a;
+  --warn-soft: color-mix(in srgb, #d99b2b 16%, transparent);
+  --warn-text: #edc073;
+  --danger: #d4483d;
+  --danger-hover: #e05b4f;
+  --danger-soft: color-mix(in srgb, #d4483d 16%, transparent);
+  --danger-text: #f0998f;
+}
+
+@theme inline {
+  --color-brand-50: var(--brand-50);
+  --color-brand-100: var(--brand-100);
+  --color-brand-200: var(--brand-200);
+  --color-brand-300: var(--brand-300);
+  --color-brand-400: var(--brand-400);
+  --color-brand-500: var(--brand-500);
+  --color-brand-600: var(--brand-600);
+  --color-brand-700: var(--brand-700);
+
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-raised: var(--surface-raised);
+
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-hairline: var(--hairline);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-text: var(--accent-text);
+
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-fg: var(--action-fg);
+
+  --color-success-soft: var(--success-soft);
+  --color-success-text: var(--success-text);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-text: var(--warn-text);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-text: var(--danger-text);
+
+  --radius-card: 0.875rem;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: fade-in 160ms var(--ease-out-soft);
+  --animate-fade-out: fade-out 120ms ease-in;
+  --animate-slide-in-right: slide-in-right 260ms var(--ease-out-soft);
+  --animate-slide-out-right: slide-out-right 180ms ease-in;
+  --animate-slide-in-left: slide-in-left 260ms var(--ease-out-soft);
+  --animate-slide-out-left: slide-out-left 200ms ease-in;
+  --animate-rise: rise 220ms var(--ease-out-soft);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+@keyframes slide-out-right {
+  to {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+  }
+}
+@keyframes slide-out-left {
+  to {
+    transform: translateX(-100%);
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.4rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
