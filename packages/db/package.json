@@ -13,7 +13,7 @@
   "scripts": {
     "generate": "prisma generate",
     "build": "prisma generate && tsc -p tsconfig.build.json",
-    "check-types": "tsc",
+    "check-types": "prisma generate && tsc",
     "lint": "eslint . --max-warnings 0",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
