@@ -4,7 +4,25 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>cms</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>Coastal Talk News CMS</title>
+    <script>
+      // Runs before first paint so a dark-mode user never sees a white flash.
+      // Mirrors ThemeProvider's storage key and resolution rules.
+      (function () {
+        try {
+          var stored = localStorage.getItem('ctn-theme');
+          var dark =
+            stored === 'dark' ||
+            ((!stored || stored === 'system') &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          document.documentElement.classList.toggle('dark', dark);
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light';
+        } catch (error) {
+          // Blocked storage just means the default theme applies.
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
