@@ -9,4 +9,7 @@ export const queryKeys = {
   categories: ['categories'] as const,
   categoryList: (params: Record<string, unknown>) =>
     ['categories', params] as const,
+  breakingNews: ['breaking-news'] as const,
+  breakingNewsList: (params: Record<string, unknown>) =>
+    ['breaking-news', params] as const,
 } as const;

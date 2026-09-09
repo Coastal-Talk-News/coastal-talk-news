@@ -1,5 +1,5 @@
 import type { Database } from '@coastal-talk-news/db';
-import { isActiveAt } from '../../lib/schedule.js';
+import { isActiveAt, isActiveAtOpenEnded } from '../../lib/schedule.js';
 import type { ObjectStorage } from '../media/storage.js';
 import * as repository from './repository.js';
 
@@ -80,8 +80,8 @@ export async function getDashboard(
       id: item.id,
       headline: item.headline,
       startAt: item.startAt.toISOString(),
-      endAt: item.endAt.toISOString(),
-      isActive: isActiveAt(item, now),
+      endAt: item.endAt ? item.endAt.toISOString() : null,
+      isActive: isActiveAtOpenEnded(item, now),
     })),
     advertisements: advertisements.map((ad) => ({
       id: ad.id,
