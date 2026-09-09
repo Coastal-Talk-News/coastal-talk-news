@@ -1,7 +1,204 @@
+// Two rules here are product decisions, not implementation details, and must
+// not be "fixed" without changing docs/DATA-MODEL.md:
+//   1. BreakingNews and Advertisement store no is_active column — active state
+//      is derived from start_at/end_at at query time (CLAUDE.md §13).
+//   2. Every media_id FK is onDelete: Restrict. A MediaAsset is removed only
+//      once nothing references it, via the API's central release check.
+
 generator client {
   provider = "prisma-client"
+  output   = "../src/generated"
 }
 
+// Prisma 7 no longer accepts `url` here. Migrate reads it from prisma.config.ts;
+// the client gets it via a driver adapter (src/index.ts).
 datasource db {
   provider = "postgresql"
+}
+
+/// Also used for SiteSettings.defaultUiLanguage, a fixed config value — V1 has
+/// no reader-facing language switcher.
+enum Language {
+  ENGLISH
+  KANNADA
+}
+
+/// No SCHEDULED member: publishing is immediate in V1.
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ArticlePriority {
+  LEAD_STORY
+  FEATURED
+  NORMAL
+}
+
+model MediaAsset {
+  id         String   @id @default(uuid(7))
+  filename   String
+  storageKey String   @unique @map("storage_key")
+  mimeType   String   @map("mime_type")
+  fileSize   Int      @map("file_size")
+  /// Captured by Sharp on upload so frontends can reserve layout space and ad
+  /// zones can lay out by aspect ratio without measuring images.
+  width      Int
+  height     Int
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  featuredForArticles Article[]       @relation("ArticleFeaturedImage")
+  ogImageForArticles  Article[]       @relation("ArticleOgImage")
+  categories          Category[]
+  advertisements      Advertisement[]
+  logoForSettings     SiteSettings[]  @relation("SettingsLogo")
+  faviconForSettings  SiteSettings[]  @relation("SettingsFavicon")
+  ogImageForSettings  SiteSettings[]  @relation("SettingsDefaultOgImage")
+
+  @@map("media_assets")
+}
+
+model Category {
+  id           String   @id @default(uuid(7))
+  name         String   @unique
+  description  String?
+  isActive     Boolean  @default(true) @map("is_active")
+  displayOrder Int      @map("display_order")
+  mediaId      String?  @map("media_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  media    MediaAsset? @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  articles Article[]
+
+  @@index([isActive, displayOrder])
+  @@map("categories")
+}
+
+model Article {
+  id         String  @id @default(uuid(7))
+  categoryId String  @map("category_id")
+  mediaId    String? @map("media_id")
+  ogImageId  String? @map("og_image_id")
+
+  language Language
+  headline String
+  /// Tiptap document JSON, not HTML. The public site renders it
+  /// programmatically, so stored content cannot inject markup.
+  content  Json
+  /// Flattened plain text of content, maintained by the API on write, so
+  /// full-text search has something to index. Never rendered.
+  contentText String  @map("content_text")
+  youtubeUrl  String? @map("youtube_url")
+
+  priority        ArticlePriority @default(NORMAL)
+  status          ArticleStatus   @default(DRAFT)
+  /// Null until first published.
+  publicationDate DateTime?       @map("publication_date")
+
+  seoTitle        String? @map("seo_title")
+  metaDescription String? @map("meta_description")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  /// Generated column maintained by Postgres (see the init migration).
+  /// Declared here only so Prisma does not report drift against it.
+  searchVector Unsupported("tsvector")? @map("search_vector")
+
+  category Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  media    MediaAsset? @relation("ArticleFeaturedImage", fields: [mediaId], references: [id], onDelete: Restrict)
+  ogImage  MediaAsset? @relation("ArticleOgImage", fields: [ogImageId], references: [id], onDelete: Restrict)
+
+  @@index([status, publicationDate(sort: Desc)])
+  @@index([categoryId, status, publicationDate(sort: Desc)])
+  @@index([status, priority, publicationDate(sort: Desc)])
+  @@index([language])
+  @@map("articles")
+}
+
+/// articleUrl is a plain URL, deliberately not an FK — breaking news can point
+/// outside the article system.
+model BreakingNews {
+  id         String   @id @default(uuid(7))
+  headline   String
+  articleUrl String   @map("article_url")
+  startAt    DateTime @map("start_at")
+  endAt      DateTime @map("end_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@index([startAt, endAt])
+  @@map("breaking_news")
+}
+
+/// No placement column: the reader site defines the ad zones and distributes
+/// active ads across them. priority is the only editorial control — higher
+/// values are dealt into the more prominent zones first.
+model Advertisement {
+  id             String   @id @default(uuid(7))
+  mediaId        String   @map("media_id")
+  advertiserName String   @map("advertiser_name")
+  destinationUrl String   @map("destination_url")
+  priority       Int      @default(0)
+  startAt        DateTime @map("start_at")
+  endAt          DateTime @map("end_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([startAt, endAt])
+  @@index([priority(sort: Desc), createdAt])
+  @@map("advertisements")
+}
+
+/// Single-tier admin access — no role column by design.
+model CmsUser {
+  id           String @id @default(uuid(7))
+  name         String
+  email        String @unique
+  /// bcrypt hash. Never returned by any endpoint, never logged.
+  passwordHash String @map("password_hash")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("cms_users")
+}
+
+/// Effectively a singleton — exactly one row, created by the seed.
+model SiteSettings {
+  id          String  @id @default(uuid(7))
+  siteName    String  @map("site_name")
+  tagline     String?
+  description String?
+
+  logoMediaId    String? @map("logo_media_id")
+  faviconMediaId String? @map("favicon_media_id")
+
+  contactEmail   String? @map("contact_email")
+  contactPhone   String? @map("contact_phone")
+  contactAddress String? @map("contact_address")
+
+  facebookUrl  String? @map("facebook_url")
+  instagramUrl String? @map("instagram_url")
+  youtubeUrl   String? @map("youtube_url")
+  xUrl         String? @map("x_url")
+
+  defaultUiLanguage Language @default(KANNADA) @map("default_ui_language")
+
+  defaultSeoTitle        String? @map("default_seo_title")
+  defaultMetaDescription String? @map("default_meta_description")
+  defaultOgImageId       String? @map("default_og_image_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  logo           MediaAsset? @relation("SettingsLogo", fields: [logoMediaId], references: [id], onDelete: Restrict)
+  favicon        MediaAsset? @relation("SettingsFavicon", fields: [faviconMediaId], references: [id], onDelete: Restrict)
+  defaultOgImage MediaAsset? @relation("SettingsDefaultOgImage", fields: [defaultOgImageId], references: [id], onDelete: Restrict)
+
+  @@map("site_settings")
 }
