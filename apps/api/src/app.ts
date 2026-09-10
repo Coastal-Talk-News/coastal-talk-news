@@ -6,6 +6,7 @@ import swaggerUi from '@fastify/swagger-ui';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { Env } from './config/env.js';
+import { cmsAdvertisementRoutes } from './modules/advertisements/routes.js';
 import { cmsArticleRoutes } from './modules/articles/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { MAX_UPLOAD_BYTES } from './modules/media/image.js';
@@ -76,6 +77,7 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
         { name: 'categories', description: 'News categories' },
         { name: 'media', description: 'Media library' },
         { name: 'breaking-news', description: 'Breaking news ticker' },
+        { name: 'advertisements', description: 'Banner advertisements' },
       ],
     },
   });
@@ -112,6 +114,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   });
   await app.register(mediaRoutes, {
     prefix: `${API_BASE_PATH}/cms/media`,
+  });
+  await app.register(cmsAdvertisementRoutes, {
+    prefix: `${API_BASE_PATH}/cms/advertisements`,
   });
   await app.register(publicCategoryRoutes, {
     prefix: `${API_BASE_PATH}/public/categories`,

@@ -76,8 +76,8 @@ display, but it is never persisted — recompute it on every read.
 
 ### Advertisement
 
-`id`, `media_id` (FK → Media Asset), `advertiser_name`, `destination_url`, `placement`,
-`priority`, `start_at`, `end_at`, `created_at`, `updated_at`
+`id`, `media_id` (FK → Media Asset), `advertiser_name`, `destination_url`, `priority`,
+`start_at`, `end_at`, `created_at`, `updated_at`
 
 There is **no `is_active` database field**, for the same reason as Breaking News. The
 backend derives the active state from the schedule:
@@ -88,9 +88,11 @@ backend derives the active state from the schedule:
 The computed `is_active` value may be included in API responses so the CMS can separate
 active advertisements from inactive/expired ones.
 
-**`placement`** — values are examples pending final UI design (homepage top/middle/sidebar,
-article sidebar/bottom, category page). Don't hardcode a closed set until confirmed; design
-the schema/API so adding a placement doesn't require rewriting the ad system.
+**No `placement` field, confirmed.** The reader site defines its own ad zones and
+distributes active ads across them automatically; `priority` is the only editorial control
+over which ads land in the more prominent zones. This entity previously listed `placement`
+as a field pending design — that was stale, never reconciled with the schema's actual
+(intentional) no-placement design. Don't reintroduce it without a real schema change.
 
 ### Media Asset
 
