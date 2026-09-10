@@ -23,4 +23,5 @@ export const queryKeys = {
   advertisements: ['advertisements'] as const,
   advertisementList: (params: Record<string, unknown>) =>
     ['advertisements', params] as const,
+  settings: ['settings'] as const,
 } as const;

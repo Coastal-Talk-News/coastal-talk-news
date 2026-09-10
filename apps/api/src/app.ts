@@ -17,6 +17,7 @@ import {
 } from './modules/categories/routes.js';
 import { dashboardRoutes } from './modules/dashboard/routes.js';
 import { mediaRoutes } from './modules/media/routes.js';
+import { cmsSettingsRoutes } from './modules/settings/routes.js';
 import authPlugin from './plugins/auth.js';
 import errorHandler from './plugins/error-handler.js';
 import prismaPlugin from './plugins/prisma.js';
@@ -78,6 +79,7 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
         { name: 'media', description: 'Media library' },
         { name: 'breaking-news', description: 'Breaking news ticker' },
         { name: 'advertisements', description: 'Banner advertisements' },
+        { name: 'settings', description: 'Site settings (singleton)' },
       ],
     },
   });
@@ -117,6 +119,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   });
   await app.register(cmsAdvertisementRoutes, {
     prefix: `${API_BASE_PATH}/cms/advertisements`,
+  });
+  await app.register(cmsSettingsRoutes, {
+    prefix: `${API_BASE_PATH}/cms/settings`,
   });
   await app.register(publicCategoryRoutes, {
     prefix: `${API_BASE_PATH}/public/categories`,

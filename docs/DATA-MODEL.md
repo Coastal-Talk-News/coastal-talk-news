@@ -110,9 +110,9 @@ No role/permission field — single-tier admin access, confirmed for V1.
 ### Site Settings
 
 `id`, `site_name`, `tagline`, `description`, `logo_media_id` (FK), `favicon_media_id` (FK),
-`contact_email`, `contact_phone`, `facebook_url`, `instagram_url`, `youtube_url`, `x_url`,
-`default_ui_language`, `default_seo_title`, `default_meta_description`,
-`default_og_image_id` (FK), `created_at`, `updated_at`
+`contact_email`, `contact_phone`, `contact_address`, `facebook_url`, `instagram_url`,
+`youtube_url`, `x_url`, `default_ui_language`, `default_seo_title`,
+`default_meta_description`, `default_og_image_id` (FK), `created_at`, `updated_at`
 
 Effectively a singleton — expect exactly one row.
 
@@ -120,9 +120,8 @@ Effectively a singleton — expect exactly one row.
 it just becomes a fixed configuration value (defaulting to Kannada per
 `docs/PROJECT-SCOPE.md`) rather than something a switcher reads at runtime.
 
-**`address` — needs migration (add), still open.** The About/Contact page and Settings →
-General both require a postal address; no field exists for it yet. Confirm field name
-(e.g. `contact_address`) before building the Settings/Contact UI.
+`contact_address` — confirmed present, a nullable column since the initial migration; no
+schema change was needed for it.
 
 ## Relationships
 
