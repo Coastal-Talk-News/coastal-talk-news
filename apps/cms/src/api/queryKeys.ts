@@ -11,4 +11,7 @@ export const queryKeys = {
   mediaList: (params: Record<string, unknown>) => ['media', params] as const,
   categoryList: (params: Record<string, unknown>) =>
     ['categories', params] as const,
+  breakingNews: ['breaking-news'] as const,
+  breakingNewsList: (params: Record<string, unknown>) =>
+    ['breaking-news', params] as const,
 } as const;

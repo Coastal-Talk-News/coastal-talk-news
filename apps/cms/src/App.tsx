@@ -26,6 +26,11 @@ const MediaLibraryPage = lazy(() =>
     default: m.MediaLibraryPage,
   })),
 );
+const BreakingNewsPage = lazy(() =>
+  import('./routes/BreakingNewsPage.js').then((m) => ({
+    default: m.BreakingNewsPage,
+  })),
+);
 const SessionsPage = lazy(() =>
   import('./routes/SessionsPage.js').then((m) => ({ default: m.SessionsPage })),
 );
@@ -55,6 +60,7 @@ export default function App() {
                   <Route index element={<DashboardPage />} />
                   <Route path="categories" element={<CategoriesPage />} />
                   <Route path="media" element={<MediaLibraryPage />} />
+                  <Route path="breaking-news" element={<BreakingNewsPage />} />
                   <Route path="sessions" element={<SessionsPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>

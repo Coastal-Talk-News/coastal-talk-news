@@ -17,10 +17,10 @@ export function Tooltip({ label, children, side = 'top' }: TooltipProps) {
         <RadixTooltip.Content
           side={side}
           sideOffset={6}
-          className="bg-ink data-[state=delayed-open]:animate-fade-in z-50 max-w-64 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white shadow-lg"
+          className="text-ink ring-hairline bg-surface-raised data-[state=delayed-open]:animate-fade-in z-50 max-w-64 rounded-lg px-2.5 py-1.5 text-xs font-medium shadow-lg ring-1"
         >
           {label}
-          <RadixTooltip.Arrow className="fill-ink" />
+          <RadixTooltip.Arrow className="fill-surface-raised" />
         </RadixTooltip.Content>
       </RadixTooltip.Portal>
     </RadixTooltip.Root>

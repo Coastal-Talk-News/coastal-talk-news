@@ -8,6 +8,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import type { Env } from './config/env.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { MAX_UPLOAD_BYTES } from './modules/media/image.js';
+import { cmsBreakingNewsRoutes } from './modules/breaking-news/routes.js';
 import {
   cmsCategoryRoutes,
   publicCategoryRoutes,
@@ -72,6 +73,7 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
         { name: 'dashboard', description: 'Newsroom overview' },
         { name: 'categories', description: 'News categories' },
         { name: 'media', description: 'Media library' },
+        { name: 'breaking-news', description: 'Breaking news ticker' },
       ],
     },
   });
@@ -96,6 +98,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   await app.register(authRoutes, { prefix: `${API_BASE_PATH}/cms/auth` });
   await app.register(cmsCategoryRoutes, {
     prefix: `${API_BASE_PATH}/cms/categories`,
+  });
+  await app.register(cmsBreakingNewsRoutes, {
+    prefix: `${API_BASE_PATH}/cms/breaking-news`,
   });
   await app.register(dashboardRoutes, {
     prefix: `${API_BASE_PATH}/cms/dashboard`,

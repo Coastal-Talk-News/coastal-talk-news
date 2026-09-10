@@ -31,7 +31,7 @@ export const DashboardBreakingNewsSchema = Type.Object({
   id: Type.String(),
   headline: Type.String(),
   startAt: IsoDateTime,
-  endAt: IsoDateTime,
+  endAt: Type.Union([IsoDateTime, Type.Null()]),
   isActive: Type.Boolean(),
 });
 
