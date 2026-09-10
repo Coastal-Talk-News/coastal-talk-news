@@ -257,9 +257,9 @@ search no-results, mobile menu behavior, image responsiveness.
 
 ## Open flags against the current schema
 
-1. **Contact address** — the About & Contact page and Settings → General both need a
-   postal address; `Site Settings` has no `address` field yet. Add a field such as
-   `contact_address`.
+1. **Contact address — resolved, no schema change.** Confirmed against the actual schema:
+   `Site Settings.contact_address` already exists as a nullable column. The Settings CMS
+   page's General tab reads/writes it directly.
 2. **Advertisement `placement` — resolved, no field.** Confirmed against the actual
    schema and CMS design: there is no `placement` column. `priority` is the only editorial
    control; the reader site distributes active ads across its own zones automatically.

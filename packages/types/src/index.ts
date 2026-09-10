@@ -6,3 +6,4 @@ export * from './breaking-news.js';
 export * from './category.js';
 export * from './dashboard.js';
 export * from './media.js';
+export * from './settings.js';
