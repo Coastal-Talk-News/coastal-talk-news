@@ -156,8 +156,14 @@ active Breaking News.
 
 ### Advertisements
 
-Fields: advertiser name, image, destination URL, placement, priority (where applicable),
-start/end datetime.
+Fields: advertiser name, image, destination URL, priority, start/end datetime.
+
+**No `placement` field, confirmed.** The Prisma schema deliberately has no `placement`
+column — the reader site defines its own ad zones and distributes active ads across them,
+with `priority` as the sole editorial control over which ads land in the more prominent
+zones. This section previously listed `placement` as a field; that was stale text never
+reconciled with the schema's actual (and intentional) design. Don't reintroduce it without
+updating the schema first.
 
 Advertisements are scheduled using `start_at` and `end_at`. The advertisement does not have
 a stored `is_active` field — its active state is derived by the backend from the schedule,
@@ -254,10 +260,9 @@ search no-results, mobile menu behavior, image responsiveness.
 1. **Contact address** — the About & Contact page and Settings → General both need a
    postal address; `Site Settings` has no `address` field yet. Add a field such as
    `contact_address`.
-2. **Advertisement `placement` values** — placement values are examples pending final UI
-   design. Finalize the supported placements against the actual UI designs before locking
-   the enum or validation values. Adding a new placement later should not require
-   rewriting the advertisement system.
+2. **Advertisement `placement` — resolved, no field.** Confirmed against the actual
+   schema and CMS design: there is no `placement` column. `priority` is the only editorial
+   control; the reader site distributes active ads across its own zones automatically.
 3. **Article lifecycle schema cleanup** — with `Scheduled` publishing removed,
    `ArticleStatus` should be `DRAFT / PUBLISHED / ARCHIVED`, and `scheduled_deletion_at`
    is no longer needed. Apply these changes in Prisma before building the dependent features.

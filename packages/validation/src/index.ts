@@ -1,4 +1,5 @@
 export * from './envelope.js';
+export * from './advertisement.js';
 export * from './article.js';
 export * from './auth.js';
 export * from './breaking-news.js';
