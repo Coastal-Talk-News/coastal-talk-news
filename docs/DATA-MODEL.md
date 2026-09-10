@@ -10,9 +10,26 @@ them in Prisma before building the feature that depends on them.
 ### Article
 
 `id`, `category_id` (FK → Category), `media_id` (FK → Media Asset, featured image),
-`language`, `headline`, `content`, `youtube_url`, `priority`, `status` (→ `ArticleStatus`),
-`publication_date`, `created_at`, `updated_at`, `seo_title`, `meta_description`,
-`og_image_id` (FK → Media Asset)
+`language`, `headline`, `summary`, `content`, `youtube_url`, `tags`, `priority`,
+`status` (→ `ArticleStatus`), `publication_date`, `created_at`, `updated_at`, `seo_title`,
+`meta_description`, `og_image_id` (FK → Media Asset)
+
+`summary` is required — shown in article listings and social previews. Distinct from
+`meta_description`, which is SEO-specific and optional.
+
+`tags` is a plain string array, entered freely by the author. Not a controlled vocabulary
+and not a separate entity — no `Tag` table, no foreign key. No filtering/search by tag in
+V1; if that's needed later, revisit whether a real entity is warranted then.
+
+No `slug` field exists. Public article URLs are not yet scoped — this is a known gap, not
+an oversight; revisit before the public article page is built.
+
+`category_id` is nullable at the database level — a change applied directly to the shared
+dev database (alongside the Media Library work) rather than through this doc's process.
+The API still requires a category on Create/Edit News (see the field table below); a null
+category can only occur for a row written outside that path. Confirm with whoever made
+this change whether Category is meant to become genuinely optional product-wise — if so,
+that's a bigger change to the CMS form and this doc, not just a schema-nullability fix.
 
 **`scheduled_deletion_at` — needs migration (remove).** The original diagram had this
 field for scheduling archival at a future time. Under the simplified lifecycle, archive

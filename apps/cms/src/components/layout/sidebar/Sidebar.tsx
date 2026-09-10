@@ -2,12 +2,19 @@ import { cn } from '@coastal-talk-news/ui/cn';
 import { Tooltip } from '@coastal-talk-news/ui/tooltip';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { SIDEBAR_GUTTER, sidebarRow } from './layout.js';
-import { NAV_GROUPS } from './navigation.js';
+import { NAV_GROUPS, type NavChild, type NavItem } from './navigation.js';
 import { SidebarAccount } from './SidebarAccount.js';
 import { SidebarBrand } from './SidebarBrand.js';
 import { SidebarLabel } from './SidebarLabel.js';
+import { SidebarNavGroupItem } from './SidebarNavGroupItem.js';
 import { SidebarNavItem } from './SidebarNavItem.js';
 import { SidebarThemeControl } from './SidebarThemeControl.js';
+
+function hasChildren(
+  item: NavItem,
+): item is NavItem & { children: NavChild[] } {
+  return Boolean(item.children);
+}
 
 interface SidebarProps {
   collapsed: boolean;
@@ -51,14 +58,23 @@ export function Sidebar({
               ))}
 
             <ul className="space-y-1">
-              {group.items.map((item) => (
-                <SidebarNavItem
-                  key={item.to}
-                  item={item}
-                  collapsed={collapsed}
-                  onNavigate={onNavigate}
-                />
-              ))}
+              {group.items.map((item) =>
+                hasChildren(item) ? (
+                  <SidebarNavGroupItem
+                    key={item.to}
+                    item={item}
+                    collapsed={collapsed}
+                    onNavigate={onNavigate}
+                  />
+                ) : (
+                  <SidebarNavItem
+                    key={item.to}
+                    item={item}
+                    collapsed={collapsed}
+                    onNavigate={onNavigate}
+                  />
+                ),
+              )}
             </ul>
           </div>
         ))}

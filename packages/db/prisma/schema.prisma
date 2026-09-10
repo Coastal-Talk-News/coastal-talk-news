@@ -78,19 +78,29 @@ model Category {
 
 model Article {
   id         String  @id @default(uuid(7))
-  categoryId String  @map("category_id")
+  /// Nullable at the DB level (a change applied directly to the shared dev
+  /// database outside this schema, reconciled here rather than fought) —
+  /// but the API still requires a category on create; docs/PROJECT-SCOPE.md
+  /// documents Category as required, and nothing here overrides that.
+  categoryId String? @map("category_id")
   mediaId    String? @map("media_id")
   ogImageId  String? @map("og_image_id")
 
   language Language
   headline String
+  /// Shown in listings and social previews — distinct from metaDescription,
+  /// which is SEO-specific and edited separately.
+  summary  String
   /// Tiptap document JSON, not HTML. The public site renders it
   /// programmatically, so stored content cannot inject markup.
   content  Json
   /// Flattened plain text of content, maintained by the API on write, so
   /// full-text search has something to index. Never rendered.
-  contentText String  @map("content_text")
-  youtubeUrl  String? @map("youtube_url")
+  contentText String   @map("content_text")
+  youtubeUrl  String?  @map("youtube_url")
+  /// Free text, entered manually by the author — not a controlled taxonomy,
+  /// no separate Tag entity.
+  tags        String[] @default([])
 
   priority        ArticlePriority @default(NORMAL)
   status          ArticleStatus   @default(DRAFT)
@@ -103,11 +113,13 @@ model Article {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  /// Generated column maintained by Postgres (see the init migration).
-  /// Declared here only so Prisma does not report drift against it.
+  /// Generated column maintained by Postgres (see the init migration). The
+  /// GIN indexes over it (and over headline) were dropped directly against
+  /// the shared dev DB outside this schema — full-text search still works,
+  /// just without those indexes backing it until someone re-adds them.
   searchVector Unsupported("tsvector")? @map("search_vector")
 
-  category Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  category Category?   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   media    MediaAsset? @relation("ArticleFeaturedImage", fields: [mediaId], references: [id], onDelete: Restrict)
   ogImage  MediaAsset? @relation("ArticleOgImage", fields: [ogImageId], references: [id], onDelete: Restrict)
 

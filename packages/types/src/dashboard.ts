@@ -16,7 +16,8 @@ export interface DashboardArticleDto {
   id: Id;
   headline: string;
   status: ArticleStatus;
-  categoryName: string;
+  /** Nullable at the DB level (see schema.prisma's Article.categoryId comment). */
+  categoryName: string | null;
   publicationDate: IsoDateTime | null;
   updatedAt: IsoDateTime;
   coverImage: MediaSummaryDto | null;

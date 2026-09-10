@@ -71,7 +71,8 @@ export async function getDashboard(
       id: article.id,
       headline: article.headline,
       status: article.status,
-      categoryName: article.category.name,
+      // Nullable at the DB level (see schema.prisma's Article.categoryId comment).
+      categoryName: article.category?.name ?? null,
       publicationDate: article.publicationDate?.toISOString() ?? null,
       updatedAt: article.updatedAt.toISOString(),
       coverImage: toMedia(article.media),
