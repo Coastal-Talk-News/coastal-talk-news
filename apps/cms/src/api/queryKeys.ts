@@ -7,6 +7,8 @@ export const queryKeys = {
   sessions: ['sessions'] as const,
   dashboard: ['dashboard'] as const,
   categories: ['categories'] as const,
+  media: ['media'] as const,
+  mediaList: (params: Record<string, unknown>) => ['media', params] as const,
   categoryList: (params: Record<string, unknown>) =>
     ['categories', params] as const,
   breakingNews: ['breaking-news'] as const,

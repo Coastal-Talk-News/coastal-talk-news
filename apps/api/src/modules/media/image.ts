@@ -8,6 +8,10 @@ import {
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
+// Cloudinary resizes per request, so the stored copy only needs to cover the
+// largest use — a full-bleed hero on a retina screen.
+const MAX_STORED_EDGE = 2400;
+
 /**
  * Keyed by magic-byte signature, never the supplied filename or Content-Type:
  * a .jpg that is really an .svg becomes stored XSS once served from the bucket.
@@ -68,6 +72,12 @@ export async function processUpload(input: Buffer): Promise<ProcessedImage> {
     : {
         buffer: await sharp(input, { failOn: 'none' })
           .rotate()
+          .resize({
+            width: MAX_STORED_EDGE,
+            height: MAX_STORED_EDGE,
+            fit: 'inside',
+            withoutEnlargement: true,
+          })
           .webp({ quality: 82 })
           .toBuffer(),
         extension: 'webp',

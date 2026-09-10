@@ -26,11 +26,13 @@ const EnvSchema = Type.Object({
 
   CORS_ORIGINS: Type.String({ minLength: 1 }),
 
-  R2_ACCOUNT_ID: Type.String({ minLength: 1 }),
-  R2_ACCESS_KEY_ID: Type.String({ minLength: 1 }),
-  R2_SECRET_ACCESS_KEY: Type.String({ minLength: 1 }),
-  R2_BUCKET: Type.String({ minLength: 1 }),
-  R2_PUBLIC_BASE_URL: Type.String({ minLength: 1 }),
+  CLOUDINARY_CLOUD_NAME: Type.String({ minLength: 1 }),
+  CLOUDINARY_API_KEY: Type.String({ minLength: 1 }),
+  CLOUDINARY_API_SECRET: Type.String({ minLength: 1 }),
+  CLOUDINARY_FOLDER: Type.String({
+    minLength: 1,
+    default: 'coastal-talk-news',
+  }),
 });
 
 export type Env = Static<typeof EnvSchema> & { corsOrigins: string[] };

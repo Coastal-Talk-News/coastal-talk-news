@@ -111,3 +111,64 @@ export function buildQuery(
   const query = search.toString();
   return query ? `?${query}` : '';
 }
+
+/**
+ * Uploads go through XMLHttpRequest, not fetch, because fetch cannot report
+ * upload progress and a large image on a slow connection needs a real bar.
+ */
+export function uploadFiles<T>(
+  path: string,
+  files: File[],
+  onProgress?: (percent: number) => void,
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    for (const file of files) form.append('files', file, file.name);
+
+    const request = new XMLHttpRequest();
+    request.open('POST', `${BASE_URL}${path}`);
+    request.withCredentials = true;
+
+    request.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        onProgress?.(Math.round((event.loaded / event.total) * 100));
+      }
+    });
+
+    request.addEventListener('load', () => {
+      let payload: unknown = null;
+      try {
+        payload = JSON.parse(request.responseText);
+      } catch {
+        payload = null;
+      }
+
+      if (request.status >= 200 && request.status < 300) {
+        resolve((payload as ApiSuccess<T>).data);
+        return;
+      }
+      const failure = payload as ApiFailure | null;
+      reject(
+        new ApiError(
+          request.status,
+          failure?.error ?? {
+            code: 'UPLOAD_FAILED',
+            message: 'Upload failed.',
+          },
+        ),
+      );
+    });
+
+    request.addEventListener('error', () => {
+      reject(
+        new ApiError(0, {
+          code: 'NETWORK_ERROR',
+          message:
+            'Could not reach the server. Check your connection and try again.',
+        }),
+      );
+    });
+
+    request.send(form);
+  });
+}

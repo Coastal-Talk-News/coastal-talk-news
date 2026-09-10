@@ -1,14 +1,16 @@
 import type {
   CmsCategoryDto,
   CreateCategoryRequest,
+  MediaSummaryDto,
 } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
 import { Sheet } from '@coastal-talk-news/ui/sheet';
 import { Toggle } from '@coastal-talk-news/ui/toggle';
-import { ImageOff } from 'lucide-react';
+import { ImagePlus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
 
 const NAME_MAX = 60;
 const DESCRIPTION_MAX = 200;
@@ -17,6 +19,7 @@ interface FormValues {
   name: string;
   description: string;
   isActive: boolean;
+  coverImage: MediaSummaryDto | null;
 }
 
 function toValues(category: CmsCategoryDto | null): FormValues {
@@ -24,6 +27,7 @@ function toValues(category: CmsCategoryDto | null): FormValues {
     name: category?.name ?? '',
     description: category?.description ?? '',
     isActive: category?.isActive ?? true,
+    coverImage: category?.coverImage ?? null,
   };
 }
 
@@ -48,6 +52,7 @@ export function CategorySheet({
 }: CategorySheetProps) {
   const [values, setValues] = useState<FormValues>(() => toValues(editing));
   const [touched, setTouched] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const initial = useRef<FormValues>(toValues(editing));
 
@@ -67,7 +72,9 @@ export function CategorySheet({
   const isDirty =
     trimmedName !== initial.current.name.trim() ||
     values.description.trim() !== initial.current.description.trim() ||
-    values.isActive !== initial.current.isActive;
+    values.isActive !== initial.current.isActive ||
+    (values.coverImage?.id ?? null) !==
+      (initial.current.coverImage?.id ?? null);
 
   const duplicate =
     trimmedName.length > 0 &&
@@ -95,6 +102,7 @@ export function CategorySheet({
       name: trimmedName,
       description: values.description.trim() || null,
       isActive: values.isActive,
+      coverImageId: values.coverImage?.id ?? null,
     });
   }
 
@@ -104,6 +112,28 @@ export function CategorySheet({
     if (isDirty && !window.confirm('Discard your unsaved changes?')) return;
     onOpenChange(false);
   }
+
+  const picker = (
+    <MediaPickerDialog
+      open={pickerOpen}
+      selectedId={values.coverImage?.id ?? null}
+      onOpenChange={setPickerOpen}
+      onSelect={(asset) => {
+        setValues((current) => ({
+          ...current,
+          coverImage: asset
+            ? {
+                id: asset.id,
+                url: asset.url,
+                width: asset.width,
+                height: asset.height,
+              }
+            : null,
+        }));
+        setPickerOpen(false);
+      }}
+    />
+  );
 
   return (
     <Sheet
@@ -191,20 +221,71 @@ export function CategorySheet({
         </div>
 
         <div className="space-y-1.5">
-          <span className="block text-sm font-medium text-ink-muted">
+          <span className="text-ink-muted block text-sm font-medium">
             Cover image
+            <span className="text-ink-subtle ml-1 font-normal">(optional)</span>
           </span>
-          <div className="border-hairline flex items-center gap-3 rounded-lg border border-dashed bg-surface-sunken px-4 py-4">
-            <span className="text-ink-subtle grid size-10 shrink-0 place-items-center rounded-full bg-surface">
-              <ImageOff className="size-5" aria-hidden />
-            </span>
-            <div className="text-sm">
-              <p className="text-ink-muted font-medium">Coming soon</p>
-              <p className="text-ink-subtle text-xs">
-                You&rsquo;ll be able to add a cover image here.
+
+          {values.coverImage ? (
+            <div className="border-hairline flex items-center gap-3 rounded-lg border p-3">
+              <img
+                src={values.coverImage.url}
+                alt=""
+                width={64}
+                height={48}
+                className="h-12 w-16 shrink-0 rounded-md object-cover"
+              />
+              <p className="text-ink-muted min-w-0 flex-1 truncate text-sm">
+                {values.coverImage.width}×{values.coverImage.height}
               </p>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => setPickerOpen(true)}
+              >
+                Change
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                aria-label="Remove cover image"
+                onClick={() =>
+                  setValues((current) => ({ ...current, coverImage: null }))
+                }
+              >
+                <X className="size-4" aria-hidden />
+              </Button>
             </div>
-          </div>
+          ) : null}
+
+          {values.coverImage && (
+            <p className="text-ink-subtle text-xs">
+              Changing or removing this deletes the image from the library,
+              unless something else uses it.
+            </p>
+          )}
+
+          {!values.coverImage && (
+            <button
+              type="button"
+              onClick={() => setPickerOpen(true)}
+              className="border-hairline bg-surface-sunken hover:border-accent hover:bg-accent-soft flex w-full items-center gap-3 rounded-lg border border-dashed px-4 py-4 text-left transition-colors"
+            >
+              <span className="text-ink-subtle bg-surface grid size-10 shrink-0 place-items-center rounded-full">
+                <ImagePlus className="size-5" aria-hidden />
+              </span>
+              <span className="text-sm">
+                <span className="text-ink-muted block font-medium">
+                  Choose an image
+                </span>
+                <span className="text-ink-subtle block text-xs">
+                  Shown on the category page.
+                </span>
+              </span>
+            </button>
+          )}
         </div>
 
         <div className="border-hairline rounded-lg border p-4">
@@ -239,6 +320,7 @@ export function CategorySheet({
             {serverError}
           </p>
         )}
+        {picker}
       </form>
     </Sheet>
   );
