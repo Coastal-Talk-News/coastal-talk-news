@@ -99,19 +99,24 @@ Published / Archived — `Scheduled` no longer exists), and category.
 
 ### Create/Edit News
 
-| Field                                   | Required | Notes                                         |
-| --------------------------------------- | -------- | --------------------------------------------- |
-| Language                                | Yes      | English or Kannada                            |
-| Category                                | Yes      | one category per article                      |
-| Headline                                | Yes      |                                               |
-| Content                                 | Yes      |                                               |
-| Featured image                          | No       | from Media Library or new upload              |
-| YouTube URL                             | No       | renders inline on the article page if set     |
-| Editorial priority                      | —        | Lead Story / Featured / Normal                |
-| Status                                  | —        | Draft or Published                            |
-| SEO title / meta description / OG image | No       | set alongside the article, no separate screen |
+| Field                                     | Required | Notes                                                                     |
+| ----------------------------------------- | -------- | ------------------------------------------------------------------------- |
+| Field                                     | Required | Notes                                                                     |
+| ----------------------------------------- | -------- | ---------------------------------------------------                       |
+| Language                                  | Yes      | English or Kannada                                                        |
+| Category                                  | Yes      | one category per article                                                  |
+| Headline                                  | Yes      |                                                                           |
+| Summary                                   | Yes      | shown in listings and social previews; distinct from SEO meta description |
+| Content                                   | Yes      |                                                                           |
+| Featured image                            | No       | from Media Library or new upload                                          |
+| YouTube URL                               | No       | renders inline on the article page if set                                 |
+| Tags                                      | No       | free text, author-entered; no controlled taxonomy, no filtering in V1     |
+| Editorial priority                        | —        | Lead Story / Featured / Normal                                            |
+| Status                                    | —        | Draft or Published — no Scheduled option                                  |
+| SEO title / meta description / OG image   | No       | set alongside the article, no separate screen                             |
 
-No other fields — the editor should only contain what's actually needed to publish.
+No URL slug field — public article URLs aren't scoped yet. No other fields beyond this
+table.
 
 **Publishing**: Save as Draft, or Publish (immediate — sets `publication_date` to now).
 Published articles remain editable afterward.

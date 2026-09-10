@@ -218,7 +218,7 @@ export function DashboardPage() {
                         {article.headline}
                       </p>
                       <p className="mt-0.5 truncate text-xs text-ink-muted">
-                        {article.categoryName} &middot;{' '}
+                        {article.categoryName ?? 'No category'} &middot;{' '}
                         {formatRelative(
                           article.publicationDate ?? article.updatedAt,
                         )}

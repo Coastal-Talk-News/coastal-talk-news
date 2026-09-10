@@ -16,6 +16,16 @@ const DashboardPage = lazy(() =>
     default: m.DashboardPage,
   })),
 );
+const ArticlesPage = lazy(() =>
+  import('./routes/ArticlesPage.js').then((m) => ({
+    default: m.ArticlesPage,
+  })),
+);
+const ArticleFormPage = lazy(() =>
+  import('./routes/ArticleFormPage.js').then((m) => ({
+    default: m.ArticleFormPage,
+  })),
+);
 const CategoriesPage = lazy(() =>
   import('./routes/CategoriesPage.js').then((m) => ({
     default: m.CategoriesPage,
@@ -58,6 +68,12 @@ export default function App() {
               <Route element={<RequireAuth />}>
                 <Route element={<AppLayout />}>
                   <Route index element={<DashboardPage />} />
+                  <Route path="articles" element={<ArticlesPage />} />
+                  <Route path="articles/new" element={<ArticleFormPage />} />
+                  <Route
+                    path="articles/:id/edit"
+                    element={<ArticleFormPage />}
+                  />
                   <Route path="categories" element={<CategoriesPage />} />
                   <Route path="media" element={<MediaLibraryPage />} />
                   <Route path="breaking-news" element={<BreakingNewsPage />} />

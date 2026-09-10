@@ -21,7 +21,7 @@ export const DashboardArticleSchema = Type.Object({
     Type.Literal('PUBLISHED'),
     Type.Literal('ARCHIVED'),
   ]),
-  categoryName: Type.String(),
+  categoryName: Type.Union([Type.String(), Type.Null()]),
   publicationDate: Type.Union([IsoDateTime, Type.Null()]),
   updatedAt: IsoDateTime,
   coverImage: NullableMedia,

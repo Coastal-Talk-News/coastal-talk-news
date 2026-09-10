@@ -14,4 +14,10 @@ export const queryKeys = {
   breakingNews: ['breaking-news'] as const,
   breakingNewsList: (params: Record<string, unknown>) =>
     ['breaking-news', params] as const,
+  articles: ['articles'] as const,
+  articleList: (params: Record<string, unknown>) =>
+    ['articles', 'list', params] as const,
+  articleCounts: (params: Record<string, unknown>) =>
+    ['articles', 'counts', params] as const,
+  article: (id: string) => ['articles', 'detail', id] as const,
 } as const;
