@@ -15,7 +15,6 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1127.0",
     "@coastal-talk-news/db": "workspace:*",
     "@coastal-talk-news/types": "workspace:*",
     "@coastal-talk-news/validation": "workspace:*",
@@ -28,6 +27,7 @@
     "@fastify/type-provider-typebox": "^6.1.0",
     "@sinclair/typebox": "^0.34.52",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.11.0",
     "fastify": "^5.12.3",
     "fastify-plugin": "^6.0.0",
     "file-type": "^22.0.2",

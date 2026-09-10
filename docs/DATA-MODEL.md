@@ -77,7 +77,7 @@ the schema/API so adding a placement doesn't require rewriting the ad system.
 
 ### Media Asset
 
-`id`, `filename`, `storage_key` (the R2 object key), `mime_type`, `file_size`, `created_at`
+`id`, `filename`, `storage_key` (the stored image key), `mime_type`, `file_size`, `created_at`
 
 Binary image data is **never** stored in PostgreSQL — only this reference row.
 
@@ -128,7 +128,7 @@ Two distinct actions exist on an Article, and they behave differently for media:
   referenced. No media cleanup happens.
 - **Delete** — the row is removed entirely. Any media it referenced must then be checked:
   if no other Article, Category, Advertisement, or Site Settings row still references that
-  Media Asset, delete it from both PostgreSQL and Cloudflare R2. If anything else still
+  Media Asset, delete it from both PostgreSQL and Cloudinary. If anything else still
   references it, the asset must remain untouched.
 
 This "is this Media Asset still referenced anywhere?" check must live in **one** central
@@ -141,12 +141,12 @@ rule.
 ```text
 Upload → validate (real file content, not just client-supplied MIME/extension)
        → process/optimize with Sharp
-       → store object in Cloudflare R2
+       → store object in Cloudinary
        → save { filename, storage_key, mime_type, file_size } as a Media Asset row
 ```
 
-The architecture diagram shows the client talking to R2 directly on two paths, in addition
-to the API↔R2 path — this suggests either a presigned-upload flow, direct public reads of
+The architecture diagram shows the client talking to Cloudinary directly on two paths, in addition
+to the API↔Cloudinary path — this suggests either a presigned-upload flow, direct public reads of
 stored images, or both. Confirm the actual implementation in `apps/api`/`apps/cms` and
 update this section once you have.
 

@@ -106,7 +106,7 @@ three different places.
 `og_image_id`), a Category, an Advertisement, or Site Settings, all at once. Build **one**
 backend function that answers "is this Media Asset still referenced by anything?" — every
 delete or update path that could orphan a media reference must call it, rather than each
-resource re-implementing its own check. Only delete the Media Asset (DB row + R2 object)
+resource re-implementing its own check. Only delete the Media Asset (DB row + stored image)
 when that check returns zero references. This applies whenever a resource is hard-deleted
 or has its media reference changed — archiving an Article does _not_ trigger it, since the
 row and its reference stay in place.
@@ -185,7 +185,7 @@ now" action triggered by the admin — don't build a background sweep unless ask
   Advertisement visibility in V1. Do not build scheduled infrastructure around it unless
   another concrete V1 requirement needs it. If it's already installed in the repo, don't
   remove it reflexively — confirm during the repo audit whether anything actually uses it.
-- Image pipeline: validate → Sharp processing/optimization → R2 → Media Asset row. Don't
+- Image pipeline: validate → Sharp processing/optimization → Cloudinary → Media Asset row. Don't
   create redundant copies unless there's a real requirement.
 
 ## 9. Performance

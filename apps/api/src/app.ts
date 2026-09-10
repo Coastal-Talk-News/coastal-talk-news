@@ -1,16 +1,19 @@
 import { API_BASE_PATH } from '@coastal-talk-news/types';
 import cors from '@fastify/cors';
+import multipart from '@fastify/multipart';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import Fastify, { type FastifyInstance } from 'fastify';
 import type { Env } from './config/env.js';
 import { authRoutes } from './modules/auth/routes.js';
+import { MAX_UPLOAD_BYTES } from './modules/media/image.js';
 import {
   cmsCategoryRoutes,
   publicCategoryRoutes,
 } from './modules/categories/routes.js';
 import { dashboardRoutes } from './modules/dashboard/routes.js';
+import { mediaRoutes } from './modules/media/routes.js';
 import authPlugin from './plugins/auth.js';
 import errorHandler from './plugins/error-handler.js';
 import prismaPlugin from './plugins/prisma.js';
@@ -68,10 +71,15 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
         { name: 'auth', description: 'CMS authentication' },
         { name: 'dashboard', description: 'Newsroom overview' },
         { name: 'categories', description: 'News categories' },
+        { name: 'media', description: 'Media library' },
       ],
     },
   });
   await app.register(swaggerUi, { routePrefix: '/docs' });
+
+  await app.register(multipart, {
+    limits: { fileSize: MAX_UPLOAD_BYTES, files: 10 },
+  });
 
   await app.register(prismaPlugin, { env });
   await app.register(storagePlugin, { env });
@@ -91,6 +99,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   });
   await app.register(dashboardRoutes, {
     prefix: `${API_BASE_PATH}/cms/dashboard`,
+  });
+  await app.register(mediaRoutes, {
+    prefix: `${API_BASE_PATH}/cms/media`,
   });
   await app.register(publicCategoryRoutes, {
     prefix: `${API_BASE_PATH}/public/categories`,

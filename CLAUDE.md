@@ -57,9 +57,9 @@ or abstraction, check whether one of the existing locations already covers it.
 **CMS** — React, Vite, TypeScript, Tiptap, TanStack Query
 **UI** — Tailwind CSS, Radix UI, shared via `packages/ui`
 **Backend** — Fastify, TypeScript, TypeBox + JSON Schema, Swagger/OpenAPI, Prisma, Sharp,
-S3-compatible API (R2), bcrypt, PostgreSQL full-text search + `pg_trgm`, Pino
+Cloudinary, bcrypt, PostgreSQL full-text search + `pg_trgm`, Pino
 **Database** — PostgreSQL
-**Object storage** — Cloudflare R2
+**Media storage** — Cloudinary (resizing and format selection happen on delivery)
 **Tooling** — pnpm workspaces, Turborepo, Prettier, ESLint, Husky + lint-staged, GitHub Actions
 
 Do not introduce an alternative library or framework when the existing stack already solves
@@ -77,7 +77,7 @@ Never hardcode these into application code — use the project's existing env/co
 
 **`.env` files live only in `apps/*`. Never create one under `packages/*`.**
 
-All backend configuration — `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS`, `R2_*`, and the
+All backend configuration — `DATABASE_URL`, `SESSION_SECRET`, `CORS_ORIGINS`, `CLOUDINARY_*`, and the
 `SEED_*` values — lives in a single `apps/api/.env` (template: `apps/api/.env.example`).
 `packages/db/prisma.config.ts` reads that file, so the Prisma CLI, the seed script, and
 the running API always share one connection string. A duplicated `DATABASE_URL` is the
@@ -209,7 +209,7 @@ in this environment, say so plainly instead of claiming it works.
 
 ## 15. Manual steps
 
-When a task needs something outside the repo (provisioning Postgres, configuring the R2
+When a task needs something outside the repo (provisioning Postgres, configuring the Cloudinary
 bucket, setting env vars on Vercel/Netlify/Render, DNS, GitHub repo settings), implement
 everything that _can_ live in the repo, then list the exact manual steps and values needed.
 Never imply that kind of setup is done when it isn't.

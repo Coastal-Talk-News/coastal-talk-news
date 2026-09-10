@@ -180,13 +180,19 @@ ad images, site logo, favicon, and the default SEO/OG image.
 article, a category, an ad, a settings field). Deleting one referencing resource must never
 delete the underlying media asset while any other reference still exists. Only when the
 **last** reference is removed does the asset get deleted, from both PostgreSQL and
-Cloudflare R2. This must be one central backend mechanism, not reimplemented separately
+Cloudinary. This must be one central backend mechanism, not reimplemented separately
 per resource — see `docs/DEVELOPMENT.md` for the enforcement rule.
 
-Media uploaded but never attached to anything: no automatic background cleanup in V1. The
-admin can manually delete unused assets from the library, and the backend can support an
-explicit "clean up unused" action if triggered on request — don't build a scheduled sweep
-unless it's actually needed.
+**Detaching counts as removing a reference — confirmed.** Swapping a category's cover
+image, or clearing it, releases the previous asset: if nothing else references it, the row
+and the stored image go immediately. It is not returned to the library as "unused". This was
+raised explicitly because it means removing a cover image destroys the file, and confirmed
+as the intended behaviour. The CMS must therefore say so at the point of the action, so the
+loss is never a surprise.
+
+Media uploaded but never attached to anything is the one case that lingers: there is no
+scheduled sweep in V1. The admin deletes those from the library, or triggers the explicit
+"clean up unused" action. Don't build a background sweep unless it's actually needed.
 
 ### Settings
 

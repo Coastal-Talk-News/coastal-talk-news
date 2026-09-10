@@ -21,6 +21,11 @@ const CategoriesPage = lazy(() =>
     default: m.CategoriesPage,
   })),
 );
+const MediaLibraryPage = lazy(() =>
+  import('./routes/MediaLibraryPage.js').then((m) => ({
+    default: m.MediaLibraryPage,
+  })),
+);
 const SessionsPage = lazy(() =>
   import('./routes/SessionsPage.js').then((m) => ({ default: m.SessionsPage })),
 );
@@ -49,6 +54,7 @@ export default function App() {
                 <Route element={<AppLayout />}>
                   <Route index element={<DashboardPage />} />
                   <Route path="categories" element={<CategoriesPage />} />
+                  <Route path="media" element={<MediaLibraryPage />} />
                   <Route path="sessions" element={<SessionsPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
