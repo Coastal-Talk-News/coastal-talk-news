@@ -63,9 +63,6 @@ export const PublicSiteSchema = Type.Object({
 });
 
 export const PublicHomeSchema = Type.Object({
-  leadStory: Type.Union([PublicArticleCardSchema, Type.Null()]),
-  topStories: Type.Array(PublicArticleCardSchema),
-  latestNews: Type.Array(PublicArticleCardSchema),
   categorySections: Type.Array(
     Type.Object({
       category: PublicNavCategorySchema,

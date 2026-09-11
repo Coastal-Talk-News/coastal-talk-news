@@ -64,9 +64,12 @@ export interface PublicCategorySectionDto {
   articles: PublicArticleCardDto[];
 }
 
+/**
+ * Homepage feed, entirely category-driven: each section is one active category
+ * with its most recent published articles (newest first). The homepage reads
+ * article [0] of the first few sections as its lead story and article [1] of
+ * the next few as "Top Stories" — there is no separate priority-based feed.
+ */
 export interface PublicHomeDto {
-  leadStory: PublicArticleCardDto | null;
-  topStories: PublicArticleCardDto[];
-  latestNews: PublicArticleCardDto[];
   categorySections: PublicCategorySectionDto[];
 }

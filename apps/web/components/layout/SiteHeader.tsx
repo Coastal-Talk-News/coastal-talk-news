@@ -4,47 +4,13 @@ import type { PublicSiteDto } from '@coastal-talk-news/types';
 import { formatLongDate } from '../../lib/format';
 import { SearchField } from './SearchField';
 import { MobileNav } from './MobileNav';
+import { SocialLinks } from './SocialLinks';
 
 const UTILITY_LINKS = [
   { href: '/about', label: 'About' },
   { href: '/contact', label: 'Contact' },
   { href: '/advertise', label: 'Advertise' },
 ];
-
-function SocialLinks({
-  settings,
-  className,
-}: {
-  settings: PublicSiteDto['settings'];
-  className?: string;
-}) {
-  const links = [
-    { href: settings.facebookUrl, label: 'Facebook' },
-    { href: settings.instagramUrl, label: 'Instagram' },
-    { href: settings.youtubeUrl, label: 'YouTube' },
-    { href: settings.xUrl, label: 'X' },
-  ].filter((link): link is { href: string; label: string } =>
-    Boolean(link.href),
-  );
-
-  if (links.length === 0) return null;
-
-  return (
-    <div className={className}>
-      {links.map((link) => (
-        <a
-          key={link.label}
-          href={link.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hover:text-brand transition-colors"
-        >
-          {link.label}
-        </a>
-      ))}
-    </div>
-  );
-}
 
 export function SiteHeader({ site }: { site: PublicSiteDto }) {
   const { settings, categories } = site;
@@ -64,10 +30,7 @@ export function SiteHeader({ site }: { site: PublicSiteDto }) {
                 {link.label}
               </Link>
             ))}
-            <SocialLinks
-              settings={settings}
-              className="flex items-center gap-3"
-            />
+            <SocialLinks settings={settings} />
           </div>
         </div>
       </div>

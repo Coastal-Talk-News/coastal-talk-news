@@ -74,3 +74,29 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* The ticker track is the breaking-news list rendered twice back to back, so
+   sliding it exactly one copy-width (50%) loops seamlessly into itself no
+   matter the content length or viewport width. The duration itself is set
+   per-element inline (see BreakingTicker.tsx), scaled to how much text there
+   is so the crawl reads at a steady, legible pace either way. */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation-name: marquee;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee {
+    animation: none;
+  }
+}

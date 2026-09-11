@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Brand } from './Brand';
 import type { PublicSiteDto } from '@coastal-talk-news/types';
+import { SocialLinks } from './SocialLinks';
 
 const QUICK_LINKS = [
   { href: '/', label: 'Home' },
@@ -11,14 +12,6 @@ const QUICK_LINKS = [
 
 export function SiteFooter({ site }: { site: PublicSiteDto }) {
   const { settings, categories } = site;
-  const socials = [
-    { href: settings.facebookUrl, label: 'Facebook' },
-    { href: settings.instagramUrl, label: 'Instagram' },
-    { href: settings.youtubeUrl, label: 'YouTube' },
-    { href: settings.xUrl, label: 'X' },
-  ].filter((link): link is { href: string; label: string } =>
-    Boolean(link.href),
-  );
 
   return (
     <footer className="bg-night mt-16 text-white">
@@ -34,21 +27,7 @@ export function SiteFooter({ site }: { site: PublicSiteDto }) {
               {settings.description}
             </p>
           )}
-          {socials.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-4 text-sm">
-              {socials.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-night-muted transition-colors hover:text-white"
-                >
-                  {social.label}
-                </a>
-              ))}
-            </div>
-          )}
+          <SocialLinks settings={settings} tone="inverse" className="mt-5" />
         </div>
 
         <nav aria-label="Quick links">
