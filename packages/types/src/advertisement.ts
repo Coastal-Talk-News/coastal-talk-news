@@ -9,7 +9,6 @@ export interface AdvertisementDto {
   priority: number;
   startAt: IsoDateTime;
   endAt: IsoDateTime;
-  /** Computed from startAt/endAt on every read — never stored (CLAUDE.md §13). */
   isActive: boolean;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;

@@ -1,7 +1,6 @@
 import type { Id, IsoDateTime } from './api.js';
 import type { MediaSummaryDto } from './media.js';
 
-/// Effectively a singleton — exactly one row, created by the seed.
 export interface SiteSettingsDto {
   id: Id;
   siteName: string;

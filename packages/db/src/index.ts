@@ -1,16 +1,11 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from './generated/client.js';
+import { Prisma, PrismaClient } from './generated/client.js';
 
 export * from './generated/enums.js';
 export type * from './generated/models.js';
-export { PrismaClient };
+export { Prisma, PrismaClient };
 
 export interface PrismaClientOptions {
-  /**
-   * PEM contents of the server's CA certificate. Supply it to get a verified
-   * connection; without it the connection is encrypted but the server identity
-   * is not checked.
-   */
   sslCa?: string;
 }
 
@@ -62,8 +57,6 @@ export function createPrismaClient(
 
 export type Database = PrismaClient;
 
-/** Prisma strips top-level transaction methods inside a transaction, so code
- * that must run within one takes this instead of Database. */
 export type TransactionClient = Parameters<
   Parameters<PrismaClient['$transaction']>[0]
 >[0];

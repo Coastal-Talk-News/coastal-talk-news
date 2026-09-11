@@ -11,10 +11,6 @@ interface SheetProps {
   footer?: ReactNode;
 }
 
-/**
- * Right-hand slide-over. Built on Dialog so it inherits focus trapping, Esc to
- * close, scroll locking and aria wiring instead of reimplementing them.
- */
 export function Sheet({
   open,
   onOpenChange,

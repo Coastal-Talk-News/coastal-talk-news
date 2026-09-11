@@ -32,8 +32,6 @@ export function toMediaAssetDto(
   return {
     id: asset.id,
     url: toPublicUrl(asset.storageKey),
-    // The grid renders dozens at ~300px; serving the stored 2400px copy there
-    // would download roughly ten times the bytes needed.
     thumbnailUrl: toPublicUrl(asset.storageKey, { width: 600 }),
     filename: asset.filename,
     mimeType: asset.mimeType,

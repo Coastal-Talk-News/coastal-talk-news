@@ -16,7 +16,6 @@ import { PageHeader } from '../components/layout/PageHeader.js';
 import { useAuth } from '../features/auth/useAuth.js';
 import { formatDate, formatRelative } from '../lib/format.js';
 
-// Enough to tell one device from another; not an attempt at UA parsing.
 function describeDevice(userAgent: string | null) {
   const ua = userAgent ?? '';
   if (/iPhone|Android.*Mobile/i.test(ua))
@@ -43,7 +42,6 @@ export function SessionsPage() {
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: queryKeys.sessions,
     queryFn: ({ signal }) => authApi.sessions(signal),
-    // Short, so a device signed out elsewhere disappears here quickly.
     staleTime: 10_000,
   });
 

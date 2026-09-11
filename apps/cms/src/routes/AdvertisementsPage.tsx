@@ -4,6 +4,7 @@ import type {
 } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
 import { ConfirmDialog } from '@coastal-talk-news/ui/confirm-dialog';
+import { Select, type SelectOption } from '@coastal-talk-news/ui/select';
 import { EmptyState, ErrorState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpDown, Megaphone, Plus } from 'lucide-react';
@@ -24,24 +25,21 @@ import { useAdvertisementMutations } from '../features/advertisements/useAdverti
 type StatusFilter = 'all' | AdvertisementStatus;
 type SortOrder = 'newest' | 'oldest';
 
-const STATUS_OPTIONS: Array<{ value: StatusFilter; label: string }> = [
+const STATUS_OPTIONS: Array<SelectOption<StatusFilter>> = [
   { value: 'all', label: 'All Status' },
   { value: 'active', label: 'Active' },
   { value: 'scheduled', label: 'Scheduled' },
   { value: 'expired', label: 'Expired' },
 ];
 
-// One page covers the whole list — same generous cap Breaking News/Categories
-// use — then filters/sort are applied client-side against the single fetch.
+const SORT_OPTIONS: Array<SelectOption<SortOrder>> = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+];
+
 const LIST_PARAMS = { limit: 100 };
 
-// Ticks the clock this page filters/labels items against, so a row crosses
-// from Scheduled to Active (and Active to Expired) on screen at its actual
-// start/end time — no manual refresh needed.
 const CLOCK_TICK_MS = 15_000;
-
-const selectClass =
-  'ring-hairline text-ink h-10 rounded-lg bg-surface px-3 text-sm ring-1 transition-shadow hover:ring-ink-subtle/40 focus:ring-2 focus:ring-accent focus:outline-none';
 
 export function AdvertisementsPage() {
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -75,9 +73,6 @@ export function AdvertisementsPage() {
             (item) => advertisementStatusValue(item, now) === status,
           );
 
-    // Sorts by when the ad was added, not its scheduled startAt — ads
-    // created back-to-back often share the same startAt default (rounded to
-    // the next 5 minutes), which would leave nothing for the sort to compare.
     return [...filtered].sort((a, b) => {
       const delta =
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -114,34 +109,24 @@ export function AdvertisementsPage() {
 
       <section className="border-hairline overflow-hidden rounded-card border bg-surface shadow-sm">
         <div className="border-hairline flex flex-wrap items-center gap-3 border-b p-4">
-          <select
+          <Select
+            size="sm"
+            className="w-44"
             value={status}
-            onChange={(event) => setStatus(event.target.value as StatusFilter)}
-            className={selectClass}
+            onValueChange={setStatus}
+            options={STATUS_OPTIONS}
             aria-label="Filter by status"
-          >
-            {STATUS_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          />
 
-          <div className="relative ml-auto">
-            <ArrowUpDown
-              className="text-ink-subtle pointer-events-none absolute inset-y-0 left-3 my-auto size-3.5"
-              aria-hidden
-            />
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as SortOrder)}
-              aria-label="Sort by"
-              className={`${selectClass} appearance-none pl-9`}
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-            </select>
-          </div>
+          <Select
+            size="sm"
+            className="ml-auto w-44"
+            value={sort}
+            onValueChange={setSort}
+            options={SORT_OPTIONS}
+            icon={<ArrowUpDown className="size-3.5" aria-hidden />}
+            aria-label="Sort by"
+          />
         </div>
 
         {isPending ? (
@@ -182,13 +167,13 @@ export function AdvertisementsPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-208 text-left">
                 <thead>
-                  <tr className="text-ink-subtle border-hairline border-b bg-surface-sunken text-xs font-semibold tracking-wide uppercase">
-                    <th className="w-9 py-2.5 pl-4">#</th>
-                    <th className="py-2.5 pr-4">Preview</th>
-                    <th className="py-2.5 pr-4">Title</th>
-                    <th className="py-2.5 pr-4">Date Range</th>
-                    <th className="py-2.5 pr-4">Status</th>
-                    <th className="py-2.5 pr-4 text-right">Actions</th>
+                  <tr className="text-ink-subtle border-hairline bg-surface-sunken border-b text-[11px] font-semibold tracking-[0.08em] uppercase">
+                    <th className="w-9 py-3 pl-4">#</th>
+                    <th className="py-3 pr-4">Preview</th>
+                    <th className="py-3 pr-4">Title</th>
+                    <th className="py-3 pr-4">Date Range</th>
+                    <th className="py-3 pr-4">Status</th>
+                    <th className="py-3 pr-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-hairline divide-y">

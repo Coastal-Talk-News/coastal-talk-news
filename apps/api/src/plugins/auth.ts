@@ -46,7 +46,6 @@ async function authPlugin(
     maxPerUser: env.SESSION_MAX_PER_USER,
   });
 
-  // Signed so a tampered cookie is rejected before it ever reaches the store.
   await app.register(cookie, { secret: env.SESSION_SECRET });
   app.decorate('sessions', sessions);
 
@@ -54,9 +53,6 @@ async function authPlugin(
     path: '/',
     httpOnly: true,
     signed: true,
-    // The CMS is a different origin, so the cookie must be SameSite=None,
-    // which browsers only accept alongside Secure. Relaxed in development
-    // because localhost is plain HTTP.
     sameSite: isProduction ? ('none' as const) : ('lax' as const),
     secure: isProduction,
     ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
@@ -102,14 +98,11 @@ async function authPlugin(
     const session = token ? sessions.verify(token) : null;
 
     if (!session) {
-      // Opaque on purpose: never reveal absent vs tampered vs expired.
       throw new UnauthorizedError();
     }
     request.session = session;
   });
 
-  // Abandoned sessions would otherwise sit in memory until the process exits.
-  // unref so the timer never holds the process open on shutdown.
   const sweeper = setInterval(() => sessions.sweep(), SWEEP_INTERVAL_MS);
   sweeper.unref();
   app.addHook('onClose', async () => clearInterval(sweeper));

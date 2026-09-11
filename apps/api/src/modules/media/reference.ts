@@ -1,12 +1,5 @@
 import type { TransactionClient } from '@coastal-talk-news/db';
 
-/**
- * A MediaAsset can be referenced from seven columns at once. Deleting one
- * referencing resource must not delete the asset while another reference
- * survives — only losing the last one deletes it. Every delete path and every
- * media-reference swap goes through here rather than re-deriving the check.
- */
-
 async function countReferences(
   tx: TransactionClient,
   mediaId: string,
@@ -40,7 +33,7 @@ export async function isMediaReferenced(
 
 /**
  * Call after the mutation that removed the reference, in the same transaction.
- * Deleting the returned storage keys from R2 is the caller's job and must
+ * Deleting the returned storage keys from Cloudinary is the caller's job and must
  * happen after commit — object storage has no rollback.
  */
 export async function releaseMedia(
@@ -103,10 +96,6 @@ export interface MediaUsage {
   total: number;
 }
 
-/**
- * Usage counts for a page of assets in five queries, whatever the page size.
- * Counting per row would be four queries per asset.
- */
 export async function countUsage(
   tx: TransactionClient,
   mediaIds: string[],

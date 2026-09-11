@@ -15,7 +15,6 @@ export function AppLayout() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Ctrl/Cmd+B matches the editor convention most people already know.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       if (event.key.toLowerCase() === 'b' && (event.ctrlKey || event.metaKey)) {

@@ -4,6 +4,7 @@ import type {
 } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
 import { ConfirmDialog } from '@coastal-talk-news/ui/confirm-dialog';
+import { Select, type SelectOption } from '@coastal-talk-news/ui/select';
 import { EmptyState, ErrorState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpDown, Bell, Plus } from 'lucide-react';
@@ -24,6 +25,11 @@ import { useBreakingNewsMutations } from '../features/breaking-news/useBreakingN
 type TabValue = 'all' | BreakingNewsStatus;
 type SortOrder = 'newest' | 'oldest';
 
+const SORT_OPTIONS: Array<SelectOption<SortOrder>> = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+];
+
 const TABS: Array<{ value: TabValue; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'active', label: 'Active' },
@@ -31,14 +37,8 @@ const TABS: Array<{ value: TabValue; label: string }> = [
   { value: 'expired', label: 'Expired' },
 ];
 
-// One page covers the whole list — same generous cap the Categories page
-// uses — then tabs/sort are applied client-side against the single fetch.
 const LIST_PARAMS = { limit: 100 };
 
-// Ticks the clock this page filters/labels items against, so a row crosses
-// from Scheduled to Active (and Active to Expired) on screen at its actual
-// start/end time — no manual refresh needed. 15s keeps that within a
-// reasonable margin without re-rendering the table needlessly often.
 const CLOCK_TICK_MS = 15_000;
 
 export function BreakingNewsPage() {
@@ -133,7 +133,7 @@ export function BreakingNewsPage() {
                 className={
                   tab === item.value
                     ? 'text-ink flex items-center gap-1.5 rounded-[7px] bg-surface px-3.5 py-1.5 text-sm font-medium shadow-sm transition-all'
-                    : 'text-ink-muted flex items-center gap-1.5 rounded-[7px] px-3.5 py-1.5 text-sm font-medium transition-colors hover:text-ink-muted'
+                    : 'text-ink-muted flex items-center gap-1.5 rounded-[7px] px-3.5 py-1.5 text-sm font-medium transition-colors hover:text-ink'
                 }
               >
                 {item.label}
@@ -144,21 +144,15 @@ export function BreakingNewsPage() {
             ))}
           </div>
 
-          <div className="relative">
-            <ArrowUpDown
-              className="text-ink-subtle pointer-events-none absolute inset-y-0 left-3 my-auto size-3.5"
-              aria-hidden
-            />
-            <select
-              value={sort}
-              onChange={(event) => setSort(event.target.value as SortOrder)}
-              aria-label="Sort by"
-              className="ring-hairline text-ink h-10 appearance-none rounded-lg bg-surface pr-8 pl-9 text-sm ring-1 transition-shadow hover:ring-ink-subtle/40 focus:ring-2 focus:ring-accent focus:outline-none"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-            </select>
-          </div>
+          <Select
+            size="sm"
+            className="w-44"
+            value={sort}
+            onValueChange={setSort}
+            options={SORT_OPTIONS}
+            icon={<ArrowUpDown className="size-3.5" aria-hidden />}
+            aria-label="Sort by"
+          />
         </div>
 
         {isPending ? (
@@ -195,13 +189,13 @@ export function BreakingNewsPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-208 text-left">
                 <thead>
-                  <tr className="text-ink-subtle border-hairline border-b bg-surface-sunken text-xs font-semibold tracking-wide uppercase">
-                    <th className="w-9 py-2.5 pl-4">#</th>
-                    <th className="py-2.5 pr-4">News Item</th>
-                    <th className="py-2.5 pr-4">Status</th>
-                    <th className="py-2.5 pr-4">Start Time</th>
-                    <th className="py-2.5 pr-4">End Time</th>
-                    <th className="py-2.5 pr-4 text-right">Actions</th>
+                  <tr className="text-ink-subtle border-hairline bg-surface-sunken border-b text-[11px] font-semibold tracking-[0.08em] uppercase">
+                    <th className="w-9 py-3 pl-4">#</th>
+                    <th className="py-3 pr-4">News Item</th>
+                    <th className="py-3 pr-4">Status</th>
+                    <th className="py-3 pr-4">Start Time</th>
+                    <th className="py-3 pr-4">End Time</th>
+                    <th className="py-3 pr-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-hairline divide-y">

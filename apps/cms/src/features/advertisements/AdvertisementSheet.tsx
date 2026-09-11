@@ -4,14 +4,14 @@ import type {
   MediaSummaryDto,
 } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
+import { DateTimeField } from '@coastal-talk-news/ui/date-time-field';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
 import { Sheet } from '@coastal-talk-news/ui/sheet';
-import { Calendar, Clock, ImagePlus, Link as LinkIcon, X } from 'lucide-react';
+import { ADVERTISER_NAME_MAX } from '@coastal-talk-news/validation/limits';
+import { ImagePlus, Link as LinkIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
-
-const TITLE_MAX = 120;
 
 interface FormValues {
   advertiserName: string;
@@ -36,7 +36,6 @@ function splitIso(iso: string): { date: string; time: string } {
   };
 }
 
-/** Native date/time inputs are local-time strings; combine and convert to UTC. */
 function combineToIso(date: string, time: string): string | null {
   if (!date || !time) return null;
   const local = new Date(`${date}T${time}`);
@@ -45,7 +44,6 @@ function combineToIso(date: string, time: string): string | null {
 
 function defaultStart(): { date: string; time: string } {
   const now = new Date();
-  // Round up to the next 5 minutes so the default doesn't read as "in the past".
   now.setMinutes(now.getMinutes() + (5 - (now.getMinutes() % 5 || 5)));
   return splitIso(now.toISOString());
 }
@@ -166,7 +164,6 @@ export function AdvertisementSheet({
     });
   }
 
-  // Closing with unsaved edits asks first, so a stray Esc cannot discard work.
   function requestClose(next: boolean) {
     if (next) return onOpenChange(true);
     if (isDirty && !window.confirm('Discard your unsaved changes?')) return;
@@ -224,7 +221,7 @@ export function AdvertisementSheet({
             id="advertisement-title"
             ref={titleRef}
             value={values.advertiserName}
-            maxLength={TITLE_MAX}
+            maxLength={ADVERTISER_NAME_MAX}
             placeholder="Enter advertisement title (e.g., Brand name)"
             invalid={Boolean(titleError)}
             onBlur={() => setTouched(true)}
@@ -362,36 +359,20 @@ export function AdvertisementSheet({
           required
           error={startError}
         >
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              id="advertisement-start-date"
-              type="date"
-              value={values.startDate}
-              icon={<Calendar className="size-4" aria-hidden />}
-              invalid={Boolean(startError)}
-              onBlur={() => setTouched(true)}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  startDate: event.target.value,
-                }))
-              }
-            />
-            <Input
-              type="time"
-              aria-label="Start time"
-              value={values.startTime}
-              icon={<Clock className="size-4" aria-hidden />}
-              invalid={Boolean(startError)}
-              onBlur={() => setTouched(true)}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  startTime: event.target.value,
-                }))
-              }
-            />
-          </div>
+          <DateTimeField
+            id="advertisement-start-date"
+            date={values.startDate}
+            time={values.startTime}
+            invalid={Boolean(startError)}
+            dateLabel="Start date"
+            timeLabel="Start time"
+            onDateChange={(startDate) =>
+              setValues((current) => ({ ...current, startDate }))
+            }
+            onTimeChange={(startTime) =>
+              setValues((current) => ({ ...current, startTime }))
+            }
+          />
         </Field>
 
         <Field
@@ -400,36 +381,20 @@ export function AdvertisementSheet({
           required
           error={endError}
         >
-          <div className="grid grid-cols-2 gap-3">
-            <Input
-              id="advertisement-end-date"
-              type="date"
-              value={values.endDate}
-              icon={<Calendar className="size-4" aria-hidden />}
-              invalid={Boolean(endError)}
-              onBlur={() => setTouched(true)}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  endDate: event.target.value,
-                }))
-              }
-            />
-            <Input
-              type="time"
-              aria-label="End time"
-              value={values.endTime}
-              icon={<Clock className="size-4" aria-hidden />}
-              invalid={Boolean(endError)}
-              onBlur={() => setTouched(true)}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  endTime: event.target.value,
-                }))
-              }
-            />
-          </div>
+          <DateTimeField
+            id="advertisement-end-date"
+            date={values.endDate}
+            time={values.endTime}
+            invalid={Boolean(endError)}
+            dateLabel="End date"
+            timeLabel="End time"
+            onDateChange={(endDate) =>
+              setValues((current) => ({ ...current, endDate }))
+            }
+            onTimeChange={(endTime) =>
+              setValues((current) => ({ ...current, endTime }))
+            }
+          />
         </Field>
 
         <div className="border-hairline rounded-lg border p-4">

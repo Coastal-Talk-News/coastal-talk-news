@@ -45,9 +45,6 @@ export function useCategoryMutations(listKey: QueryKey) {
     },
   });
 
-  // Separate from `update` because the row toggle applies immediately and rolls
-  // back if the server rejects it. Sharing one mutation would make the form save
-  // optimistic too, which it should not be.
   const setActive = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       categoriesApi.update(id, { isActive }),
@@ -93,7 +90,6 @@ export function useCategoryMutations(listKey: QueryKey) {
       toast.success('Order saved.');
     },
     onError: (error) => {
-      // Refetching restores the server's order, undoing the local drag.
       invalidate();
       toast.error(messageFor(error, 'Could not save the new order.'));
     },

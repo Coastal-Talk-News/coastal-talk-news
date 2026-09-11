@@ -1,6 +1,5 @@
 import { Skeleton } from '@coastal-talk-news/ui/skeleton';
 
-/** Mirrors the real row heights so content doesn't jump when data lands. */
 export function AdvertisementTableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="divide-hairline divide-y">

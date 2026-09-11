@@ -7,13 +7,15 @@ import { Button } from '@coastal-talk-news/ui/button';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
 import { Sheet } from '@coastal-talk-news/ui/sheet';
+import { Textarea } from '@coastal-talk-news/ui/textarea';
 import { Toggle } from '@coastal-talk-news/ui/toggle';
+import {
+  CATEGORY_DESCRIPTION_MAX,
+  CATEGORY_NAME_MAX,
+} from '@coastal-talk-news/validation/limits';
 import { ImagePlus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
-
-const NAME_MAX = 60;
-const DESCRIPTION_MAX = 200;
 
 interface FormValues {
   name: string;
@@ -62,8 +64,6 @@ export function CategorySheet({
     setValues(next);
     initial.current = next;
     setTouched(false);
-    // Focus lands on the first field so the form is usable without reaching
-    // for the mouse.
     const timer = setTimeout(() => nameRef.current?.focus(), 80);
     return () => clearTimeout(timer);
   }, [open, editing]);
@@ -106,7 +106,6 @@ export function CategorySheet({
     });
   }
 
-  // Closing with unsaved edits asks first, so a stray Esc cannot discard work.
   function requestClose(next: boolean) {
     if (next) return onOpenChange(true);
     if (isDirty && !window.confirm('Discard your unsaved changes?')) return;
@@ -183,7 +182,7 @@ export function CategorySheet({
             id="category-name"
             ref={nameRef}
             value={values.name}
-            maxLength={NAME_MAX}
+            maxLength={CATEGORY_NAME_MAX}
             placeholder="e.g. Udupi"
             invalid={Boolean(nameError)}
             onBlur={() => setTouched(true)}
@@ -201,10 +200,11 @@ export function CategorySheet({
             Description
             <span className="text-ink-subtle ml-1 font-normal">(optional)</span>
           </label>
-          <textarea
+          <Textarea
             id="category-description"
             rows={4}
-            maxLength={DESCRIPTION_MAX}
+            maxLength={CATEGORY_DESCRIPTION_MAX}
+            showCount
             value={values.description}
             placeholder="A short line shown on the category page."
             onChange={(event) =>
@@ -213,11 +213,7 @@ export function CategorySheet({
                 description: event.target.value,
               }))
             }
-            className="ring-hairline focus:ring-accent w-full resize-none rounded-lg bg-surface px-3 py-2.5 text-sm ring-1 transition-shadow placeholder:text-ink-subtle hover:ring-ink-subtle/40 focus:ring-2 focus:outline-none"
           />
-          <p className="text-ink-subtle text-right text-xs tabular-nums">
-            {values.description.length}/{DESCRIPTION_MAX}
-          </p>
         </div>
 
         <div className="space-y-1.5">

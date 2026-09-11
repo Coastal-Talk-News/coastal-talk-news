@@ -19,8 +19,9 @@ import {
 import { Link } from 'react-router-dom';
 import { dashboardApi } from '../api/dashboard.js';
 import { queryKeys } from '../api/queryKeys.js';
+import { DashboardDate } from '../features/dashboard/DashboardDate.js';
 import { StatCard } from '../features/dashboard/StatCard.js';
-import { formatDate, formatRelative } from '../lib/format.js';
+import { formatRelative } from '../lib/format.js';
 
 const STATUS_TONE: Record<ArticleStatus, 'green' | 'amber' | 'slate'> = {
   PUBLISHED: 'green',
@@ -95,9 +96,7 @@ export function DashboardPage() {
             Here&rsquo;s what&rsquo;s happening in your newsroom today.
           </p>
         </div>
-        <p className="text-right text-sm text-ink-muted">
-          {formatDate(new Date().toISOString())}
-        </p>
+        <DashboardDate />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -224,7 +223,7 @@ export function DashboardPage() {
                         )}
                       </p>
                     </div>
-                    <Badge tone={STATUS_TONE[article.status]}>
+                    <Badge tone={STATUS_TONE[article.status]} dot>
                       {article.status.charAt(0) +
                         article.status.slice(1).toLowerCase()}
                     </Badge>

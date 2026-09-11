@@ -28,7 +28,6 @@ export async function login(
     password,
   );
 
-  // A fresh session id per login, so a token captured earlier is never reused.
   request.server.issueSession(request, reply, user.id);
   return dataEnvelope(user);
 }
@@ -60,8 +59,6 @@ export async function revokeSession(
   const { sessions } = request.server;
   const { id } = request.params;
 
-  // Revoking your own session is a sign-out, so clear the cookie too rather
-  // than leaving the browser holding one that no longer resolves.
   if (id === request.session.id) {
     request.server.clearSession(request, reply);
     return reply.status(204).send(null);

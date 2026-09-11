@@ -1,11 +1,5 @@
-/**
- * The API response contract. Every endpoint returns one of these three shapes.
- * Matching TypeBox schemas live in @coastal-talk-news/validation.
- */
-
 export const API_BASE_PATH = '/api/v1';
 
-/** ISO 8601, e.g. "2026-09-08T04:37:46.169Z". */
 export type IsoDateTime = string;
 
 export type Id = string;
@@ -24,7 +18,6 @@ export interface ApiListSuccess<TItem> {
 export interface PaginationMeta {
   page: number;
   limit: number;
-  /** Across all pages, not the length of `data`. */
   total: number;
   totalPages: number;
   hasNextPage: boolean;

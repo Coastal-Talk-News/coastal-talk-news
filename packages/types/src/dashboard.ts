@@ -16,7 +16,6 @@ export interface DashboardArticleDto {
   id: Id;
   headline: string;
   status: ArticleStatus;
-  /** Nullable at the DB level (see schema.prisma's Article.categoryId comment). */
   categoryName: string | null;
   publicationDate: IsoDateTime | null;
   updatedAt: IsoDateTime;
@@ -27,7 +26,6 @@ export interface DashboardBreakingNewsDto {
   id: Id;
   headline: string;
   startAt: IsoDateTime;
-  /** Null means the item runs indefinitely from startAt until deleted. */
   endAt: IsoDateTime | null;
   isActive: boolean;
 }

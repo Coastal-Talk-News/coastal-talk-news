@@ -12,9 +12,6 @@ const withMedia = {
 
 export type SiteSettingsRow = Awaited<ReturnType<typeof findFirst>>;
 
-// No id-keyed finder, no create, no remove, no count — SiteSettings is a
-// singleton with exactly one row, created once by the seed. The API never
-// creates or deletes it, only reads and updates the one existing row.
 export function findFirst(db: TransactionClient) {
   return db.siteSettings.findFirst({ include: withMedia });
 }

@@ -9,7 +9,6 @@ interface TagsInputProps {
   tagMaxLength?: number;
 }
 
-/** Free text, author-entered — not a controlled taxonomy (docs/DATA-MODEL.md). */
 export function TagsInput({
   value,
   onChange,

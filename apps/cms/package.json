@@ -13,6 +13,7 @@
   "dependencies": {
     "@coastal-talk-news/types": "workspace:*",
     "@coastal-talk-news/ui": "workspace:*",
+    "@coastal-talk-news/validation": "workspace:*",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",

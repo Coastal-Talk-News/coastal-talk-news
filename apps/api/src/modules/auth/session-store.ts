@@ -1,20 +1,8 @@
 import { createHash, randomBytes } from 'node:crypto';
 
-/**
- * Server-held sessions, kept in process memory.
- *
- * Opaque IDs rather than JWTs so a session can actually be revoked: a stateless
- * token stays valid until it expires no matter what the server decides.
- *
- * Memory is the deliberate store — no Redis, no table. The consequence is that
- * every restart or deploy signs everyone out, and the API cannot run more than
- * one instance, because a session created on one would not exist on another.
- */
-
 const TOKEN_BYTES = 32;
 
 export interface SessionRecord {
-  /** SHA-256 of the token. The token itself is never retained. */
   id: string;
   userId: string;
   createdAt: Date;
@@ -25,11 +13,8 @@ export interface SessionRecord {
 }
 
 export interface SessionStoreOptions {
-  /** Hard lifetime. A session dies at this point however active it is. */
   absoluteTtlMs: number;
-  /** Idle lifetime. An untouched session dies after this. */
   idleTtlMs: number;
-  /** Oldest sessions are dropped past this, so one account cannot grow memory without bound. */
   maxPerUser: number;
 }
 
@@ -63,10 +48,6 @@ export class SessionStore {
     return { token, session };
   }
 
-  /**
-   * Returns the session for a token and marks it seen, or null when it is
-   * unknown, expired or idled out.
-   */
   verify(token: string, now = new Date()): SessionRecord | null {
     const session = this.sessions.get(hashToken(token));
     if (!session) {
@@ -86,7 +67,6 @@ export class SessionStore {
     return this.sessions.delete(hashToken(token));
   }
 
-  /** Scoped to the owner so one admin can never revoke another's session. */
   revokeForUser(userId: string, sessionId: string): boolean {
     const session = this.sessions.get(sessionId);
     if (!session || session.userId !== userId) {
@@ -113,7 +93,6 @@ export class SessionStore {
       .sort((a, b) => b.lastSeenAt.getTime() - a.lastSeenAt.getTime());
   }
 
-  /** Drops lapsed sessions so memory does not grow with abandoned logins. */
   sweep(now = new Date()): number {
     let removed = 0;
     for (const [id, session] of this.sessions) {

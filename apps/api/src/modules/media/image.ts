@@ -8,8 +8,6 @@ import {
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
-// Cloudinary resizes per request, so the stored copy only needs to cover the
-// largest use — a full-bleed hero on a retina screen.
 const MAX_STORED_EDGE = 2400;
 
 /**

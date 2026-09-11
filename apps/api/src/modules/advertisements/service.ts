@@ -115,7 +115,6 @@ export async function update(
       ...(input.endAt !== undefined ? { endAt } : {}),
     });
 
-    // Swapping the image can strand the previous one.
     const orphanedKeys = mediaChanged
       ? await releaseMedia(tx, [existing.media.id])
       : [];

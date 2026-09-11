@@ -5,16 +5,16 @@ import type {
 import { Button } from '@coastal-talk-news/ui/button';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
+import { Textarea } from '@coastal-talk-news/ui/textarea';
+import {
+  SETTINGS_META_DESCRIPTION_MAX,
+  SETTINGS_SEO_TITLE_MAX,
+} from '@coastal-talk-news/validation/limits';
 import { Info } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { SettingsImageField } from './SettingsImageField.js';
 import { useUpdateSettings } from './useUpdateSettings.js';
-
-// Mirrors packages/validation/src/settings.ts — see SettingsGeneralForm for why
-// the CMS keeps its own copies instead of importing the validation package.
-const SEO_TITLE_MAX = 60;
-const META_DESCRIPTION_MAX = 160;
 
 interface SeoValues {
   defaultSeoTitle: string;
@@ -86,7 +86,7 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
         <Input
           id="settings-seo-title"
           value={values.defaultSeoTitle}
-          maxLength={SEO_TITLE_MAX}
+          maxLength={SETTINGS_SEO_TITLE_MAX}
           placeholder="Coastal Talk News — Local news you can trust"
           onChange={(event) =>
             setValues((current) => ({
@@ -105,10 +105,11 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
           Default Meta Description
           <span className="text-ink-subtle ml-1 font-normal">(optional)</span>
         </label>
-        <textarea
+        <Textarea
           id="settings-seo-description"
           rows={3}
-          maxLength={META_DESCRIPTION_MAX}
+          maxLength={SETTINGS_META_DESCRIPTION_MAX}
+          showCount
           value={values.defaultMetaDescription}
           placeholder="A short description search engines show under your site's title."
           onChange={(event) =>
@@ -117,11 +118,7 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
               defaultMetaDescription: event.target.value,
             }))
           }
-          className="ring-hairline focus:ring-accent w-full resize-none rounded-lg bg-surface px-3 py-2.5 text-sm ring-1 transition-shadow placeholder:text-ink-subtle hover:ring-ink-subtle/40 focus:ring-2 focus:outline-none"
         />
-        <p className="text-ink-subtle text-right text-xs tabular-nums">
-          {values.defaultMetaDescription.length}/{META_DESCRIPTION_MAX}
-        </p>
       </div>
 
       <SettingsImageField

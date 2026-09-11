@@ -55,8 +55,6 @@ async function errorHandlerPlugin(app: FastifyInstance): Promise<void> {
         .send(failure('VALIDATION_FAILED', error.message));
     }
 
-    // Infrastructure, not a defect: warn rather than error so genuine bugs stay
-    // visible, and 503 so the caller knows it is worth retrying.
     if (isDatabaseUnavailable(error)) {
       request.log.warn({ err: error }, 'Database unreachable');
       return reply

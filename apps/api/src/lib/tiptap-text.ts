@@ -1,10 +1,3 @@
-/**
- * Flattens a Tiptap document into plain text for contentText, which exists
- * only to feed the generated search_vector column (see the init migration).
- * This is intentionally not a full ProseMirror walker — it only needs enough
- * fidelity for full-text search to find real words, not to reproduce layout.
- */
-
 interface TiptapNode {
   text?: unknown;
   content?: unknown;

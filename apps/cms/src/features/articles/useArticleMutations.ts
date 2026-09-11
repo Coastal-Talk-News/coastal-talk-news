@@ -21,11 +21,18 @@ export function useArticleMutations() {
     void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
   };
 
+  function savedMessage(status: ArticleDto['status']): string {
+    if (status === 'PUBLISHED') return 'Published — it is live now.';
+    if (status === 'ARCHIVED') return 'Archived — it is off the website.';
+    return 'Draft saved.';
+  }
+
   const create = useMutation({
     mutationFn: (body: CreateArticleRequest) => articlesApi.create(body),
-    onSuccess: () => {
+    onSuccess: (article) => {
       invalidate();
-      toast.success('Article saved.');
+      queryClient.setQueryData(queryKeys.article(article.id), article);
+      toast.success(savedMessage(article.status));
     },
   });
 
@@ -35,7 +42,7 @@ export function useArticleMutations() {
     onSuccess: (article) => {
       invalidate();
       queryClient.setQueryData(queryKeys.article(article.id), article);
-      toast.success('Article saved.');
+      toast.success(savedMessage(article.status));
     },
   });
 
@@ -54,11 +61,47 @@ export function useArticleMutations() {
       articlesApi.update(article.id, { status: 'ARCHIVED' }),
     onSuccess: () => {
       invalidate();
-      toast.success('Article archived.');
+      toast.success('Article archived — it is off the website now.');
     },
     onError: (error) =>
       toast.error(messageFor(error, 'Could not archive this article.')),
   });
 
-  return { create, update, remove, archive };
+  const restore = useMutation({
+    mutationFn: (article: ArticleDto) =>
+      articlesApi.update(article.id, { status: 'DRAFT' }),
+    onSuccess: (article) => {
+      invalidate();
+      queryClient.setQueryData(queryKeys.article(article.id), article);
+      toast.success('Restored to drafts.');
+    },
+    onError: (error) =>
+      toast.error(messageFor(error, 'Could not restore this article.')),
+  });
+
+  const publish = useMutation({
+    mutationFn: (article: ArticleDto) =>
+      articlesApi.update(article.id, { status: 'PUBLISHED' }),
+    onSuccess: (article) => {
+      invalidate();
+      queryClient.setQueryData(queryKeys.article(article.id), article);
+      toast.success('Published — it is live now.');
+    },
+    onError: (error) =>
+      toast.error(messageFor(error, 'Could not publish this article.')),
+  });
+
+  const unpublish = useMutation({
+    mutationFn: (article: ArticleDto) =>
+      articlesApi.update(article.id, { status: 'DRAFT' }),
+    onSuccess: (article) => {
+      invalidate();
+      queryClient.setQueryData(queryKeys.article(article.id), article);
+      toast.success('Moved back to drafts — it is off the website.');
+    },
+    onError: (error) =>
+      toast.error(messageFor(error, 'Could not unpublish this article.')),
+  });
+
+  return { create, update, remove, archive, restore, publish, unpublish };
 }

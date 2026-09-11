@@ -3,8 +3,6 @@ import bcrypt from 'bcrypt';
 import { UnauthorizedError } from '../../lib/errors.js';
 import * as repository from './repository.js';
 
-/** Compared against when no user matches, so response time does not leak
- * which accounts exist. */
 const DUMMY_HASH =
   '$2b$12$C6UzMDM.H6dfI/f/IKcEe.eS3nMEBcMHpBFCXNHNBBg9nRJlLIcmy';
 

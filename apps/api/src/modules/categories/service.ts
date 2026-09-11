@@ -81,8 +81,6 @@ export async function getForCms({ db }: CategoryServiceDeps, id: string) {
 
 export async function getPublic({ db }: CategoryServiceDeps, id: string) {
   const category = await repository.findById(db, id);
-  // A deactivated category must be indistinguishable from a missing one to
-  // readers, so this is a 404 rather than a 403.
   if (!category || !category.isActive) {
     throw new NotFoundError('Category');
   }
@@ -148,7 +146,6 @@ export async function update(
         : {}),
     });
 
-    // Swapping the cover image can strand the previous one.
     const orphanedKeys = coverImageChanged
       ? await releaseMedia(tx, [existing.mediaId])
       : [];
@@ -160,11 +157,6 @@ export async function update(
   return category;
 }
 
-/**
- * Takes the complete ordered list of category ids and rewrites displayOrder to
- * match. Partial lists are rejected: assigning positions from a subset would
- * collide with the categories left out of it.
- */
 export async function reorder(
   { db }: CategoryServiceDeps,
   ids: string[],
@@ -206,8 +198,6 @@ export async function remove(
   }
 
   const orphanedKeys = await db.$transaction(async (tx) => {
-    // Enforced here, not just by the CMS hiding the button — the API must
-    // reject this independently of what any frontend does.
     const articleCount = await repository.countArticles(tx, id);
     if (articleCount > 0) {
       throw new ConflictError(

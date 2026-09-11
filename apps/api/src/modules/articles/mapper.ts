@@ -14,9 +14,6 @@ interface MediaRow {
 
 export interface ArticleEntity {
   id: string;
-  // Nullable at the DB level (see schema.prisma) — the API still requires a
-  // category on create, so this is only ever null for a row written outside
-  // that path.
   categoryId: string | null;
   language: Language;
   headline: string;
@@ -60,8 +57,6 @@ export function toArticleDto(
     language: article.language,
     headline: article.headline,
     summary: article.summary,
-    // Prisma's Json column is genuinely `unknown` to TypeScript; the actual
-    // shape is enforced on write by ArticleContentSchema.
     content: article.content as ArticleContent,
     youtubeUrl: article.youtubeUrl,
     tags: article.tags,

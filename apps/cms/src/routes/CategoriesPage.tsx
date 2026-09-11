@@ -30,7 +30,7 @@ import { CategoryRow } from '../features/categories/CategoryRow.js';
 import { CategoryTableSkeleton } from '../features/categories/CategoryTableSkeleton.js';
 import { CategorySheet } from '../features/categories/CategorySheet.js';
 import { useCategoryMutations } from '../features/categories/useCategoryMutations.js';
-import { useDebounced } from '../lib/useDebounced.js';
+import { SEARCH_DEBOUNCE_MS, useDebounced } from '../lib/useDebounced.js';
 
 type StatusFilter = 'all' | 'active' | 'hidden';
 
@@ -49,7 +49,7 @@ const STATUS_PARAM: Record<StatusFilter, boolean | undefined> = {
 export function CategoriesPage() {
   const [status, setStatus] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounced(search);
+  const debouncedSearch = useDebounced(search, SEARCH_DEBOUNCE_MS);
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<CmsCategoryDto | null>(null);
@@ -67,8 +67,6 @@ export function CategoriesPage() {
 
   const mutations = useCategoryMutations(listKey);
 
-  // Dragging rearranges a local copy before the server confirms; this resyncs
-  // whenever fresh data arrives.
   const [order, setOrder] = useState<CmsCategoryDto[]>([]);
   useEffect(() => {
     if (data) setOrder(data.data);
@@ -84,8 +82,6 @@ export function CategoriesPage() {
     );
   }, [order, debouncedSearch]);
 
-  // Reordering a filtered subset would write positions that don't reflect the
-  // real list, so dragging is only allowed when everything is on screen.
   const isFiltered = debouncedSearch.trim() !== '' || status !== 'all';
   const reorderHint = isFiltered
     ? 'Clear the search and filter to reorder'
@@ -164,7 +160,7 @@ export function CategoriesPage() {
                 className={
                   status === tab.value
                     ? 'text-ink rounded-[7px] bg-surface px-3.5 py-1.5 text-sm font-medium shadow-sm transition-all'
-                    : 'text-ink-muted rounded-[7px] px-3.5 py-1.5 text-sm font-medium transition-colors hover:text-ink-muted'
+                    : 'text-ink-muted rounded-[7px] px-3.5 py-1.5 text-sm font-medium transition-colors hover:text-ink'
                 }
               >
                 {tab.label}
@@ -231,16 +227,16 @@ export function CategoriesPage() {
               >
                 <table className="w-full min-w-208 text-left">
                   <thead>
-                    <tr className="text-ink-subtle border-hairline border-b bg-surface-sunken text-xs font-semibold tracking-wide uppercase">
+                    <tr className="text-ink-subtle border-hairline bg-surface-sunken border-b text-[11px] font-semibold tracking-[0.08em] uppercase">
                       <th className="w-9 pl-4">
                         <span className="sr-only">Reorder</span>
                       </th>
-                      <th className="w-9 py-2.5">#</th>
-                      <th className="py-2.5">Image</th>
-                      <th className="py-2.5 pr-4">Name</th>
-                      <th className="py-2.5 pr-4">Articles</th>
-                      <th className="py-2.5 pr-4">Status</th>
-                      <th className="py-2.5 pr-4 text-right">Actions</th>
+                      <th className="w-9 py-3">#</th>
+                      <th className="py-3">Image</th>
+                      <th className="py-3 pr-4">Name</th>
+                      <th className="py-3 pr-4">Articles</th>
+                      <th className="py-3 pr-4">Status</th>
+                      <th className="py-3 pr-4 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-hairline divide-y">

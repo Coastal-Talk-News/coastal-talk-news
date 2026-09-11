@@ -8,15 +8,6 @@ interface DrawerProps {
   children: ReactNode;
 }
 
-/**
- * Left slide-over for mobile navigation.
- *
- * Portals to document.body so the scrim is measured against the viewport
- * rather than an ancestor's containing block — rendered inline, a fixed
- * overlay can be clipped by any parent with a transform, filter or contain,
- * leaving strips of the page uncovered. Dialog also locks body scroll, so the
- * page cannot be scrolled out from under the scrim.
- */
 export function Drawer({ open, onOpenChange, title, children }: DrawerProps) {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>

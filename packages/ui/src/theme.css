@@ -194,3 +194,9 @@
     display: none;
   }
 }
+
+/* DateTimeField draws its own clock icon; the browser's sits on top of it and
+   can't be themed. Clicking the field still opens the native time popup. */
+input[type='time']::-webkit-calendar-picker-indicator {
+  display: none;
+}

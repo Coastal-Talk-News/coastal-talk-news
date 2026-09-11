@@ -1,9 +1,13 @@
+import type { ArticleContent } from '@coastal-talk-news/types';
 import { cn } from '@coastal-talk-news/ui/cn';
 import ImageExtension from '@tiptap/extension-image';
-import LinkExtension from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import UnderlineExtension from '@tiptap/extension-underline';
-import { EditorContent, useEditor, type Editor } from '@tiptap/react';
+import {
+  EditorContent,
+  useEditor,
+  type Content,
+  type Editor,
+} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import {
   Bold as BoldIcon,
@@ -19,8 +23,8 @@ import {
 import { useEffect, type ReactNode } from 'react';
 
 interface TiptapEditorProps {
-  content: object | null;
-  onChange: (content: object) => void;
+  content: ArticleContent | null;
+  onChange: (content: ArticleContent) => void;
   placeholder?: string;
 }
 
@@ -151,11 +155,6 @@ function Toolbar({ editor }: { editor: Editor }) {
   );
 }
 
-/**
- * Stores Tiptap document JSON, not HTML — the public site renders it
- * programmatically, so stored content cannot inject markup (schema.prisma's
- * Article.content comment).
- */
 export function TiptapEditor({
   content,
   onChange,
@@ -163,14 +162,14 @@ export function TiptapEditor({
 }: TiptapEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      UnderlineExtension,
-      LinkExtension.configure({ openOnClick: false, autolink: true }),
+      StarterKit.configure({
+        link: { openOnClick: false, autolink: true },
+      }),
       ImageExtension,
       Placeholder.configure({ placeholder }),
     ],
-    content: content ?? '',
-    onUpdate: ({ editor }) => onChange(editor.getJSON()),
+    content: (content ?? '') as Content,
+    onUpdate: ({ editor }) => onChange(editor.getJSON() as ArticleContent),
     editorProps: {
       attributes: {
         class:
@@ -179,11 +178,9 @@ export function TiptapEditor({
     },
   });
 
-  // The form resets `content` when switching between create/edit or reverting
-  // a draft; sync that back into the editor instead of only reading it once.
   useEffect(() => {
     if (!editor) return;
-    const next = content ?? '';
+    const next = (content ?? '') as Content;
     const current = editor.getJSON();
     if (JSON.stringify(current) !== JSON.stringify(next)) {
       editor.commands.setContent(next, { emitUpdate: false });

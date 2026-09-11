@@ -1,16 +1,29 @@
 import { Type } from '@sinclair/typebox';
 import { IsoDateTime } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
+import {
+  SETTINGS_SITE_NAME_MAX,
+  SETTINGS_TAGLINE_MAX,
+  SETTINGS_DESCRIPTION_MAX,
+  SETTINGS_EMAIL_MAX,
+  SETTINGS_PHONE_MAX,
+  SETTINGS_ADDRESS_MAX,
+  SETTINGS_SOCIAL_URL_MAX,
+  SETTINGS_SEO_TITLE_MAX,
+  SETTINGS_META_DESCRIPTION_MAX,
+} from './limits.js';
 
-export const SETTINGS_SITE_NAME_MAX = 120;
-export const SETTINGS_TAGLINE_MAX = 160;
-export const SETTINGS_DESCRIPTION_MAX = 160;
-export const SETTINGS_EMAIL_MAX = 254;
-export const SETTINGS_PHONE_MAX = 32;
-export const SETTINGS_ADDRESS_MAX = 200;
-export const SETTINGS_SOCIAL_URL_MAX = 300;
-export const SETTINGS_SEO_TITLE_MAX = 60;
-export const SETTINGS_META_DESCRIPTION_MAX = 160;
+export {
+  SETTINGS_SITE_NAME_MAX,
+  SETTINGS_TAGLINE_MAX,
+  SETTINGS_DESCRIPTION_MAX,
+  SETTINGS_EMAIL_MAX,
+  SETTINGS_PHONE_MAX,
+  SETTINGS_ADDRESS_MAX,
+  SETTINGS_SOCIAL_URL_MAX,
+  SETTINGS_SEO_TITLE_MAX,
+  SETTINGS_META_DESCRIPTION_MAX,
+};
 
 const NullableId = Type.Union([Type.String({ format: 'uuid' }), Type.Null()]);
 const NullableMedia = Type.Union([MediaSummarySchema, Type.Null()]);
@@ -44,10 +57,6 @@ export const SiteSettingsSchema = Type.Object({
   updatedAt: IsoDateTime,
 });
 
-// Fully optional/nullable, matching actual DB nullability — even siteName,
-// which is required at the column level, stays optional here so a PATCH from
-// one tab (e.g. SEO) doesn't need to resend fields it doesn't own. "Required
-// to save" for General-tab fields is enforced client-side only, not here.
 export const UpdateSiteSettingsBodySchema = Type.Object(
   {
     siteName: Type.Optional(
@@ -77,7 +86,6 @@ export const UpdateSiteSettingsBodySchema = Type.Object(
     defaultOgImageId: Type.Optional(NullableId),
   },
   {
-    // Rejects an empty PATCH rather than reporting success for a no-op.
     minProperties: 1,
     additionalProperties: false,
   },

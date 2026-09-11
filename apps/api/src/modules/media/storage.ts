@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { v2 as cloudinary, type UploadApiResponse } from 'cloudinary';
 import type { Env } from '../../config/env.js';
 
-// Cloudinary rejects with a plain { message, http_code } object, not an Error,
-// so the real cause was being discarded in favor of a generic message.
 function describeUploadError(error: unknown): string {
   if (error && typeof error === 'object' && 'message' in error) {
     return String((error as { message: unknown }).message);
@@ -12,16 +10,9 @@ function describeUploadError(error: unknown): string {
 }
 
 export interface TransformOptions {
-  /** Longest edge in pixels. Omit for the stored size. */
   width?: number;
 }
 
-/**
- * Cloudinary media storage.
- *
- * Uploads are proxied through the API rather than sent from the browser: a
- * direct upload would skip content validation and Sharp.
- */
 export class ObjectStorage {
   private readonly folder: string;
 
@@ -35,10 +26,6 @@ export class ObjectStorage {
     this.folder = env.CLOUDINARY_FOLDER;
   }
 
-  /**
-   * Random, not the upload's filename: those collide, can carry path traversal,
-   * and would leak into public URLs.
-   */
   buildStorageKey(): string {
     const now = new Date();
     const yearMonth = `${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
@@ -51,8 +38,6 @@ export class ObjectStorage {
         {
           public_id: storageKey,
           resource_type: 'image',
-          // The bytes are already validated and re-encoded by Sharp; letting
-          // Cloudinary transform on upload would spend credits twice.
           overwrite: false,
         },
         (error?: unknown, result?: UploadApiResponse) => {
@@ -75,11 +60,6 @@ export class ObjectStorage {
     await cloudinary.uploader.destroy(storageKey, { resource_type: 'image' });
   }
 
-  /**
-   * f_auto serves AVIF or WebP based on the browser's Accept header and q_auto
-   * picks a quality per image, so one stored file covers every client. Passing
-   * a width returns a resized derivative rather than the full-size original.
-   */
   publicUrl(storageKey: string, options: TransformOptions = {}): string {
     return cloudinary.url(storageKey, {
       secure: true,

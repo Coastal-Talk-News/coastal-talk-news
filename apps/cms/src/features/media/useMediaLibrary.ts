@@ -62,7 +62,6 @@ export function useMediaLibrary(search: string) {
             if (upload) URL.revokeObjectURL(upload.previewUrl);
             return current.filter((item) => item.key !== key);
           });
-          // Skip a filtered search view: the new file may not match it.
           if (!search) {
             queryClient.setQueryData<MediaList>(listKey, (current) =>
               current
@@ -95,7 +94,6 @@ export function useMediaLibrary(search: string) {
     [invalidate, listKey, queryClient, search],
   );
 
-  /** Each file uploads independently, so one bad file never blocks the rest. */
   const enqueueFiles = useCallback(
     (files: File[], onUploaded?: (asset: MediaAssetDto) => void) => {
       for (const file of files) {

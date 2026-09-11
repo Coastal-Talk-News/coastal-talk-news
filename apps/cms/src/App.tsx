@@ -8,9 +8,6 @@ import { ThemeProvider } from './features/theme/ThemeProvider.js';
 import { ThemedToaster } from './features/theme/ThemedToaster.js';
 import { LoginPage } from './routes/LoginPage.js';
 
-// Split per route so the first load carries only the shell and login. Heavy
-// dependencies — drag-and-drop, and the rich text editor later — then ship with
-// the screen that needs them instead of on first paint.
 const DashboardPage = lazy(() =>
   import('./routes/DashboardPage.js').then((m) => ({
     default: m.DashboardPage,

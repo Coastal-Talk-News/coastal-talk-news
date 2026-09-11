@@ -25,9 +25,7 @@ function readStoredPreference(): ThemePreference {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
     if (stored === 'light' || stored === 'dark' || stored === 'system')
       return stored;
-  } catch {
-    // Private mode and blocked storage both throw; fall through to the default.
-  }
+  } catch {}
   return 'system';
 }
 
@@ -40,7 +38,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       : 'light',
   );
 
-  // Follows the OS live, so "System" updates without a reload.
   useEffect(() => {
     const media = window.matchMedia('(prefers-color-scheme: dark)');
     const onChange = (event: MediaQueryListEvent) =>
@@ -55,7 +52,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement;
     root.classList.toggle('dark', resolved === 'dark');
-    // Keeps form controls, scrollbars and caret colours in step with the theme.
     root.style.colorScheme = resolved;
   }, [resolved]);
 
@@ -63,9 +59,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setPreferenceState(next);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, next);
-    } catch {
-      // A failed write only costs persistence, not the current session.
-    }
+    } catch {}
   }, []);
 
   const value = useMemo(
