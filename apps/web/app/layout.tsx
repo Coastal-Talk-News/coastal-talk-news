@@ -15,6 +15,13 @@ import { adsForZone } from '../lib/ads';
 import { getSite } from '../lib/api';
 import './globals.css';
 
+// Every route reads live site/news data through this layout, so there is
+// nothing meaningful to prerender at build time — and `next build` has no
+// running API to fetch from anyway (CI builds against a placeholder DB with
+// no API process). Forcing dynamic rendering here makes the whole app render
+// per-request instead, which also means readers never see stale HTML.
+export const dynamic = 'force-dynamic';
+
 /**
  * Each script gets its own face from the same superfamily. A Latin-only face
  * has no Kannada glyphs, so without these the ನಾಟಕ headlines fall through to
