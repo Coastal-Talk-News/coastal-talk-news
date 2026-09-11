@@ -15,7 +15,9 @@ const cardSelect = {
   media: mediaSelect,
 } as const;
 
-export type ArticleCardRow = Awaited<ReturnType<typeof findLatest>>[number];
+export type ArticleCardRow = Awaited<
+  ReturnType<typeof findRecentForCategories>
+>[number];
 export type NavCategoryRow = Awaited<
   ReturnType<typeof findNavCategories>
 >[number];
@@ -80,35 +82,6 @@ export function findActiveAdvertisements(db: TransactionClient, now: Date) {
       destinationUrl: true,
       media: mediaSelect,
     },
-  });
-}
-
-export function findByPriority(
-  db: TransactionClient,
-  priority: 'LEAD_STORY' | 'FEATURED',
-  take: number,
-) {
-  return db.article.findMany({
-    where: { ...publishedWhere, priority },
-    orderBy: newestFirst,
-    select: cardSelect,
-    take,
-  });
-}
-
-export function findLatest(
-  db: TransactionClient,
-  take: number,
-  excludeIds: string[] = [],
-) {
-  return db.article.findMany({
-    where:
-      excludeIds.length > 0
-        ? { ...publishedWhere, id: { notIn: excludeIds } }
-        : publishedWhere,
-    orderBy: newestFirst,
-    select: cardSelect,
-    take,
   });
 }
 

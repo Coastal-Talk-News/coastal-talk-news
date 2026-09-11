@@ -35,12 +35,22 @@ a category (`Category.is_active = false`) must remove it from public navigation 
 
 ### Homepage
 
-- **Breaking News** — prominent strip, only items currently within their `start_at`/`end_at` window
-- **Lead Story** — articles with `priority = Lead Story`
-- **Featured News** — articles with `priority = Featured`
-- **Latest News** — automatic, newest published first, no manual curation
-- **Category News** — per active category, in the CMS-configured order
-- **Advertisements** — predefined placements, responsive, proportions preserved
+**Revision note (2026-09-11):** the homepage feed is category-driven, not
+priority-driven. `Article.priority` (Lead Story / Featured) remains a CMS field editors can
+set, but the public homepage no longer reads it — this supersedes the priority-based
+Lead Story / Featured / Latest News layout described in earlier revisions of this file.
+
+- **Breaking News** — prominent strip, only items currently within their `start_at`/`end_at`
+  window, scrolling continuously; each item links out via its own `article_url`
+- **Advertisements** — a horizontal band of predefined placements, responsive, proportions
+  preserved
+- **Featured categories** — the first `N` active categories that have a published article (in
+  the CMS-configured category order), each contributing its single most recent article: the
+  first category's is the lead banner, the next few run alongside it as a list
+- **Category menu** — a quick-jump grid to every active category
+- **Top Stories** — the _next_-most-recent article (i.e. one position further back) from each
+  of the first `N` active categories with enough articles to have one — deliberately distinct
+  from the featured-categories headlines above so nothing repeats
 
 Articles of both languages appear together, unsegregated, throughout the homepage.
 Responsive rule: desktop can use multiple columns, smaller screens rearrange, images are
@@ -218,19 +228,18 @@ if useful for future i18n work, just without a reader-facing control.
 
 Every editorial piece of content on the public site must be traceable to a CMS control.
 
-| Public website                                | Managed from CMS               |
-| --------------------------------------------- | ------------------------------ |
-| Website name, logo                            | Settings → General             |
-| Navigation categories                         | Categories                     |
-| Homepage Lead Story / Featured                | News → Editorial Priority      |
-| Homepage Latest News                          | Published News (automatic)     |
-| Category sections                             | Categories + News              |
-| Breaking News                                 | Breaking News                  |
-| Article content / image / YouTube video / SEO | News + Media Library           |
-| Category name / cover image                   | Categories + Media Library     |
-| Search results                                | Published News                 |
-| About / Contact / Social                      | Settings → General             |
-| Advertisements + images                       | Advertisements + Media Library |
+| Public website                                | Managed from CMS                               |
+| --------------------------------------------- | ---------------------------------------------- |
+| Website name, logo                            | Settings → General                             |
+| Navigation categories                         | Categories                                     |
+| Homepage featured categories / Top Stories    | Categories order + News (automatic by recency) |
+| Category sections                             | Categories + News                              |
+| Breaking News                                 | Breaking News                                  |
+| Article content / image / YouTube video / SEO | News + Media Library                           |
+| Category name / cover image                   | Categories + Media Library                     |
+| Search results                                | Published News                                 |
+| About / Contact / Social                      | Settings → General                             |
+| Advertisements + images                       | Advertisements + Media Library                 |
 
 Pure website behavior needing no CMS control: responsive layout, loading states, 404,
 search no-results, mobile menu behavior, image responsiveness.

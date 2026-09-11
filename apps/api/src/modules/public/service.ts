@@ -15,10 +15,13 @@ export interface PublicServiceDeps {
   toPublicUrl: ToPublicUrl;
 }
 
-const TOP_STORIES = 6;
-const LATEST_NEWS = 6;
-const SECTION_CATEGORIES = 4;
-const SECTION_ARTICLES = 3;
+// The homepage reads this same list twice, at two different depths: the first
+// HERO_CATEGORIES sections supply the lead story + its sidebar (article 0 of
+// each), and the first TOP_STORY_CATEGORIES supply "Top Stories" (article 1 of
+// each) — see apps/web/app/page.tsx. Fetching HOME_SECTION_ARTICLES per
+// category up front covers both reads in one query.
+const HOME_SECTION_CATEGORIES = 6;
+const HOME_SECTION_ARTICLES = 2;
 
 export async function getSite({
   db,
@@ -53,44 +56,29 @@ export async function getHome({
   db,
   toPublicUrl,
 }: PublicServiceDeps): Promise<PublicHomeDto> {
-  const [leadStories, featured, categories] = await Promise.all([
-    repository.findByPriority(db, 'LEAD_STORY', 1),
-    repository.findByPriority(db, 'FEATURED', TOP_STORIES),
-    repository.findNavCategories(db),
-  ]);
-
-  const leadStory = leadStories[0] ?? null;
-  // Latest is a catch-all strip, so it should not repeat what is already above.
-  const shown = [
-    leadStory?.id,
-    ...featured.map((article) => article.id),
-  ].filter((id): id is string => Boolean(id));
-  const latest = await repository.findLatest(db, LATEST_NEWS, shown);
+  const categories = await repository.findNavCategories(db);
 
   const sectionCategories = categories
     .filter((category) => category._count.articles > 0)
-    .slice(0, SECTION_CATEGORIES);
+    .slice(0, HOME_SECTION_CATEGORIES);
 
   const sectionArticles = await repository.findRecentForCategories(
     db,
     sectionCategories.map((category) => category.id),
-    sectionCategories.length * SECTION_ARTICLES * 2,
+    sectionCategories.length * HOME_SECTION_ARTICLES * 2,
   );
 
   const byCategory = new Map<string, typeof sectionArticles>();
   for (const article of sectionArticles) {
     if (!article.category) continue;
     const bucket = byCategory.get(article.category.id) ?? [];
-    if (bucket.length < SECTION_ARTICLES) {
+    if (bucket.length < HOME_SECTION_ARTICLES) {
       bucket.push(article);
       byCategory.set(article.category.id, bucket);
     }
   }
 
   return {
-    leadStory: leadStory ? toArticleCard(leadStory, toPublicUrl) : null,
-    topStories: featured.map((article) => toArticleCard(article, toPublicUrl)),
-    latestNews: latest.map((article) => toArticleCard(article, toPublicUrl)),
     categorySections: sectionCategories
       .map((category) => ({
         category: toNavCategory(category, toPublicUrl),

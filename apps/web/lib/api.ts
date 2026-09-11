@@ -68,8 +68,6 @@ export async function getHome(): Promise<PublicHomeDto> {
   const home = await fetchPublic<PublicHomeDto>('/home');
   return {
     ...home,
-    topStories: list(home.topStories),
-    latestNews: list(home.latestNews),
     categorySections: list(home.categorySections),
   };
 }

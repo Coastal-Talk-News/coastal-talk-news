@@ -1,61 +1,52 @@
 import Image from 'next/image';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
-import { adAspectRatio, galleryRows, rowMaxWidth } from '../../lib/ads';
 
 interface AdColumnProps {
   advertisements: PublicAdvertisementDto[];
   className?: string;
 }
 
-const GAP = 12;
-const MAX_HEIGHT = 220;
-
+/**
+ * Unlike the horizontal bands, the column has no width to divide between
+ * creatives — each one gets the full rail, stacked, so a tall or square
+ * image never gets squeezed down to fit beside another.
+ */
 export function AdColumn({ advertisements, className = '' }: AdColumnProps) {
   if (advertisements.length === 0) return null;
 
-  const rows = galleryRows(advertisements, { maxPerRow: 2, ratioBudget: 3.2 });
-
   return (
-    <aside aria-label="Advertisement" className={className}>
-      <p className="text-ink-subtle border-rule mb-3 border-b pb-1.5 text-center text-[9px] tracking-[0.2em] uppercase">
+    <aside
+      // xl is deliberate, not lg: this same component also renders as a
+      // full-width block below the article on narrower screens (see
+      // layout.tsx), and sticky only makes sense once it's an actual sidebar.
+      aria-label="Advertisement"
+      className={`xl:sticky xl:top-6 xl:self-start ${className}`}
+    >
+      <p className="text-ink-subtle mb-4 text-center text-[10px] font-semibold tracking-[0.2em] uppercase">
         Advertisement
       </p>
-      <div className="flex flex-col gap-3">
-        {rows.map((row) => (
-          <ul
-            key={row.key}
-            className="mx-auto flex w-full gap-3"
-            style={{ maxWidth: rowMaxWidth(row, MAX_HEIGHT, GAP) }}
-          >
-            {row.ads.map((ad) => (
-              // Growing by the creative's own ratio makes every image in the
-              // row land on the same height without any of them being resized.
-              <li
-                key={ad.id}
-                className="min-w-0"
-                style={{ flexGrow: adAspectRatio(ad.image), flexBasis: 0 }}
-              >
-                <a
-                  href={ad.destinationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
-                  aria-label={`Advertisement: ${ad.advertiserName}`}
-                  className="block transition-opacity hover:opacity-90"
-                >
-                  <Image
-                    src={ad.image.url}
-                    alt={ad.advertiserName}
-                    width={ad.image.width}
-                    height={ad.image.height}
-                    sizes="288px"
-                    className="h-auto w-full rounded-sm"
-                  />
-                </a>
-              </li>
-            ))}
-          </ul>
+      <ul className="flex flex-col gap-6">
+        {advertisements.map((ad) => (
+          <li key={ad.id}>
+            <a
+              href={ad.destinationUrl}
+              target="_blank"
+              rel="noopener noreferrer sponsored"
+              aria-label={`Advertisement: ${ad.advertiserName}`}
+              className="border-rule bg-paper-sunken group block overflow-hidden rounded-card border transition-shadow hover:shadow-lg"
+            >
+              <Image
+                src={ad.image.url}
+                alt={ad.advertiserName}
+                width={ad.image.width}
+                height={ad.image.height}
+                sizes="288px"
+                className="h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              />
+            </a>
+          </li>
         ))}
-      </div>
+      </ul>
     </aside>
   );
 }
