@@ -18,11 +18,6 @@ export interface MediaServiceDeps {
   logger: FastifyBaseLogger;
 }
 
-/**
- * Deletes R2 objects whose rows are already gone. Runs after the transaction
- * commits, so a failure leaves an unreachable object rather than a broken
- * reference — recoverable by the cleanup action, so it is logged not thrown.
- */
 export async function purgeStorageObjects(
   storage: ObjectStorage,
   logger: FastifyBaseLogger,
@@ -79,8 +74,6 @@ export async function upload(
   const processed = await processUpload(input.buffer);
   const storageKey = storage.buildStorageKey();
 
-  // Object first: a stored file with no row is invisible and sweepable, while a
-  // row with no object renders as a broken image everywhere it is used.
   await storage.put(storageKey, processed.buffer);
 
   return repository.create(db, {
@@ -130,7 +123,6 @@ export async function remove(
   await purgeStorageObjects(storage, logger, [storageKey]);
 }
 
-/** Admin-triggered only. V1 has no scheduled sweep. */
 export async function cleanupUnused(deps: MediaServiceDeps): Promise<number> {
   const { db, storage, logger } = deps;
 

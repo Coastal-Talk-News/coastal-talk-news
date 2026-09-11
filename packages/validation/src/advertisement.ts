@@ -1,9 +1,9 @@
 import { Type } from '@sinclair/typebox';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
+import { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX } from './limits.js';
 
-export const ADVERTISER_NAME_MAX = 120;
-export const DESTINATION_URL_MAX = 2048;
+export { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX };
 
 const advertisementFields = {
   id: Type.String(),
@@ -37,8 +37,6 @@ export const CreateAdvertisementBodySchema = Type.Object(
     advertiserName: writableAdvertisementFields.advertiserName,
     mediaId: writableAdvertisementFields.mediaId,
     destinationUrl: writableAdvertisementFields.destinationUrl,
-    // Omit to default to 0 — the only editorial control over prominence now
-    // that there's no placement column (schema.prisma's Advertisement comment).
     priority: Type.Optional(writableAdvertisementFields.priority),
     startAt: writableAdvertisementFields.startAt,
     endAt: writableAdvertisementFields.endAt,
@@ -49,7 +47,6 @@ export const CreateAdvertisementBodySchema = Type.Object(
 export const UpdateAdvertisementBodySchema = Type.Partial(
   Type.Object(writableAdvertisementFields),
   {
-    // Rejects an empty PATCH rather than reporting success for a no-op.
     minProperties: 1,
     additionalProperties: false,
   },

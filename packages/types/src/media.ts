@@ -1,6 +1,5 @@
 import type { Id, IsoDateTime } from './api.js';
 
-/** Media as embedded in another resource, carrying the URL a client renders. */
 export interface MediaSummaryDto {
   id: Id;
   url: string;

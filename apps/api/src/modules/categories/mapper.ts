@@ -7,7 +7,6 @@ interface MediaRow {
   height: number;
 }
 
-/** The database calls this relation `media`; the API exposes it as coverImage. */
 export interface CategoryEntity {
   id: string;
   name: string;

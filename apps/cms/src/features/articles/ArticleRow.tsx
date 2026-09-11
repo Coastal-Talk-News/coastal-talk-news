@@ -1,7 +1,16 @@
 import type { ArticleDto } from '@coastal-talk-news/types';
 import { Badge } from '@coastal-talk-news/ui/badge';
 import { Tooltip } from '@coastal-talk-news/ui/tooltip';
-import { Archive, ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import { iconButtonClass } from '@coastal-talk-news/ui/icon-button';
+import {
+  Archive,
+  ArchiveRestore,
+  ImageIcon,
+  Pencil,
+  Send,
+  Trash2,
+  Undo2,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { formatDate, formatTime } from '../../lib/format.js';
 import { PRIORITY_LABELS, PRIORITY_TONES } from './priority.js';
@@ -14,14 +23,24 @@ interface ArticleRowProps {
   article: ArticleDto;
   onDelete: (article: ArticleDto) => void;
   onArchive: (article: ArticleDto) => void;
+  onRestore: (article: ArticleDto) => void;
+  onPublish: (article: ArticleDto) => void;
+  onUnpublish: (article: ArticleDto) => void;
 }
 
-export function ArticleRow({ article, onDelete, onArchive }: ArticleRowProps) {
+export function ArticleRow({
+  article,
+  onDelete,
+  onArchive,
+  onRestore,
+  onPublish,
+  onUnpublish,
+}: ArticleRowProps) {
   const readMinutes = estimateReadMinutes(article.content);
-  const canArchive = article.status !== 'ARCHIVED';
+  const { status } = article;
 
   return (
-    <tr className="hover:bg-surface-sunken transition-colors">
+    <tr className="group hover:bg-surface-sunken align-middle transition-colors">
       <td className="py-3 pr-4 pl-4">
         <div className="flex items-start gap-3">
           {article.featuredImage ? (
@@ -63,7 +82,7 @@ export function ArticleRow({ article, onDelete, onArchive }: ArticleRowProps) {
       </td>
 
       <td className="py-3 pr-4">
-        <Badge tone={STATUS_TONES[article.status]}>
+        <Badge tone={STATUS_TONES[article.status]} dot>
           {STATUS_LABELS[article.status]}
         </Badge>
       </td>
@@ -88,37 +107,73 @@ export function ArticleRow({ article, onDelete, onArchive }: ArticleRowProps) {
       </td>
 
       <td className="py-3 pr-4">
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center justify-end gap-1.5 opacity-65 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <Tooltip label="Edit">
             <Link
               to={`/articles/${article.id}/edit`}
               aria-label={`Edit ${article.headline}`}
-              className="text-ink-muted ring-hairline rounded-lg p-2 ring-1 transition-colors hover:bg-surface hover:text-ink-muted"
+              className={iconButtonClass()}
             >
               <Pencil className="size-4" aria-hidden />
             </Link>
           </Tooltip>
 
-          <Tooltip label={canArchive ? 'Archive' : 'Already archived'}>
-            <span className="inline-flex">
+          {status === 'DRAFT' && (
+            <Tooltip label="Publish — puts it on the website">
+              <button
+                type="button"
+                onClick={() => onPublish(article)}
+                aria-label={`Publish ${article.headline}`}
+                className={iconButtonClass('accent')}
+              >
+                <Send className="size-4" aria-hidden />
+              </button>
+            </Tooltip>
+          )}
+
+          {status === 'PUBLISHED' && (
+            <Tooltip label="Move back to drafts — takes it off the website">
+              <button
+                type="button"
+                onClick={() => onUnpublish(article)}
+                aria-label={`Move ${article.headline} back to drafts`}
+                className={iconButtonClass()}
+              >
+                <Undo2 className="size-4" aria-hidden />
+              </button>
+            </Tooltip>
+          )}
+
+          {status === 'ARCHIVED' ? (
+            <Tooltip label="Restore to drafts">
+              <button
+                type="button"
+                onClick={() => onRestore(article)}
+                aria-label={`Restore ${article.headline} to drafts`}
+                className={iconButtonClass()}
+              >
+                <ArchiveRestore className="size-4" aria-hidden />
+              </button>
+            </Tooltip>
+          ) : (
+            <Tooltip label="Archive — hides it from the website">
               <button
                 type="button"
                 onClick={() => onArchive(article)}
-                disabled={!canArchive}
                 aria-label={`Archive ${article.headline}`}
-                className="text-ink-muted ring-hairline rounded-lg p-2 ring-1 transition-colors hover:bg-surface hover:text-ink-muted disabled:cursor-not-allowed disabled:text-ink-subtle disabled:hover:bg-transparent"
+                className={iconButtonClass()}
               >
                 <Archive className="size-4" aria-hidden />
               </button>
-            </span>
-          </Tooltip>
+            </Tooltip>
+          )}
 
           <Tooltip label="Delete">
             <button
               type="button"
               onClick={() => onDelete(article)}
               aria-label={`Delete ${article.headline}`}
-              className="rounded-lg p-2 text-danger-text ring-1 ring-danger/25 transition-colors hover:bg-danger-soft"
+              className={iconButtonClass('danger')}
             >
               <Trash2 className="size-4" aria-hidden />
             </button>

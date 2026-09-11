@@ -1,9 +1,9 @@
 import { Type } from '@sinclair/typebox';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
+import { CATEGORY_NAME_MAX, CATEGORY_DESCRIPTION_MAX } from './limits.js';
 
-export const CATEGORY_NAME_MAX = 60;
-export const CATEGORY_DESCRIPTION_MAX = 500;
+export { CATEGORY_NAME_MAX, CATEGORY_DESCRIPTION_MAX };
 
 const categoryFields = {
   id: Type.String(),
@@ -35,7 +35,6 @@ export const CreateCategoryBodySchema = Type.Object(
       ]),
     ),
     isActive: Type.Optional(Type.Boolean()),
-    // Omit to append to the end of the list.
     displayOrder: Type.Optional(Type.Integer({ minimum: 0 })),
     coverImageId: Type.Optional(NullableId),
   },
@@ -43,7 +42,6 @@ export const CreateCategoryBodySchema = Type.Object(
 );
 
 export const UpdateCategoryBodySchema = Type.Partial(CreateCategoryBodySchema, {
-  // Rejects an empty PATCH rather than reporting success for a no-op.
   minProperties: 1,
   additionalProperties: false,
 });
@@ -63,7 +61,6 @@ export const PublicCategoryListQuerySchema = Type.Object({
 
 export const ReorderCategoriesBodySchema = Type.Object(
   {
-    /** Every category id, in the order they should appear. */
     ids: Type.Array(Type.String({ format: 'uuid' }), { minItems: 1 }),
   },
   { additionalProperties: false },

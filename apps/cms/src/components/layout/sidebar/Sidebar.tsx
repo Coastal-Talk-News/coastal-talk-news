@@ -20,7 +20,6 @@ interface SidebarProps {
   collapsed: boolean;
   onToggleCollapsed: () => void;
   onNavigate?: () => void;
-  /** Hidden in the mobile drawer, where collapsing is meaningless. */
   showCollapseControl?: boolean;
 }
 

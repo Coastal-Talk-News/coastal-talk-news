@@ -14,6 +14,7 @@ const start = async (): Promise<void> => {
 };
 
 start().catch((error: unknown) => {
-  console.error(error);
+  // Thrown before the Fastify logger exists, so stderr is all there is.
+  process.stderr.write(`${String(error)}\n`);
   process.exit(1);
 });

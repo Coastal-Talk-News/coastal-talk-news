@@ -1,5 +1,7 @@
 import type { ArticleDto, ArticleListParams } from '@coastal-talk-news/types';
 import { ConfirmDialog } from '@coastal-talk-news/ui/confirm-dialog';
+import { Input } from '@coastal-talk-news/ui/input';
+import { Select, type SelectOption } from '@coastal-talk-news/ui/select';
 import { EmptyState, ErrorState } from '@coastal-talk-news/ui/states';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
@@ -8,9 +10,10 @@ import {
   ChevronRight,
   Newspaper,
   Plus,
+  Search,
 } from 'lucide-react';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { articlesApi } from '../api/articles.js';
 import { ApiError } from '../api/client.js';
 import { categoriesApi } from '../api/categories.js';
@@ -19,6 +22,7 @@ import { PageHeader } from '../components/layout/PageHeader.js';
 import { ArticleRow } from '../features/articles/ArticleRow.js';
 import { ArticlesTableSkeleton } from '../features/articles/ArticlesTableSkeleton.js';
 import { useArticleMutations } from '../features/articles/useArticleMutations.js';
+import { SEARCH_DEBOUNCE_MS, useDebounced } from '../lib/useDebounced.js';
 
 type StatusTab = 'all' | 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 type SortOrder = 'newest' | 'oldest';
@@ -39,8 +43,30 @@ const COUNT_KEY = {
 
 const PAGE_LIMIT = 20;
 
-const selectClass =
-  'ring-hairline text-ink h-10 rounded-lg bg-surface px-3 text-sm ring-1 transition-shadow hover:ring-ink-subtle/40 focus:ring-2 focus:ring-accent focus:outline-none';
+function toStatusTab(raw: string | null): StatusTab {
+  return TABS.some((tab) => tab.value === raw) ? (raw as StatusTab) : 'all';
+}
+
+type LanguageFilter = '' | 'ENGLISH' | 'KANNADA';
+type PriorityFilter = '' | 'LEAD_STORY' | 'FEATURED' | 'NORMAL';
+
+const LANGUAGE_OPTIONS: Array<SelectOption<LanguageFilter>> = [
+  { value: '', label: 'All Languages' },
+  { value: 'ENGLISH', label: 'English' },
+  { value: 'KANNADA', label: 'ಕನ್ನಡ' },
+];
+
+const PRIORITY_OPTIONS: Array<SelectOption<PriorityFilter>> = [
+  { value: '', label: 'All Priority' },
+  { value: 'LEAD_STORY', label: 'Lead Story' },
+  { value: 'FEATURED', label: 'Featured' },
+  { value: 'NORMAL', label: 'Normal' },
+];
+
+const SORT_OPTIONS: Array<SelectOption<SortOrder>> = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+];
 
 // Button has no asChild/Slot support, and a <Link> can't nest inside a
 // <button> — this mirrors Button's primary/md classes for a real nav link.
@@ -49,14 +75,28 @@ const primaryLinkClass =
 
 export function ArticlesPage() {
   const [page, setPage] = useState(1);
-  const [statusTab, setStatusTab] = useState<StatusTab>('all');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const statusTab = toStatusTab(searchParams.get('status'));
   const [categoryId, setCategoryId] = useState('');
-  const [language, setLanguage] = useState<'' | 'ENGLISH' | 'KANNADA'>('');
-  const [priority, setPriority] = useState<
-    '' | 'LEAD_STORY' | 'FEATURED' | 'NORMAL'
-  >('');
+  const [language, setLanguage] = useState<LanguageFilter>('');
+  const [priority, setPriority] = useState<PriorityFilter>('');
   const [sort, setSort] = useState<SortOrder>('newest');
+  const [search, setSearch] = useState('');
   const [pendingDelete, setPendingDelete] = useState<ArticleDto | null>(null);
+  const debouncedSearch = useDebounced(search, SEARCH_DEBOUNCE_MS);
+
+  function selectStatusTab(next: StatusTab) {
+    setSearchParams(
+      (current) => {
+        const params = new URLSearchParams(current);
+        if (next === 'all') params.delete('status');
+        else params.set('status', next);
+        return params;
+      },
+      { replace: true },
+    );
+    setPage(1);
+  }
 
   function withReset<T>(setter: (value: T) => void) {
     return (value: T) => {
@@ -67,18 +107,27 @@ export function ArticlesPage() {
 
   const categoriesQuery = useQuery({
     queryKey: queryKeys.categoryList({ limit: 100 }),
-    queryFn: () => categoriesApi.list({ limit: 100 }),
+    queryFn: ({ signal }) => categoriesApi.list({ limit: 100 }, signal),
   });
+
+  const categoryOptions: SelectOption[] = [
+    { value: '', label: 'All Categories' },
+    ...(categoriesQuery.data?.data ?? []).map((category) => ({
+      value: category.id,
+      label: category.name,
+    })),
+  ];
 
   const baseFilters: Omit<ArticleListParams, 'page' | 'limit' | 'status'> = {
     categoryId: categoryId || undefined,
     language: language || undefined,
     priority: priority || undefined,
+    search: debouncedSearch || undefined,
   };
 
   const countsQuery = useQuery({
     queryKey: queryKeys.articleCounts({ ...baseFilters }),
-    queryFn: () => articlesApi.counts(baseFilters),
+    queryFn: ({ signal }) => articlesApi.counts(baseFilters, signal),
   });
 
   const listParams: ArticleListParams = {
@@ -104,7 +153,9 @@ export function ArticlesPage() {
   };
   const articles = data?.data ?? [];
   const meta = data?.meta;
-  const isFiltered = Boolean(categoryId || language || priority);
+  const isFiltered = Boolean(
+    categoryId || language || priority || debouncedSearch,
+  );
 
   return (
     <>
@@ -122,64 +173,52 @@ export function ArticlesPage() {
 
       <section className="border-hairline overflow-hidden rounded-card border bg-surface shadow-sm">
         <div className="border-hairline flex flex-wrap items-center gap-3 border-b p-4">
-          <select
-            value={categoryId}
-            onChange={(event) => withReset(setCategoryId)(event.target.value)}
-            className={selectClass}
-            aria-label="Filter by category"
-          >
-            <option value="">All Categories</option>
-            {categoriesQuery.data?.data.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={language}
-            onChange={(event) =>
-              withReset(setLanguage)(event.target.value as typeof language)
-            }
-            className={selectClass}
-            aria-label="Filter by language"
-          >
-            <option value="">All Languages</option>
-            <option value="ENGLISH">English</option>
-            <option value="KANNADA">Kannada</option>
-          </select>
-
-          <select
-            value={priority}
-            onChange={(event) =>
-              withReset(setPriority)(event.target.value as typeof priority)
-            }
-            className={selectClass}
-            aria-label="Filter by priority"
-          >
-            <option value="">All Priority</option>
-            <option value="LEAD_STORY">Lead Story</option>
-            <option value="FEATURED">Featured</option>
-            <option value="NORMAL">Normal</option>
-          </select>
-
-          <div className="relative ml-auto">
-            <ArrowUpDown
-              className="text-ink-subtle pointer-events-none absolute inset-y-0 left-3 my-auto size-3.5"
-              aria-hidden
+          <div className="min-w-56 flex-1">
+            <Input
+              value={search}
+              onChange={(event) => withReset(setSearch)(event.target.value)}
+              placeholder="Search headlines and content…"
+              aria-label="Search articles"
+              icon={<Search className="size-4" aria-hidden />}
             />
-            <select
-              value={sort}
-              onChange={(event) =>
-                withReset(setSort)(event.target.value as SortOrder)
-              }
-              className={`${selectClass} appearance-none pl-9`}
-              aria-label="Sort by"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-            </select>
           </div>
+
+          <Select
+            size="sm"
+            className="w-44"
+            value={categoryId}
+            onValueChange={withReset(setCategoryId)}
+            options={categoryOptions}
+            aria-label="Filter by category"
+          />
+
+          <Select
+            size="sm"
+            className="w-40"
+            value={language}
+            onValueChange={withReset(setLanguage)}
+            options={LANGUAGE_OPTIONS}
+            aria-label="Filter by language"
+          />
+
+          <Select
+            size="sm"
+            className="w-40"
+            value={priority}
+            onValueChange={withReset(setPriority)}
+            options={PRIORITY_OPTIONS}
+            aria-label="Filter by priority"
+          />
+
+          <Select
+            size="sm"
+            className="w-40"
+            value={sort}
+            onValueChange={withReset(setSort)}
+            options={SORT_OPTIONS}
+            icon={<ArrowUpDown className="size-3.5" aria-hidden />}
+            aria-label="Sort by"
+          />
         </div>
 
         <div
@@ -193,7 +232,7 @@ export function ArticlesPage() {
               type="button"
               role="tab"
               aria-selected={statusTab === tab.value}
-              onClick={() => withReset(setStatusTab)(tab.value)}
+              onClick={() => selectStatusTab(tab.value)}
               className={
                 statusTab === tab.value
                   ? 'text-accent-text bg-accent-soft flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors'
@@ -249,13 +288,13 @@ export function ArticlesPage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-240 text-left">
                 <thead>
-                  <tr className="text-ink-subtle border-hairline border-b bg-surface-sunken text-xs font-semibold tracking-wide uppercase">
-                    <th className="py-2.5 pr-4 pl-4">Article</th>
-                    <th className="py-2.5 pr-4">Category</th>
-                    <th className="py-2.5 pr-4">Status</th>
-                    <th className="py-2.5 pr-4">Priority</th>
-                    <th className="py-2.5 pr-4">Published At</th>
-                    <th className="py-2.5 pr-4 text-right">Actions</th>
+                  <tr className="text-ink-subtle border-hairline bg-surface-sunken border-b text-[11px] font-semibold tracking-[0.08em] uppercase">
+                    <th className="py-3 pr-4 pl-4">Article</th>
+                    <th className="py-3 pr-4">Category</th>
+                    <th className="py-3 pr-4">Status</th>
+                    <th className="py-3 pr-4">Priority</th>
+                    <th className="py-3 pr-4">Published At</th>
+                    <th className="py-3 pr-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-hairline divide-y">
@@ -265,6 +304,11 @@ export function ArticlesPage() {
                       article={article}
                       onDelete={setPendingDelete}
                       onArchive={(target) => mutations.archive.mutate(target)}
+                      onRestore={(target) => mutations.restore.mutate(target)}
+                      onPublish={(target) => mutations.publish.mutate(target)}
+                      onUnpublish={(target) =>
+                        mutations.unpublish.mutate(target)
+                      }
                     />
                   ))}
                 </tbody>

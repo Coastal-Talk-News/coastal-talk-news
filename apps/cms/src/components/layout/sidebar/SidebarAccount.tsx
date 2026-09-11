@@ -17,7 +17,6 @@ export function SidebarAccount({ collapsed }: { collapsed: boolean }) {
       await logout();
       toast.success('Signed out.');
     } catch {
-      // logout() clears local state regardless, so the user is out either way.
       toast.warning(
         'Signed out here, but your connection dropped. Try again online.',
       );

@@ -12,8 +12,6 @@ import { Type } from '@sinclair/typebox';
 import * as controller from './controller.js';
 
 export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
-  // global:false so the limit applies only where opted in. Covering the whole
-  // plugin would also throttle /me, which the CMS calls on every page load.
   await app.register(import('@fastify/rate-limit'), { global: false });
 
   app.post(
@@ -95,7 +93,6 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
     controller.revokeOtherSessions,
   );
 
-  // Declared after /sessions/others so "others" is not captured as an id.
   app.delete(
     '/sessions/:id',
     {

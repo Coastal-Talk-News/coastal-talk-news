@@ -1,7 +1,3 @@
-/**
- * Every cache key in one place. Raw arrays at call sites drift, and a mismatch
- * fails silently — the query simply never invalidates.
- */
 export const queryKeys = {
   session: ['session'] as const,
   sessions: ['sessions'] as const,

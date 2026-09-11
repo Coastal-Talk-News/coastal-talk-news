@@ -15,10 +15,7 @@ export function RequireAuth() {
   }
 
   if (!user) {
-    // Keep search and hash, so signing back in returns to the exact view —
-    // a filtered list stays filtered.
     const from = `${location.pathname}${location.search}${location.hash}`;
-    // This is a UX redirect only; every /cms endpoint enforces auth server-side.
     return <Navigate to="/login" replace state={{ from }} />;
   }
 

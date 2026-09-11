@@ -44,8 +44,9 @@ async function main(): Promise<void> {
         select: { id: true },
       }));
 
-    console.log(
-      `Seeded admin ${admin.email} and site settings ${settings.id}.`,
+    process.stdout.write(
+      `Seeded admin ${admin.email} and site settings ${settings.id}.
+`,
     );
   } finally {
     await prisma.$disconnect();
@@ -53,6 +54,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  console.error(error);
+  process.stderr.write(`${String(error)}
+`);
   process.exit(1);
 });

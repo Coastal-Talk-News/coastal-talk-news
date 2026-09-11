@@ -1,6 +1,5 @@
 import { useCallback, useState } from 'react';
 
-/** Persisted state that degrades to in-memory when storage is unavailable. */
 export function useLocalStorage<T>(key: string, fallback: T) {
   const [value, setValue] = useState<T>(() => {
     try {
@@ -16,9 +15,7 @@ export function useLocalStorage<T>(key: string, fallback: T) {
       setValue(next);
       try {
         localStorage.setItem(key, JSON.stringify(next));
-      } catch {
-        // A failed write only costs persistence, not the current session.
-      }
+      } catch {}
     },
     [key],
   );

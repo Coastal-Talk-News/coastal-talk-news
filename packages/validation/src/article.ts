@@ -1,13 +1,23 @@
 import { Type } from '@sinclair/typebox';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
+import {
+  ARTICLE_HEADLINE_MAX,
+  ARTICLE_SUMMARY_MAX,
+  ARTICLE_SEO_TITLE_MAX,
+  ARTICLE_META_DESCRIPTION_MAX,
+  ARTICLE_TAG_MAX,
+  ARTICLE_TAGS_MAX,
+} from './limits.js';
 
-export const ARTICLE_HEADLINE_MAX = 200;
-export const ARTICLE_SUMMARY_MAX = 300;
-export const ARTICLE_SEO_TITLE_MAX = 70;
-export const ARTICLE_META_DESCRIPTION_MAX = 300;
-export const ARTICLE_TAG_MAX = 40;
-export const ARTICLE_TAGS_MAX = 10;
+export {
+  ARTICLE_HEADLINE_MAX,
+  ARTICLE_SUMMARY_MAX,
+  ARTICLE_SEO_TITLE_MAX,
+  ARTICLE_META_DESCRIPTION_MAX,
+  ARTICLE_TAG_MAX,
+  ARTICLE_TAGS_MAX,
+};
 
 export const LanguageSchema = Type.Union([
   Type.Literal('ENGLISH'),
@@ -26,18 +36,11 @@ export const ArticleStatusSchema = Type.Union([
   Type.Literal('ARCHIVED'),
 ]);
 
-/** No Scheduled status in V1 — creating an article publishes it immediately or saves a draft. */
 export const CreatableArticleStatusSchema = Type.Union([
   Type.Literal('DRAFT'),
   Type.Literal('PUBLISHED'),
 ]);
 
-/**
- * A light shape check, not a full ProseMirror schema — the API stores this
- * opaquely and only reads text out of it (lib/tiptap-text.ts) to build
- * contentText. Rejecting non-doc-shaped JSON here is enough to catch garbage
- * without hand-maintaining every Tiptap node type.
- */
 export const ArticleContentSchema = Type.Object(
   {
     type: Type.Literal('doc'),
@@ -55,8 +58,6 @@ const TagsSchema = Type.Array(
 
 const articleFields = {
   id: Type.String(),
-  // Nullable at the DB level (see schema.prisma's Article.categoryId comment)
-  // — the API still requires a category on create.
   categoryId: Type.Union([Type.String(), Type.Null()]),
   categoryName: Type.Union([Type.String(), Type.Null()]),
   language: LanguageSchema,
@@ -78,7 +79,6 @@ const articleFields = {
 
 export const ArticleSchema = Type.Object(articleFields);
 
-/** Shared shape for the writable fields, before Create/Update apply different optionality. */
 const writableArticleFields = {
   categoryId: Type.String({ format: 'uuid' }),
   language: LanguageSchema,
@@ -110,7 +110,6 @@ export const CreateArticleBodySchema = Type.Object(
     youtubeUrl: Type.Optional(writableArticleFields.youtubeUrl),
     tags: Type.Optional(writableArticleFields.tags),
     priority: Type.Optional(writableArticleFields.priority),
-    // Omit or DRAFT/PUBLISHED — Archive is reached via update, not creation.
     status: Type.Optional(CreatableArticleStatusSchema),
     featuredImageId: Type.Optional(writableArticleFields.featuredImageId),
     ogImageId: Type.Optional(writableArticleFields.ogImageId),
@@ -123,7 +122,6 @@ export const CreateArticleBodySchema = Type.Object(
 export const UpdateArticleBodySchema = Type.Partial(
   Type.Object({ ...writableArticleFields, status: ArticleStatusSchema }),
   {
-    // Rejects an empty PATCH rather than reporting success for a no-op.
     minProperties: 1,
     additionalProperties: false,
   },
@@ -144,12 +142,10 @@ export const CmsArticleListQuerySchema = Type.Object({
   language: Type.Optional(LanguageSchema),
   status: Type.Optional(ArticleStatusSchema),
   priority: Type.Optional(ArticlePrioritySchema),
-  // Matched against headline and content, case-insensitive.
   search: Type.Optional(Type.String({ maxLength: 200 })),
   sort: Type.Optional(ArticleSortSchema),
 });
 
-/** Every CmsArticleListQuerySchema filter except status and pagination. */
 export const CmsArticleCountsQuerySchema = Type.Object({
   categoryId: Type.Optional(Type.String({ format: 'uuid' })),
   language: Type.Optional(LanguageSchema),

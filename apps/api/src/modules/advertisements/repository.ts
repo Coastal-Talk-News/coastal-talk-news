@@ -17,9 +17,6 @@ export function findMany(
   page: { skip: number; take: number },
 ) {
   return db.advertisement.findMany({
-    // Priority-first, matching the schema's own "priority is the only
-    // editorial control" design — the CMS re-sorts client-side for the
-    // Newest/Oldest First control.
     orderBy: [{ priority: 'desc' }, { startAt: 'desc' }],
     include: withMedia,
     ...page,

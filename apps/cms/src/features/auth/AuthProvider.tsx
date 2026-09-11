@@ -19,7 +19,6 @@ export interface AuthContextValue {
   user: CmsUserDto | null;
   isLoading: boolean;
   isSigningOut: boolean;
-  /** Set when the session ended on its own, so login can explain why. */
   signOutReason: SignOutReason | null;
   clearSignOutReason: () => void;
   setUser: (user: CmsUserDto) => void;
@@ -38,7 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data, isLoading } = useQuery({
     queryKey: queryKeys.session,
     queryFn: ({ signal }) => authApi.me(signal),
-    // A 401 here means "not signed in" — retrying cannot change that.
     retry: (failureCount, error) =>
       !(error instanceof ApiError && error.status === 401) && failureCount < 2,
     staleTime: 5 * 60 * 1000,
@@ -46,13 +44,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const user = data ?? null;
 
-  // Read inside the 401 handler without making it depend on the user, which
-  // would re-register the handler on every session change.
   const hasUser = useRef(false);
   hasUser.current = Boolean(user);
 
-  /** Drops every cached query and marks the session ended, without triggering
-   * a refetch of /me that would immediately 401 again. */
   const endSession = useCallback(
     (reason: SignOutReason) => {
       queryClient.removeQueries({
@@ -64,8 +58,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [queryClient],
   );
 
-  // One place decides what a 401 means: the cookie expired or was revoked
-  // mid-session, so tear the session down and let RequireAuth redirect.
   useEffect(() => {
     setUnauthorizedHandler(() => {
       if (hasUser.current) {
@@ -88,8 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authApi.logout();
     } finally {
-      // Local state clears even if the request failed. Leaving someone
-      // apparently signed in after they asked to leave is the worse outcome.
       endSession('manual');
       setIsSigningOut(false);
     }

@@ -16,8 +16,6 @@ export function countPublishedSince(db: TransactionClient, since: Date) {
 
 export function countActiveBreakingNews(db: TransactionClient, now: Date) {
   return db.breakingNews.count({
-    // endAt is nullable (runs until deleted) — SQL NULL fails a plain `gte`
-    // comparison, so an open-ended item must be matched explicitly here too.
     where: {
       startAt: { lte: now },
       OR: [{ endAt: null }, { endAt: { gte: now } }],

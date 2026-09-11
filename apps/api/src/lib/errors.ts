@@ -1,4 +1,3 @@
-/** Safe to show a client. Anything else thrown becomes a generic 500. */
 export class AppError extends Error {
   readonly statusCode: number;
   readonly code: string;

@@ -2,6 +2,7 @@ import type { BreakingNewsDto } from '@coastal-talk-news/types';
 import { Badge } from '@coastal-talk-news/ui/badge';
 import { Toggle } from '@coastal-talk-news/ui/toggle';
 import { Tooltip } from '@coastal-talk-news/ui/tooltip';
+import { iconButtonClass } from '@coastal-talk-news/ui/icon-button';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { formatDate, formatTime } from '../../lib/format.js';
 import { breakingNewsStatus } from './status.js';
@@ -25,7 +26,7 @@ export function BreakingNewsRow({
   const isLive = status.value === 'active';
 
   return (
-    <tr className="hover:bg-surface-sunken transition-colors">
+    <tr className="group hover:bg-surface-sunken align-middle transition-colors">
       <td className="text-ink-subtle w-9 py-3 pl-4 text-sm tabular-nums">
         {position}
       </td>
@@ -48,7 +49,9 @@ export function BreakingNewsRow({
       </td>
 
       <td className="py-3 pr-4">
-        <Badge tone={status.tone}>{status.label}</Badge>
+        <Badge tone={status.tone} dot>
+          {status.label}
+        </Badge>
       </td>
 
       <td className="py-3 pr-4 text-sm">
@@ -68,7 +71,7 @@ export function BreakingNewsRow({
       </td>
 
       <td className="py-3 pr-4">
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center justify-end gap-1.5 opacity-65 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <Tooltip
             label={
               isLive
@@ -93,7 +96,7 @@ export function BreakingNewsRow({
               type="button"
               onClick={() => onEdit(item)}
               aria-label={`Edit ${item.headline}`}
-              className="text-ink-muted ring-hairline ml-1 rounded-lg p-2 ring-1 transition-colors hover:bg-surface hover:text-ink-muted"
+              className={iconButtonClass()}
             >
               <Pencil className="size-4" aria-hidden />
             </button>
@@ -104,7 +107,7 @@ export function BreakingNewsRow({
               type="button"
               onClick={() => onDelete(item)}
               aria-label={`Delete ${item.headline}`}
-              className="rounded-lg p-2 text-danger-text ring-1 ring-danger/25 transition-colors hover:bg-danger-soft"
+              className={iconButtonClass('danger')}
             >
               <Trash2 className="size-4" aria-hidden />
             </button>

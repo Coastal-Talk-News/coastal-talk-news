@@ -18,12 +18,6 @@ function isChildActive(child: NavChild, pathname: string): boolean {
   );
 }
 
-/**
- * A nav item with sub-links (News: All Articles / Create Article). Expand
- * state defaults from whether a child route is current, then stays under the
- * viewer's control — reopening on every navigation within the group would
- * fight a deliberate collapse.
- */
 export function SidebarNavGroupItem({
   item,
   collapsed,
@@ -34,8 +28,6 @@ export function SidebarNavGroupItem({
   const groupActive = children.some((child) => isChildActive(child, pathname));
   const [expanded, setExpanded] = useState(groupActive);
 
-  // Collapsed rail: no flyout submenu, just a link to the group's default
-  // route, matching how a collapsed sidebar treats every other item.
   if (collapsed) {
     return (
       <li className={cn('relative', SIDEBAR_GUTTER)}>

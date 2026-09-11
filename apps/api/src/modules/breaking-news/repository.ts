@@ -11,8 +11,6 @@ export function findMany(
   page: { skip: number; take: number },
 ) {
   return db.breakingNews.findMany({
-    // Newest-created schedule first; the CMS re-sorts client-side by start
-    // time when the viewer picks "Oldest First".
     orderBy: { startAt: 'desc' },
     ...page,
   });

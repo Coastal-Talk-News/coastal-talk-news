@@ -16,8 +16,6 @@ const OPTIONS: Array<{
   { value: 'system', label: 'System', icon: Monitor },
 ];
 
-// Three explicit choices rather than a two-way flip, so "follow my OS" stays
-// reachable instead of being lost the first time someone toggles.
 export function SidebarThemeControl({ collapsed }: { collapsed: boolean }) {
   const { preference, setPreference } = useTheme();
   const active =

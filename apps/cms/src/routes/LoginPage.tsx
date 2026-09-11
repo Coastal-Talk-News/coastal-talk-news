@@ -65,8 +65,6 @@ export function LoginPage() {
     login.mutate();
   }
 
-  /** Editing after a rejection clears it, so the form never shows an error
-   * that no longer describes what is in the fields. */
   function edit(setter: (value: string) => void) {
     return (event: { target: { value: string } }) => {
       if (login.error) login.reset();
@@ -172,7 +170,7 @@ export function LoginPage() {
                   type="button"
                   onClick={() => setShowPassword((visible) => !visible)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-subtle hover:text-ink-muted"
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-subtle hover:text-ink"
                 >
                   {showPassword ? (
                     <EyeOff className="size-4" aria-hidden />

@@ -9,12 +9,6 @@ function messageFor(error: unknown, fallback: string): string {
   return error instanceof ApiError ? error.message : fallback;
 }
 
-/**
- * One mutation shared by both tabs. The singleton has a single cache entry, so
- * a successful PATCH writes the response straight into it instead of
- * refetching — each tab's `onSuccess` (passed at call time) picks its own
- * toast copy.
- */
 export function useUpdateSettings() {
   const queryClient = useQueryClient();
 

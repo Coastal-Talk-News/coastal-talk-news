@@ -20,9 +20,7 @@ export interface NavItem {
   to: string;
   label: string;
   icon: LucideIcon;
-  /** Exact match. Needed for "/" so it is not active on every route. */
   end?: boolean;
-  /** Renders as an expandable group instead of a plain link when present. */
   children?: NavChild[];
 }
 

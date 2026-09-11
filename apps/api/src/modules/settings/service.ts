@@ -131,9 +131,6 @@ export async function update(
         : {}),
     });
 
-    // Swapping or clearing any of the three images can strand the previous
-    // one — releaseMedia dedupes/ignores nulls, so passing all three slots
-    // regardless of which actually changed is safe.
     const orphanedKeys = await releaseMedia(tx, [
       logoChanged ? existing.logoMediaId : null,
       faviconChanged ? existing.faviconMediaId : null,

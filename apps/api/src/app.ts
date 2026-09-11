@@ -93,8 +93,6 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   await app.register(storagePlugin, { env });
   await app.register(authPlugin, { env });
 
-  // Unversioned and unenveloped on purpose: a platform liveness probe that the
-  // ping-server workflow hits, not part of the client API.
   app.get(
     '/health',
     { schema: { tags: ['system'], summary: 'Liveness probe' } },

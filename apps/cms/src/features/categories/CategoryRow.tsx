@@ -3,6 +3,7 @@ import { Badge } from '@coastal-talk-news/ui/badge';
 import { cn } from '@coastal-talk-news/ui/cn';
 import { Toggle } from '@coastal-talk-news/ui/toggle';
 import { Tooltip } from '@coastal-talk-news/ui/tooltip';
+import { iconButtonClass } from '@coastal-talk-news/ui/icon-button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ImageIcon, Pencil, Trash2 } from 'lucide-react';
@@ -42,7 +43,7 @@ export function CategoryRow({
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        'group transition-colors',
+        'group align-middle transition-colors',
         isDragging
           ? 'relative z-10 bg-accent-soft/60 shadow-lg ring-1 ring-accent/30'
           : 'hover:bg-surface-sunken',
@@ -61,7 +62,7 @@ export function CategoryRow({
             {...attributes}
             {...listeners}
             aria-label={`Reorder ${category.name}`}
-            className="text-ink-subtle cursor-grab rounded p-1 transition-colors group-hover:text-ink-subtle hover:!text-ink-muted active:cursor-grabbing"
+            className="text-ink-subtle/60 hover:bg-surface hover:text-ink cursor-grab rounded p-1 transition-colors group-hover:text-ink-subtle active:cursor-grabbing"
           >
             <GripVertical className="size-4" aria-hidden />
           </button>
@@ -104,13 +105,13 @@ export function CategoryRow({
       </td>
 
       <td className="py-3 pr-4">
-        <Badge tone={category.isActive ? 'green' : 'slate'}>
+        <Badge tone={category.isActive ? 'green' : 'slate'} dot>
           {category.isActive ? 'Active' : 'Hidden'}
         </Badge>
       </td>
 
       <td className="py-3 pr-4">
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center justify-end gap-1.5 opacity-65 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
           <Tooltip
             label={category.isActive ? 'Hide from website' : 'Show on website'}
           >
@@ -130,7 +131,7 @@ export function CategoryRow({
               type="button"
               onClick={() => onEdit(category)}
               aria-label={`Edit ${category.name}`}
-              className="text-ink-muted ring-hairline ml-1 rounded-lg p-2 ring-1 transition-colors hover:bg-surface hover:text-ink-muted"
+              className={iconButtonClass()}
             >
               <Pencil className="size-4" aria-hidden />
             </button>
@@ -149,7 +150,7 @@ export function CategoryRow({
                 onClick={() => onDelete(category)}
                 disabled={!canDelete}
                 aria-label={`Delete ${category.name}`}
-                className="rounded-lg p-2 text-danger-text ring-1 ring-danger/25 transition-colors hover:bg-danger-soft disabled:cursor-not-allowed disabled:text-ink-subtle disabled:ring-hairline disabled:hover:bg-transparent"
+                className={iconButtonClass('danger')}
               >
                 <Trash2 className="size-4" aria-hidden />
               </button>

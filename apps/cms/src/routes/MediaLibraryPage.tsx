@@ -11,11 +11,11 @@ import { PageHeader } from '../components/layout/PageHeader.js';
 import { MediaGrid } from '../features/media/MediaGrid.js';
 import { UploadZone } from '../features/media/UploadZone.js';
 import { useMediaLibrary } from '../features/media/useMediaLibrary.js';
-import { useDebounced } from '../lib/useDebounced.js';
+import { SEARCH_DEBOUNCE_MS, useDebounced } from '../lib/useDebounced.js';
 
 export function MediaLibraryPage() {
   const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounced(search);
+  const debouncedSearch = useDebounced(search, SEARCH_DEBOUNCE_MS);
   const [pendingDelete, setPendingDelete] = useState<MediaAssetDto | null>(
     null,
   );
@@ -122,7 +122,6 @@ export function MediaLibraryPage() {
         confirmLabel="Delete image"
         onConfirm={() => {
           if (!pendingDelete) return;
-          // Optimistic: rolled back with a toast if the server rejects it.
           remove.mutate(pendingDelete);
           setPendingDelete(null);
         }}

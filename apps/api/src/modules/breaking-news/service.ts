@@ -14,7 +14,6 @@ export interface CreateBreakingNewsInput {
   headline: string;
   articleUrl?: string;
   startAt: string;
-  /** Omit or null to run indefinitely from startAt until deleted. */
   endAt?: string | null;
 }
 
@@ -55,10 +54,7 @@ export async function create(
 
   return repository.create(db, {
     headline: input.headline.trim(),
-    // No is_active column exists for this model — schema.prisma stores no
-    // manual override, only startAt/endAt (CLAUDE.md §13, schema.prisma
-    // header). "No link" is represented as '' since articleUrl stays
-    // non-null; endAt itself is nullable, meaning "runs until deleted".
+    // No is_active column: startAt/endAt are the only source of truth.
     articleUrl: input.articleUrl?.trim() ?? '',
     startAt,
     endAt,
@@ -76,8 +72,6 @@ export async function update(
   }
 
   const startAt = input.startAt ? new Date(input.startAt) : existing.startAt;
-  // input.endAt === undefined means "leave it alone"; an explicit null means
-  // "clear the end date", distinct from an unset key on a PATCH.
   const endAt =
     input.endAt !== undefined
       ? input.endAt

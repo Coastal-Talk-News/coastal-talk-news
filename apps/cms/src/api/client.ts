@@ -6,17 +6,12 @@ import type {
 
 const BASE_URL = import.meta.env?.VITE_API_BASE_URL ?? 'http://localhost:3001';
 
-/**
- * Notified whenever a request comes back 401 so the app can end the session in
- * one place, rather than each caller inventing its own recovery.
- */
 let onUnauthorized: (() => void) | null = null;
 
 export function setUnauthorizedHandler(handler: (() => void) | null): void {
   onUnauthorized = handler;
 }
 
-/** Carries the API's error code so callers can branch without parsing strings. */
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
@@ -46,8 +41,6 @@ async function request<T>(
   const response = await fetch(`${BASE_URL}${path}`, {
     method,
     signal,
-    // The session lives in an httpOnly cookie, so every call must opt in to
-    // sending credentials cross-origin.
     credentials: 'include',
     headers: body ? { 'Content-Type': 'application/json' } : undefined,
     body: body === undefined ? undefined : JSON.stringify(body),
@@ -90,11 +83,9 @@ export const api = {
   patch: <T>(path: string, body?: unknown) =>
     request<ApiSuccess<T>>(path, { method: 'PATCH', body }).then((r) => r.data),
 
-  /** DELETE that returns a body, unlike the 204 deletes handled by send(). */
   remove: <T>(path: string) =>
     request<ApiSuccess<T>>(path, { method: 'DELETE' }).then((r) => r.data),
 
-  /** For 204 endpoints, where there is no envelope to unwrap. */
   send: (path: string, method: 'POST' | 'PATCH' | 'DELETE', body?: unknown) =>
     request<void>(path, { method, body }),
 };
@@ -112,10 +103,6 @@ export function buildQuery(
   return query ? `?${query}` : '';
 }
 
-/**
- * Uploads go through XMLHttpRequest, not fetch, because fetch cannot report
- * upload progress and a large image on a slow connection needs a real bar.
- */
 export function uploadFiles<T>(
   path: string,
   files: File[],

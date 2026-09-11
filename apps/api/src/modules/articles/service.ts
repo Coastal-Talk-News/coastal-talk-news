@@ -1,4 +1,9 @@
-import type { Database } from '@coastal-talk-news/db';
+import type {
+  ArticlePriority,
+  ArticleStatus,
+  Database,
+  Language,
+} from '@coastal-talk-news/db';
 import type { FastifyBaseLogger } from 'fastify';
 import { BadRequestError, NotFoundError } from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
@@ -18,24 +23,22 @@ export interface ArticleServiceDeps {
 
 export interface CreateArticleInput {
   categoryId: string;
-  language: 'ENGLISH' | 'KANNADA';
+  language: Language;
   headline: string;
   summary: string;
   content: object;
   youtubeUrl?: string | null;
   tags?: string[];
-  priority?: 'LEAD_STORY' | 'FEATURED' | 'NORMAL';
-  // No Scheduled status in V1 — omit or DRAFT/PUBLISHED only.
-  status?: 'DRAFT' | 'PUBLISHED';
+  priority?: ArticlePriority;
+  status?: Exclude<ArticleStatus, 'ARCHIVED'>;
   featuredImageId?: string | null;
   ogImageId?: string | null;
   seoTitle?: string | null;
   metaDescription?: string | null;
 }
 
-/** Editing allows the full status range, since Archive is reached via update. */
 export type UpdateArticleInput = Partial<Omit<CreateArticleInput, 'status'>> & {
-  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  status?: ArticleStatus;
 };
 
 async function assertCategoryExists(
@@ -66,25 +69,19 @@ export async function listForCms(
   filters: ListFilters,
   pagination: PaginationParams,
 ) {
-  const [rows, total] = await Promise.all([
-    repository.findMany(db, filters, toSkipTake(pagination)),
-    repository.count(db, filters),
-  ]);
-  return { rows, total };
+  return repository.list(db, filters, toSkipTake(pagination));
 }
 
 export async function getStatusCounts(
   { db }: ArticleServiceDeps,
   filters: Omit<ListFilters, 'status'>,
 ) {
-  const grouped = await repository.countByStatus(db, filters);
   const counts = { all: 0, draft: 0, published: 0, archived: 0 };
-  for (const row of grouped) {
-    const n = row._count._all;
-    counts.all += n;
-    if (row.status === 'DRAFT') counts.draft = n;
-    else if (row.status === 'PUBLISHED') counts.published = n;
-    else if (row.status === 'ARCHIVED') counts.archived = n;
+  for (const { status, count } of await repository.countByStatus(db, filters)) {
+    counts.all += count;
+    if (status === 'DRAFT') counts.draft = count;
+    else if (status === 'PUBLISHED') counts.published = count;
+    else if (status === 'ARCHIVED') counts.archived = count;
   }
   return counts;
 }
@@ -122,8 +119,7 @@ export async function create(
     tags: input.tags ?? [],
     priority: input.priority ?? 'NORMAL',
     status,
-    // "Publishing sets status = PUBLISHED and publication_date = now() in
-    // the same action" (docs/DATA-MODEL.md) — null until first published.
+    // Stamped once, on the first publish.
     publicationDate: status === 'PUBLISHED' ? new Date() : null,
     mediaId: input.featuredImageId ?? null,
     ogImageId: input.ogImageId ?? null,
@@ -160,9 +156,6 @@ export async function update(
   const ogImageChanged =
     input.ogImageId !== undefined && input.ogImageId !== existing.ogImageId;
 
-  // Re-publishing an already-published article, or moving it to Draft/
-  // Archived, leaves the original publish date alone as history — only the
-  // first transition into PUBLISHED stamps it.
   const willBePublished =
     input.status === 'PUBLISHED' ||
     (input.status === undefined && existing.status === 'PUBLISHED');

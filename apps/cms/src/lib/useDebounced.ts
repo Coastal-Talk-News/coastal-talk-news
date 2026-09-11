@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 
-/** Delays a fast-changing value so filtering doesn't run on every keystroke. */
+/** Long enough to cover the gap between keystrokes of a steady typist. */
+export const SEARCH_DEBOUNCE_MS = 400;
+
 export function useDebounced<T>(value: T, delayMs = 200): T {
   const [debounced, setDebounced] = useState(value);
 

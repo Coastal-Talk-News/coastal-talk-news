@@ -1,10 +1,5 @@
 import { Type, type TSchema } from '@sinclair/typebox';
 
-/**
- * Fastify validates responses against these and generates the Swagger docs
- * from them, so the documented shape and the actual shape cannot drift.
- */
-
 export const IsoDateTime = Type.String({
   format: 'date-time',
   description: 'ISO 8601 timestamp',
@@ -43,7 +38,6 @@ export const ErrorResponseSchema = Type.Object({
   }),
 });
 
-/** Spread into every route so the failure shape is documented too. */
 export const commonErrorResponses = {
   400: ErrorResponseSchema,
   401: ErrorResponseSchema,
@@ -53,10 +47,7 @@ export const commonErrorResponses = {
   503: ErrorResponseSchema,
 };
 
-/** Spread into a querystring schema rather than composed, which pushes
- * TypeBox past its type-instantiation depth limit. */
 export const paginationQueryFields = {
   page: Type.Integer({ minimum: 1, default: 1 }),
-  // Capped so a client cannot force the API to materialise a whole table.
   limit: Type.Integer({ minimum: 1, maximum: 100, default: 20 }),
 };

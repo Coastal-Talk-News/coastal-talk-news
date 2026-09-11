@@ -12,7 +12,6 @@ export interface CategoryDto {
   updatedAt: IsoDateTime;
 }
 
-/** CMS view. articleCount drives the disabled state of the delete button. */
 export interface CmsCategoryDto extends CategoryDto {
   articleCount: number;
 }

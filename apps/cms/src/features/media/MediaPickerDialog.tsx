@@ -7,7 +7,7 @@ import { EmptyState, ErrorState } from '@coastal-talk-news/ui/states';
 import { Image as ImageIcon, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import { ApiError } from '../../api/client.js';
-import { useDebounced } from '../../lib/useDebounced.js';
+import { SEARCH_DEBOUNCE_MS, useDebounced } from '../../lib/useDebounced.js';
 import { MediaGrid } from './MediaGrid.js';
 import { UploadZone } from './UploadZone.js';
 import { useMediaLibrary } from './useMediaLibrary.js';
@@ -26,7 +26,7 @@ export function MediaPickerDialog({
   onSelect,
 }: MediaPickerDialogProps) {
   const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounced(search);
+  const debouncedSearch = useDebounced(search, SEARCH_DEBOUNCE_MS);
   const { listQuery, pending, enqueueFiles, retryUpload, dismissUpload } =
     useMediaLibrary(debouncedSearch);
   const { data, isPending, isError, error, refetch } = listQuery;
@@ -57,8 +57,6 @@ export function MediaPickerDialog({
 
           <div className="space-y-4 overflow-y-auto px-6 py-5">
             <UploadZone
-              // Selecting straight after upload saves a second click on what
-              // is almost always the image the admin just added.
               onFiles={(files) =>
                 enqueueFiles(files, (asset) => onSelect(asset))
               }

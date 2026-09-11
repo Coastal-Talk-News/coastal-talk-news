@@ -1,9 +1,5 @@
 import { ApiError } from '../../api/client.js';
 
-/**
- * Every failure the user can hit gets a message that says what to do next.
- * A raw server string or "Something went wrong" leaves them guessing.
- */
 export function loginErrorMessage(error: unknown): string | null {
   if (!error) return null;
 

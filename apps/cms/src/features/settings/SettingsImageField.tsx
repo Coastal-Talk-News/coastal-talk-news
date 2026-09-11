@@ -11,16 +11,9 @@ interface SettingsImageFieldProps {
   value: MediaSummaryDto | null;
   error?: string;
   onChange: (asset: MediaSummaryDto | null) => void;
-  /** Marks the owning form's `touched`, so a still-empty required field shows its error. */
   onInteract?: () => void;
 }
 
-/**
- * Self-contained image picker field — owns its own dialog-open state rather
- * than the parent form owning it (as CategorySheet/AdvertisementSheet do for
- * their single image field), since three sibling instances on one page each
- * need an independent open flag.
- */
 export function SettingsImageField({
   label,
   required,

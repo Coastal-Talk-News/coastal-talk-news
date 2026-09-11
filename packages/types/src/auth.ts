@@ -1,6 +1,5 @@
 import type { Id, IsoDateTime } from './api.js';
 
-/** Has no password field of any kind — the hash has no wire representation. */
 export interface CmsUserDto {
   id: Id;
   name: string;
@@ -12,7 +11,6 @@ export interface LoginRequest {
   password: string;
 }
 
-/** A signed-in device. `isCurrent` marks the session making the request. */
 export interface SessionDto {
   id: Id;
   createdAt: IsoDateTime;

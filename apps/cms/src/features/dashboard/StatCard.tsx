@@ -52,7 +52,7 @@ export function StatCard({
         )}
       </span>
       <ChevronRight
-        className="size-4 shrink-0 text-ink-subtle transition group-hover:text-ink-muted"
+        className="size-4 shrink-0 text-ink-subtle transition group-hover:text-ink"
         aria-hidden
       />
     </Link>

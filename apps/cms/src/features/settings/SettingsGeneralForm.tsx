@@ -5,21 +5,20 @@ import type {
 import { Button } from '@coastal-talk-news/ui/button';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
+import { Textarea } from '@coastal-talk-news/ui/textarea';
+import {
+  SETTINGS_ADDRESS_MAX,
+  SETTINGS_DESCRIPTION_MAX,
+  SETTINGS_EMAIL_MAX,
+  SETTINGS_PHONE_MAX,
+  SETTINGS_SITE_NAME_MAX,
+  SETTINGS_TAGLINE_MAX,
+} from '@coastal-talk-news/validation/limits';
 import { Link2, Mail, MapPin, Phone } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { SettingsImageField } from './SettingsImageField.js';
 import { useUpdateSettings } from './useUpdateSettings.js';
-
-// Mirrors packages/validation/src/settings.ts — the CMS doesn't depend on the
-// validation package (see ArticleFormPage's identical local constants), so
-// these are kept in sync by hand.
-const SITE_NAME_MAX = 120;
-const TAGLINE_MAX = 160;
-const DESCRIPTION_MAX = 160;
-const EMAIL_MAX = 254;
-const PHONE_MAX = 32;
-const ADDRESS_MAX = 200;
 
 interface GeneralValues {
   siteName: string;
@@ -53,7 +52,6 @@ function toValues(settings: SiteSettingsDto): GeneralValues {
   };
 }
 
-/** '' -> null for an optional field; otherwise the trimmed value. */
 function orNull(value: string): string | null {
   const trimmed = value.trim();
   return trimmed === '' ? null : trimmed;
@@ -147,7 +145,7 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
         <Input
           id="settings-site-name"
           value={values.siteName}
-          maxLength={SITE_NAME_MAX}
+          maxLength={SETTINGS_SITE_NAME_MAX}
           placeholder="Coastal Talk News"
           invalid={Boolean(nameError)}
           onBlur={() => setTouched(true)}
@@ -169,7 +167,7 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
         <Input
           id="settings-tagline"
           value={values.tagline}
-          maxLength={TAGLINE_MAX}
+          maxLength={SETTINGS_TAGLINE_MAX}
           placeholder="Your daily dose of coastal news"
           invalid={Boolean(taglineError)}
           onBlur={() => setTouched(true)}
@@ -190,10 +188,11 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
           Description
           <span className="text-ink-subtle ml-1 font-normal">(optional)</span>
         </label>
-        <textarea
+        <Textarea
           id="settings-description"
           rows={3}
-          maxLength={DESCRIPTION_MAX}
+          maxLength={SETTINGS_DESCRIPTION_MAX}
+          showCount
           value={values.description}
           placeholder="A short description of your website."
           onChange={(event) =>
@@ -202,11 +201,7 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
               description: event.target.value,
             }))
           }
-          className="ring-hairline focus:ring-accent w-full resize-none rounded-lg bg-surface px-3 py-2.5 text-sm ring-1 transition-shadow placeholder:text-ink-subtle hover:ring-ink-subtle/40 focus:ring-2 focus:outline-none"
         />
-        <p className="text-ink-subtle text-right text-xs tabular-nums">
-          {values.description.length}/{DESCRIPTION_MAX}
-        </p>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2">
@@ -242,7 +237,7 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
           id="settings-email"
           type="email"
           value={values.contactEmail}
-          maxLength={EMAIL_MAX}
+          maxLength={SETTINGS_EMAIL_MAX}
           placeholder="contact@coastaltalknews.com"
           invalid={Boolean(emailError)}
           icon={<Mail className="size-4" aria-hidden />}
@@ -261,7 +256,7 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
           id="settings-phone"
           type="tel"
           value={values.contactPhone}
-          maxLength={PHONE_MAX}
+          maxLength={SETTINGS_PHONE_MAX}
           placeholder="+91 00000 00000"
           icon={<Phone className="size-4" aria-hidden />}
           onChange={(event) =>
@@ -277,7 +272,7 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
         <Input
           id="settings-address"
           value={values.contactAddress}
-          maxLength={ADDRESS_MAX}
+          maxLength={SETTINGS_ADDRESS_MAX}
           placeholder="Street, City, State, PIN"
           icon={<MapPin className="size-4" aria-hidden />}
           onChange={(event) =>
