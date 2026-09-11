@@ -1,1 +1,76 @@
 @import 'tailwindcss';
+
+@theme {
+  /* Warm newsprint greys rather than blue-greys: on a page that is mostly text
+     and photography, a cold white ground makes both look washed out. */
+  --color-ink: #1b1917;
+  --color-ink-muted: #57514a;
+  --color-ink-subtle: #79716a;
+  --color-paper: #fdfcfa;
+  --color-paper-sunken: #f4f1ec;
+  --color-rule: #e6e0d7;
+  --color-brand: #b4232b;
+  --color-brand-hover: #911a21;
+  --color-brand-soft: #fbecea;
+  --color-night: #1c1815;
+  --color-night-muted: #a79f94;
+
+  /* The Kannada face sits behind the Latin one: the browser falls through per
+     character, so each script is drawn by its own sibling of the family. */
+  --font-serif:
+    var(--font-headline), var(--font-headline-kannada), Georgia,
+    'Times New Roman', serif;
+  --font-sans:
+    var(--font-body), var(--font-body-kannada), ui-sans-serif, system-ui,
+    sans-serif;
+
+  --radius-card: 0.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-serif tracking-tight;
+    text-wrap: balance;
+  }
+
+  a {
+    @apply outline-brand;
+  }
+
+  :focus-visible {
+    @apply outline-brand outline-2 outline-offset-2;
+  }
+}
+
+@layer components {
+  /* Headlines stay one line short of the box so cards keep a common rhythm. */
+  .clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
