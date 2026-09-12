@@ -2,11 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 import { useId, useState, type FormEvent } from 'react';
+import { getDictionary } from '../../lib/i18n/dictionaries';
+import type { Locale } from '../../lib/i18n/types';
 
-export function SearchField() {
+export function SearchField({ locale }: { locale: Locale }) {
   const router = useRouter();
   const [term, setTerm] = useState('');
   const inputId = useId();
+  const dictionary = getDictionary(locale);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -18,14 +21,14 @@ export function SearchField() {
   return (
     <form role="search" onSubmit={handleSubmit} className="relative">
       <label htmlFor={inputId} className="sr-only">
-        Search news
+        {dictionary.header.searchLabel}
       </label>
       <input
         id={inputId}
         type="search"
         value={term}
         onChange={(event) => setTerm(event.target.value)}
-        placeholder="Search news, topics…"
+        placeholder={dictionary.header.searchPlaceholder}
         className="border-rule bg-paper-sunken placeholder:text-ink-subtle focus:border-brand h-10 w-full rounded-sm border pr-3 pl-9 text-sm transition-colors focus:bg-white focus:outline-none"
       />
       <svg

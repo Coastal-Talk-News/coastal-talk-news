@@ -1,10 +1,13 @@
-import type { Database } from '@coastal-talk-news/db';
+import type { Database, Language } from '@coastal-talk-news/db';
 import type {
   PublicArticleDto,
   PublicHomeDto,
   PublicSiteDto,
 } from '@coastal-talk-news/types';
 import { NotFoundError } from '../../lib/errors.js';
+import * as articlesRepository from '../articles/repository.js';
+import type { PaginationParams } from '../../lib/pagination.js';
+import { toSkipTake } from '../../lib/pagination.js';
 import {
   toAdvertisement,
   toArticleCard,
@@ -103,5 +106,21 @@ export async function getHome({
         ),
       }))
       .filter((section) => section.articles.length > 0),
+  };
+}
+
+export async function search(
+  { db, toPublicUrl }: PublicServiceDeps,
+  filters: { search: string; language?: Language },
+  pagination: PaginationParams,
+) {
+  const { rows, total } = await articlesRepository.searchPublished(
+    db,
+    filters,
+    toSkipTake(pagination),
+  );
+  return {
+    rows: rows.map((row) => toArticleCard(row, toPublicUrl)),
+    total,
   };
 }

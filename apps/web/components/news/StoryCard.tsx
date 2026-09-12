@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { PublicArticleCardDto } from '@coastal-talk-news/types';
+import type { Locale } from '../../lib/i18n/types';
 import { CategoryTag } from './CategoryTag';
 import { StoryImage } from './StoryImage';
 import { StoryMeta } from './StoryMeta';
@@ -11,6 +12,7 @@ interface StoryCardProps {
   showSummary?: boolean;
   showCategory?: boolean;
   sizes?: string;
+  locale?: Locale;
 }
 
 export function StoryCard({
@@ -19,6 +21,7 @@ export function StoryCard({
   showSummary = false,
   showCategory = false,
   sizes = '(min-width: 1024px) 20vw, (min-width: 640px) 45vw, 90vw',
+  locale = 'en',
 }: StoryCardProps) {
   const href = `/article/${article.id}`;
 
@@ -53,7 +56,10 @@ export function StoryCard({
             </Link>
           </h3>
           <div className="mt-1">
-            <StoryMeta publicationDate={article.publicationDate} />
+            <StoryMeta
+              publicationDate={article.publicationDate}
+              locale={locale}
+            />
           </div>
         </div>
       </article>
@@ -92,7 +98,10 @@ export function StoryCard({
           </p>
         )}
         <div className="mt-auto pt-3">
-          <StoryMeta publicationDate={article.publicationDate} />
+          <StoryMeta
+            publicationDate={article.publicationDate}
+            locale={locale}
+          />
         </div>
       </div>
     </article>

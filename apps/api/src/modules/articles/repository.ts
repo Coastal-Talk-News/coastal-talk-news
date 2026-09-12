@@ -5,6 +5,7 @@ import {
   type Language,
   type TransactionClient,
 } from '@coastal-talk-news/db';
+import { cardSelect, type ArticleCardRow } from '../public/repository.js';
 
 const mediaSelect = {
   select: { id: true, storageKey: true, width: true, height: true },
@@ -205,6 +206,73 @@ export function update(
 
 export function remove(db: TransactionClient, id: string) {
   return db.article.delete({ where: { id }, select: { id: true } });
+}
+
+export interface PublicSearchFilters {
+  search: string;
+  language?: Language;
+}
+
+function publicSearchWhere(
+  filters: PublicSearchFilters,
+  tsquery: string,
+): Prisma.Sql {
+  const conditions: Prisma.Sql[] = [
+    Prisma.sql`status = 'PUBLISHED'::"ArticleStatus"`,
+  ];
+  if (filters.language) {
+    conditions.push(Prisma.sql`language = ${filters.language}::"Language"`);
+  }
+  conditions.push(searchCondition(filters.search, tsquery));
+  return Prisma.join(conditions, ' AND ');
+}
+
+/**
+ * The reader-facing counterpart to `list()` above: published articles only,
+ * ranked by relevance, shaped as public article cards rather than the full
+ * CMS row. Reuses the same tsquery/trigram matching so search behaves
+ * identically for readers and editors.
+ */
+export async function searchPublished(
+  db: TransactionClient,
+  filters: PublicSearchFilters,
+  page: { skip: number; take: number },
+): Promise<{ rows: ArticleCardRow[]; total: number }> {
+  const tsquery = toPrefixQuery(filters.search);
+  if (!tsquery) {
+    return { rows: [], total: 0 };
+  }
+
+  const ranked = await db.$queryRaw<Array<{ id: string; total: bigint }>>(
+    Prisma.sql`
+      SELECT id, count(*) OVER() AS total
+      FROM articles
+      WHERE ${publicSearchWhere(filters, tsquery)}
+      ORDER BY ts_rank(search_vector, to_tsquery('simple', ${tsquery})) DESC,
+               publication_date DESC
+      OFFSET ${page.skip} LIMIT ${page.take}
+    `,
+  );
+
+  const total = ranked[0] ? Number(ranked[0].total) : 0;
+  const ids = ranked.map((row) => row.id);
+  if (ids.length === 0) {
+    return { rows: [], total };
+  }
+
+  // Re-sorted into the ranking the raw query produced.
+  const rows = await db.article.findMany({
+    where: { id: { in: ids } },
+    select: cardSelect,
+  });
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  return {
+    rows: ids.flatMap((id) => {
+      const row = byId.get(id);
+      return row ? [row] : [];
+    }),
+    total,
+  };
 }
 
 export function categoryExists(db: TransactionClient, categoryId: string) {

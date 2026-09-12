@@ -1,4 +1,5 @@
 import type { TransactionClient } from '@coastal-talk-news/db';
+import { cardSelect } from '../public/repository.js';
 
 const withMedia = {
   media: {
@@ -125,4 +126,28 @@ export function mediaExists(db: TransactionClient, mediaId: string) {
     where: { id: mediaId },
     select: { id: true },
   });
+}
+
+export type PublishedArticleRow = Awaited<
+  ReturnType<typeof findPublishedArticles>
+>[number];
+
+export function findPublishedArticles(
+  db: TransactionClient,
+  categoryId: string,
+  page: { skip: number; take: number },
+) {
+  return db.article.findMany({
+    where: { categoryId, status: 'PUBLISHED' },
+    orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }],
+    select: cardSelect,
+    ...page,
+  });
+}
+
+export function countPublishedArticles(
+  db: TransactionClient,
+  categoryId: string,
+) {
+  return db.article.count({ where: { categoryId, status: 'PUBLISHED' } });
 }

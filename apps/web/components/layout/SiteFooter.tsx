@@ -1,17 +1,26 @@
 import Link from 'next/link';
 import { Brand } from './Brand';
 import type { PublicSiteDto } from '@coastal-talk-news/types';
+import { getDictionary } from '../../lib/i18n/dictionaries';
+import type { Locale } from '../../lib/i18n/types';
 import { SocialLinks } from './SocialLinks';
 
-const QUICK_LINKS = [
-  { href: '/', label: 'Home' },
-  { href: '/about', label: 'About' },
-  { href: '/contact', label: 'Contact' },
-  { href: '/advertise', label: 'Advertise' },
-];
-
-export function SiteFooter({ site }: { site: PublicSiteDto }) {
+export function SiteFooter({
+  site,
+  locale,
+}: {
+  site: PublicSiteDto;
+  locale: Locale;
+}) {
   const { settings, categories } = site;
+  const dictionary = getDictionary(locale);
+
+  const quickLinks = [
+    { href: '/', label: dictionary.common.home },
+    { href: '/about', label: dictionary.common.about },
+    { href: '/contact', label: dictionary.common.contact },
+    { href: '/advertise', label: dictionary.common.advertise },
+  ];
 
   return (
     <footer className="bg-night mt-16 text-white">
@@ -30,10 +39,12 @@ export function SiteFooter({ site }: { site: PublicSiteDto }) {
           <SocialLinks settings={settings} tone="inverse" className="mt-5" />
         </div>
 
-        <nav aria-label="Quick links">
-          <h2 className="text-sm font-semibold tracking-wide">Quick Links</h2>
+        <nav aria-label={dictionary.footer.quickLinks}>
+          <h2 className="text-sm font-semibold tracking-wide">
+            {dictionary.footer.quickLinks}
+          </h2>
           <ul className="text-night-muted mt-4 space-y-2.5 text-sm">
-            {QUICK_LINKS.map((link) => (
+            {quickLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
@@ -47,10 +58,12 @@ export function SiteFooter({ site }: { site: PublicSiteDto }) {
         </nav>
 
         {categories.length > 0 && (
-          <nav aria-label="Categories">
-            <h2 className="text-sm font-semibold tracking-wide">Categories</h2>
+          <nav aria-label={dictionary.footer.categories}>
+            <h2 className="text-sm font-semibold tracking-wide">
+              {dictionary.footer.categories}
+            </h2>
             <ul className="text-night-muted mt-4 space-y-2.5 text-sm">
-              {categories.slice(0, 6).map((category) => (
+              {categories.map((category) => (
                 <li key={category.id}>
                   <Link
                     href={`/category/${category.id}`}
@@ -65,7 +78,9 @@ export function SiteFooter({ site }: { site: PublicSiteDto }) {
         )}
 
         <div>
-          <h2 className="text-sm font-semibold tracking-wide">Contact</h2>
+          <h2 className="text-sm font-semibold tracking-wide">
+            {dictionary.footer.contact}
+          </h2>
           <ul className="text-night-muted mt-4 space-y-2.5 text-sm">
             {settings.contactAddress && <li>{settings.contactAddress}</li>}
             {settings.contactEmail && (
@@ -94,7 +109,8 @@ export function SiteFooter({ site }: { site: PublicSiteDto }) {
 
       <div className="border-white/10 border-t">
         <p className="text-night-muted mx-auto max-w-7xl px-4 py-5 text-xs">
-          © {new Date().getFullYear()} {settings.siteName}. All rights reserved.
+          © {new Date().getFullYear()} {settings.siteName}.{' '}
+          {dictionary.footer.rightsReserved}
         </p>
       </div>
     </footer>

@@ -1,9 +1,14 @@
 import Link from 'next/link';
 import { getSite } from '../lib/api';
+import { getDictionary } from '../lib/i18n/dictionaries';
+import { getLocale } from '../lib/i18n/server';
 
 export const metadata = { title: 'Page not found' };
 
 export default async function NotFound() {
+  const locale = await getLocale();
+  const dictionary = getDictionary(locale);
+
   let categories: Array<{ id: string; name: string }> = [];
   try {
     categories = (await getSite()).categories;
@@ -16,22 +21,24 @@ export default async function NotFound() {
       <p className="text-brand font-serif text-6xl font-bold sm:text-7xl">
         404
       </p>
-      <h1 className="mt-4 text-3xl font-bold sm:text-4xl">Page not found</h1>
+      <h1 className="mt-4 text-3xl font-bold sm:text-4xl">
+        {dictionary.notFound.heading}
+      </h1>
       <p className="text-ink-muted mt-3 max-w-md leading-relaxed">
-        The page you are looking for does not exist or may have been moved.
+        {dictionary.notFound.description}
       </p>
 
       <Link
         href="/"
         className="bg-brand hover:bg-brand-hover mt-8 inline-flex h-11 items-center rounded-sm px-6 text-sm font-semibold text-white transition-colors"
       >
-        Go to homepage
+        {dictionary.common.goToHomepage}
       </Link>
 
       {categories.length > 0 && (
         <div className="mt-12 w-full">
           <p className="text-ink-subtle text-xs font-semibold tracking-[0.12em] uppercase">
-            Popular sections
+            {dictionary.notFound.popularSections}
           </p>
           <div className="mt-4 flex flex-wrap justify-center gap-2">
             {categories.slice(0, 6).map((category) => (

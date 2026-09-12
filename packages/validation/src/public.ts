@@ -1,7 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import { AdPlacementSchema } from './advertisement.js';
 import { ArticleContentSchema, LanguageSchema } from './article.js';
-import { IsoDateTime } from './envelope.js';
+import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
 
 const PublicCategoryRefSchema = Type.Object({
@@ -86,4 +86,11 @@ export const PublicHomeSchema = Type.Object({
       articles: Type.Array(PublicArticleCardSchema),
     }),
   ),
+});
+
+export const PublicSearchQuerySchema = Type.Object({
+  q: Type.String({ minLength: 1, maxLength: 200 }),
+  // Omitted entirely means "All" — both languages, mixed together.
+  language: Type.Optional(LanguageSchema),
+  ...paginationQueryFields,
 });

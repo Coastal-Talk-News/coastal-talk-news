@@ -1,8 +1,11 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
+  ListResponse,
+  PublicArticleCardSchema,
   PublicArticleParamsSchema,
   PublicArticleSchema,
   PublicHomeSchema,
+  PublicSearchQuerySchema,
   PublicSiteSchema,
   SuccessResponse,
   commonErrorResponses,
@@ -41,6 +44,24 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.getHome,
+  );
+
+  app.get(
+    '/search',
+    {
+      schema: {
+        tags: ['public'],
+        summary: 'Full-text search over published articles',
+        description:
+          'Ranked by relevance. `language` omitted means both languages, mixed together.',
+        querystring: PublicSearchQuerySchema,
+        response: {
+          200: ListResponse(PublicArticleCardSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.search,
   );
 };
 

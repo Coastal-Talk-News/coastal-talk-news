@@ -87,6 +87,23 @@ export async function getPublic({ db }: CategoryServiceDeps, id: string) {
   return category;
 }
 
+export async function listPublicArticles(
+  deps: CategoryServiceDeps,
+  categoryId: string,
+  pagination: PaginationParams,
+) {
+  // Reuses getPublic's own visibility rule: an inactive or missing category
+  // has no public article listing, regardless of what it still contains.
+  await getPublic(deps, categoryId);
+
+  const { db } = deps;
+  const [rows, total] = await Promise.all([
+    repository.findPublishedArticles(db, categoryId, toSkipTake(pagination)),
+    repository.countPublishedArticles(db, categoryId),
+  ]);
+  return { rows, total };
+}
+
 export async function create(
   deps: CategoryServiceDeps,
   input: CreateCategoryInput,

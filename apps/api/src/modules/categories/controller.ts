@@ -1,5 +1,6 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
+import { toArticleCard } from '../public/mapper.js';
 import type { ToPublicUrl } from './mapper.js';
 import { toCategoryDto, toCmsCategoryDto } from './mapper.js';
 import type {
@@ -107,4 +108,21 @@ export async function listPublic(
 export async function getPublic(request: FastifyRequest<{ Params: IdParams }>) {
   const category = await service.getPublic(deps(request), request.params.id);
   return dataEnvelope(toCategoryDto(category, publicUrl(request)));
+}
+
+export async function listPublicArticles(
+  request: FastifyRequest<{ Params: IdParams; Querystring: ListQuery }>,
+) {
+  const pagination = { page: request.query.page, limit: request.query.limit };
+  const { rows, total } = await service.listPublicArticles(
+    deps(request),
+    request.params.id,
+    pagination,
+  );
+  const toUrl = publicUrl(request);
+  return listEnvelope(
+    rows.map((row) => toArticleCard(row, toUrl)),
+    pagination,
+    total,
+  );
 }
