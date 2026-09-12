@@ -89,7 +89,7 @@ The computed `is_active` value may be included in API responses so the CMS can s
 active advertisements from inactive/expired ones.
 
 `placement` chooses one of two reader-site ad zones: `TOP` or `SIDEBAR` (the column
-default). Top is a fixed-size 700×161 band capped at exactly 3 active ads — the API
+default). Top is a fixed-size 320.57×73.88 band capped at exactly 3 active ads — the API
 rejects a create/update that would push the Top-placement count past 3 with a 409
 Conflict. Sidebar is a fixed-size 250×300 rail with no capacity limit. `priority`
 remains the only ordering control _within_ a placement zone; it no longer decides which

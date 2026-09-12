@@ -145,8 +145,8 @@ model BreakingNews {
   @@map("breaking_news")
 }
 
-/// placement chooses the reader-site ad zone: TOP (a 700×161 band, capped at 3
-/// active ads — enforced in the service layer, not a DB constraint) or SIDEBAR
+/// placement chooses the reader-site ad zone: TOP (a 320.57×73.88 band, capped
+/// at 3 active ads — enforced in the service layer, not a DB constraint) or SIDEBAR
 /// (a 250×300 rail, uncapped, and the column default). priority still orders
 /// ads within whichever zone they land in, not which zone they land in.
 model Advertisement {

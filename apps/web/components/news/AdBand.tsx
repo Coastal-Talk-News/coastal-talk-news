@@ -9,8 +9,12 @@ interface AdBandProps {
 // Fixed ad-unit size for the top band — every creative renders at exactly
 // this size regardless of what it was uploaded at, so the row never reflows
 // as ads change.
-const WIDTH = 700;
-const HEIGHT = 161;
+const WIDTH = 320.57;
+const HEIGHT = 73.88;
+// next/image requires an integer for the fetched-resource size; the fractional
+// values above still govern the actual on-screen box via the inline style.
+const FETCH_WIDTH = Math.round(WIDTH);
+const FETCH_HEIGHT = Math.round(HEIGHT);
 
 export function AdBand({ advertisements, className = '' }: AdBandProps) {
   if (advertisements.length === 0) return null;
@@ -37,9 +41,9 @@ export function AdBand({ advertisements, className = '' }: AdBandProps) {
                 <Image
                   src={ad.image.url}
                   alt={ad.advertiserName}
-                  width={WIDTH}
-                  height={HEIGHT}
-                  sizes={`${WIDTH}px`}
+                  width={FETCH_WIDTH}
+                  height={FETCH_HEIGHT}
+                  sizes={`${FETCH_WIDTH}px`}
                   className="object-cover"
                   style={{ width: WIDTH, height: HEIGHT }}
                 />

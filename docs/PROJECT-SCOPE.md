@@ -170,7 +170,7 @@ Fields: advertiser name, image, destination URL, priority, placement, start/end 
 
 **`placement` chooses the ad's zone: Top or Right Side (Sidebar), confirmed.** The CMS
 create/edit form offers a Top / Right Side choice (default Right Side). Top is a fixed
-700×161 band capped at exactly 3 active ads, enforced server-side (409 Conflict on a
+320.57×73.88 band capped at exactly 3 active ads, enforced server-side (409 Conflict on a
 4th). Right Side is a fixed 250×300 rail with no cap. `priority` still orders ads
 within whichever zone they're in — it no longer selects the zone itself. This reverses
 the earlier "no placement field, confirmed" decision recorded here and in
