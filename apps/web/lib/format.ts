@@ -11,6 +11,14 @@ const longDateFormatter = new Intl.DateTimeFormat('en-IN', {
   year: 'numeric',
 });
 
+const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
 const relativeFormatter = new Intl.RelativeTimeFormat('en', {
   numeric: 'auto',
 });
@@ -25,6 +33,11 @@ const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
 
 export function formatDate(iso: string): string {
   return dateFormatter.format(new Date(iso));
+}
+
+/** Articles carry a byline date and time, unlike the relative card labels. */
+export function formatDateTime(iso: string): string {
+  return dateTimeFormatter.format(new Date(iso));
 }
 
 export function formatLongDate(date: Date): string {

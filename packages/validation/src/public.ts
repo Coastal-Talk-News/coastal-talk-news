@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { AdPlacementSchema } from './advertisement.js';
-import { LanguageSchema } from './article.js';
+import { ArticleContentSchema, LanguageSchema } from './article.js';
 import { IsoDateTime } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
 
@@ -17,6 +17,10 @@ export const PublicArticleCardSchema = Type.Object({
   category: Type.Union([PublicCategoryRefSchema, Type.Null()]),
   image: Type.Union([MediaSummarySchema, Type.Null()]),
   publicationDate: IsoDateTime,
+});
+
+export const PublicArticleParamsSchema = Type.Object({
+  id: Type.String({ format: 'uuid' }),
 });
 
 export const PublicBreakingNewsSchema = Type.Object({
@@ -56,6 +60,17 @@ export const PublicNavCategorySchema = Type.Object({
   articleCount: Type.Integer(),
   image: Type.Union([MediaSummarySchema, Type.Null()]),
 });
+
+export const PublicArticleSchema = Type.Composite([
+  PublicArticleCardSchema,
+  Type.Object({
+    content: ArticleContentSchema,
+    youtubeUrl: Nullable(Type.String()),
+    seoTitle: Nullable(Type.String()),
+    metaDescription: Nullable(Type.String()),
+    ogImage: Type.Union([MediaSummarySchema, Type.Null()]),
+  }),
+]);
 
 export const PublicSiteSchema = Type.Object({
   settings: PublicSiteSettingsSchema,

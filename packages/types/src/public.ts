@@ -1,6 +1,6 @@
 import type { Id, IsoDateTime } from './api.js';
 import type { AdPlacement } from './advertisement.js';
-import type { Language } from './article.js';
+import type { ArticleContent, Language } from './article.js';
 import type { MediaSummaryDto } from './media.js';
 
 export interface PublicCategoryRefDto {
@@ -17,6 +17,19 @@ export interface PublicArticleCardDto {
   category: PublicCategoryRefDto | null;
   image: MediaSummaryDto | null;
   publicationDate: IsoDateTime;
+}
+
+/**
+ * The article page. `content` is the Tiptap document, not HTML — the reader
+ * site walks it and renders each node itself, so stored content can never
+ * inject markup.
+ */
+export interface PublicArticleDto extends PublicArticleCardDto {
+  content: ArticleContent;
+  youtubeUrl: string | null;
+  seoTitle: string | null;
+  metaDescription: string | null;
+  ogImage: MediaSummaryDto | null;
 }
 
 export interface PublicBreakingNewsDto {

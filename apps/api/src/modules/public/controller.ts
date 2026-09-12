@@ -18,3 +18,11 @@ export async function getSite(request: FastifyRequest) {
 export async function getHome(request: FastifyRequest) {
   return dataEnvelope(await service.getHome(deps(request)));
 }
+
+export async function getArticle(
+  request: FastifyRequest<{ Params: { id: string } }>,
+) {
+  return dataEnvelope(
+    await service.getArticle(deps(request), request.params.id),
+  );
+}

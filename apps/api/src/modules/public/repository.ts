@@ -15,6 +15,16 @@ const cardSelect = {
   media: mediaSelect,
 } as const;
 
+/** The card fields plus the body and per-article SEO, for the article page. */
+const detailSelect = {
+  ...cardSelect,
+  content: true,
+  youtubeUrl: true,
+  seoTitle: true,
+  metaDescription: true,
+  ogImage: mediaSelect,
+} as const;
+
 export type ArticleCardRow = Awaited<
   ReturnType<typeof findRecentForCategories>
 >[number];
@@ -28,6 +38,21 @@ const newestFirst: Array<{ publicationDate?: 'desc'; createdAt?: 'desc' }> = [
   { publicationDate: 'desc' },
   { createdAt: 'desc' },
 ];
+
+/**
+ * Draft and archived articles are absent rather than forbidden: a reader
+ * following an old link should meet the 404 page, not a permissions error.
+ */
+export function findPublishedArticle(db: TransactionClient, id: string) {
+  return db.article.findFirst({
+    where: { ...publishedWhere, id },
+    select: detailSelect,
+  });
+}
+
+export type ArticleDetailRow = NonNullable<
+  Awaited<ReturnType<typeof findPublishedArticle>>
+>;
 
 export function findSettings(db: TransactionClient) {
   return db.siteSettings.findFirst({
