@@ -35,13 +35,14 @@ export function SiteHeader({ site }: { site: PublicSiteDto }) {
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-4">
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-5">
         <MobileNav categories={categories} />
 
         <Brand
           siteName={settings.siteName}
           tagline={settings.tagline}
           priority
+          size="lg"
         />
 
         <div className="ml-auto hidden w-full max-w-xs min-w-0 sm:block">
