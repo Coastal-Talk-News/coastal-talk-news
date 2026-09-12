@@ -23,9 +23,6 @@ export function AdColumn({ advertisements, className = '' }: AdColumnProps) {
       aria-label="Advertisement"
       className={`xl:sticky xl:top-6 xl:self-start ${className}`}
     >
-      <p className="text-ink-subtle mb-4 text-center text-[10px] font-semibold tracking-[0.2em] uppercase">
-        Advertisement
-      </p>
       <ul className="flex flex-col items-center gap-6">
         {advertisements.map((ad) => (
           <li key={ad.id}>

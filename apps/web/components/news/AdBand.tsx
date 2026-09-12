@@ -25,9 +25,6 @@ export function AdBand({ advertisements, className = '' }: AdBandProps) {
       className={`mx-auto w-full max-w-6xl px-4 ${className}`}
     >
       <div className="border-rule border-y py-5">
-        <p className="text-ink-subtle mb-3 text-center text-[9px] tracking-[0.2em] uppercase">
-          Advertisement
-        </p>
         <ul className="flex flex-wrap items-center justify-center gap-4">
           {advertisements.map((ad) => (
             <li key={ad.id}>
