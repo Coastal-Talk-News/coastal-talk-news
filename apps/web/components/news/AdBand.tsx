@@ -9,8 +9,8 @@ interface AdBandProps {
 // Fixed ad-unit size for the top band — every creative renders at exactly
 // this size regardless of what it was uploaded at, so the row never reflows
 // as ads change.
-const WIDTH = 242;
-const HEIGHT = 90;
+const WIDTH = 700;
+const HEIGHT = 161;
 
 export function AdBand({ advertisements, className = '' }: AdBandProps) {
   if (advertisements.length === 0) return null;

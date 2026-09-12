@@ -276,7 +276,7 @@ export function AdvertisementSheet({
             >
               <span className="text-ink block text-sm font-medium">Top</span>
               <span className="text-ink-subtle block text-xs">
-                242×90 ·{' '}
+                700×161 ·{' '}
                 {topIsFull
                   ? `Full (${TOP_PLACEMENT_CAPACITY}/${TOP_PLACEMENT_CAPACITY})`
                   : `${topPlacementCount}/${TOP_PLACEMENT_CAPACITY} used`}
@@ -360,7 +360,7 @@ export function AdvertisementSheet({
                 </span>
                 <span className="text-ink-subtle block text-xs">
                   Recommended size:{' '}
-                  {values.placement === 'TOP' ? '242 × 90px' : '250 × 300px'}.
+                  {values.placement === 'TOP' ? '700 × 161px' : '250 × 300px'}.
                   Supports JPG, PNG, WebP.
                 </span>
               </span>

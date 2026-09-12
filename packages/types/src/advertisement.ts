@@ -1,7 +1,7 @@
 import type { Id, IsoDateTime } from './api.js';
 import type { MediaSummaryDto } from './media.js';
 
-/** TOP is a fixed 242×90 band capped at 3 active ads; SIDEBAR is a fixed 250×300 rail, uncapped. */
+/** TOP is a fixed 700×161 band capped at 3 active ads; SIDEBAR is a fixed 250×300 rail, uncapped. */
 export type AdPlacement = 'TOP' | 'SIDEBAR';
 
 export interface AdvertisementDto {
