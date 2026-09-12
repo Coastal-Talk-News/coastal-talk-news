@@ -1,11 +1,17 @@
 import type { AdPlacement } from '@coastal-talk-news/db';
 import type {
+  ArticleContent,
   PublicAdvertisementDto,
   PublicArticleCardDto,
+  PublicArticleDto,
   PublicNavCategoryDto,
   PublicSiteSettingsDto,
 } from '@coastal-talk-news/types';
-import type { ArticleCardRow, NavCategoryRow } from './repository.js';
+import type {
+  ArticleCardRow,
+  ArticleDetailRow,
+  NavCategoryRow,
+} from './repository.js';
 
 interface MediaRow {
   id: string;
@@ -40,6 +46,22 @@ export function toArticleCard(
     image: toMedia(article.media, toPublicUrl),
     // Only published articles reach here, so the date is always set.
     publicationDate: (article.publicationDate ?? new Date()).toISOString(),
+  };
+}
+
+export function toArticleDetail(
+  article: ArticleDetailRow,
+  toPublicUrl: ToPublicUrl,
+): PublicArticleDto {
+  return {
+    ...toArticleCard(article, toPublicUrl),
+    // Prisma types a Json column as JsonValue; the CMS only ever writes a
+    // Tiptap document here and the response schema re-checks the shape.
+    content: article.content as unknown as ArticleContent,
+    youtubeUrl: article.youtubeUrl,
+    seoTitle: article.seoTitle,
+    metaDescription: article.metaDescription,
+    ogImage: toMedia(article.ogImage, toPublicUrl),
   };
 }
 

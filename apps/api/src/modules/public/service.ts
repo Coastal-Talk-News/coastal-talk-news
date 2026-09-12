@@ -1,9 +1,14 @@
 import type { Database } from '@coastal-talk-news/db';
-import type { PublicHomeDto, PublicSiteDto } from '@coastal-talk-news/types';
+import type {
+  PublicArticleDto,
+  PublicHomeDto,
+  PublicSiteDto,
+} from '@coastal-talk-news/types';
 import { NotFoundError } from '../../lib/errors.js';
 import {
   toAdvertisement,
   toArticleCard,
+  toArticleDetail,
   toNavCategory,
   toSettings,
   type ToPublicUrl,
@@ -22,6 +27,17 @@ export interface PublicServiceDeps {
 // category up front covers both reads in one query.
 const HOME_SECTION_CATEGORIES = 6;
 const HOME_SECTION_ARTICLES = 2;
+
+export async function getArticle(
+  { db, toPublicUrl }: PublicServiceDeps,
+  id: string,
+): Promise<PublicArticleDto> {
+  const article = await repository.findPublishedArticle(db, id);
+  if (!article) {
+    throw new NotFoundError('Article');
+  }
+  return toArticleDetail(article, toPublicUrl);
+}
 
 export async function getSite({
   db,

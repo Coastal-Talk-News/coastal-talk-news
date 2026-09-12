@@ -50,6 +50,79 @@
 }
 
 @layer components {
+  /* Reading styles for the article body. The document arrives as Tiptap JSON
+     and is rendered as bare elements (see ArticleBody.tsx), so the typography
+     lives here rather than as classes on every node. */
+  .article-body {
+    @apply text-[1.0625rem] leading-[1.75];
+  }
+
+  .article-body > * + * {
+    @apply mt-5;
+  }
+
+  .article-body h2 {
+    @apply mt-10 mb-3 font-serif text-2xl font-bold;
+  }
+
+  .article-body h3 {
+    @apply mt-8 mb-2 font-serif text-xl font-bold;
+  }
+
+  .article-body h4,
+  .article-body h5,
+  .article-body h6 {
+    @apply mt-6 mb-2 text-lg font-semibold;
+  }
+
+  .article-body a {
+    @apply text-brand decoration-brand/40 hover:decoration-brand underline underline-offset-2 transition-colors;
+  }
+
+  .article-body ul {
+    @apply list-disc pl-6;
+  }
+
+  .article-body ol {
+    @apply list-decimal pl-6;
+  }
+
+  .article-body li + li {
+    @apply mt-2;
+  }
+
+  .article-body li::marker {
+    color: var(--color-ink-subtle);
+  }
+
+  .article-body blockquote {
+    @apply border-brand text-ink-muted my-7 border-l-2 pl-5 font-serif text-xl italic;
+  }
+
+  .article-body pre {
+    @apply bg-paper-sunken border-rule overflow-x-auto rounded-sm border p-4 text-sm;
+  }
+
+  .article-body code {
+    @apply bg-paper-sunken rounded-sm px-1 py-0.5 text-[0.9em];
+  }
+
+  .article-body pre code {
+    @apply bg-transparent p-0;
+  }
+
+  .article-body hr {
+    @apply border-rule my-8;
+  }
+
+  .article-body figure {
+    @apply my-7;
+  }
+
+  .article-body figcaption {
+    @apply text-ink-subtle mt-2 text-center text-xs;
+  }
+
   /* Headlines stay one line short of the box so cards keep a common rhythm. */
   .clamp-2 {
     display: -webkit-box;

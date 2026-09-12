@@ -17,7 +17,10 @@ import {
 } from './modules/categories/routes.js';
 import { dashboardRoutes } from './modules/dashboard/routes.js';
 import { mediaRoutes } from './modules/media/routes.js';
-import { publicSiteRoutes } from './modules/public/routes.js';
+import {
+  publicArticleRoutes,
+  publicSiteRoutes,
+} from './modules/public/routes.js';
 import { cmsSettingsRoutes } from './modules/settings/routes.js';
 import authPlugin from './plugins/auth.js';
 import errorHandler from './plugins/error-handler.js';
@@ -127,6 +130,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
     prefix: `${API_BASE_PATH}/public/categories`,
   });
   await app.register(publicSiteRoutes, { prefix: `${API_BASE_PATH}/public` });
+  await app.register(publicArticleRoutes, {
+    prefix: `${API_BASE_PATH}/public/articles`,
+  });
 
   return app;
 }

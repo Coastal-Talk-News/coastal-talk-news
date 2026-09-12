@@ -1,5 +1,7 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
+  PublicArticleParamsSchema,
+  PublicArticleSchema,
   PublicHomeSchema,
   PublicSiteSchema,
   SuccessResponse,
@@ -39,5 +41,25 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.getHome,
+  );
+};
+
+export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  app.get(
+    '/:id',
+    {
+      schema: {
+        tags: ['public'],
+        summary: 'Get a published article, body included',
+        description:
+          'Draft and archived articles 404 rather than 403, so a stale shared link lands on the reader-site not-found page.',
+        params: PublicArticleParamsSchema,
+        response: {
+          200: SuccessResponse(PublicArticleSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.getArticle,
   );
 };
