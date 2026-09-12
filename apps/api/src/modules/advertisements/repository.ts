@@ -1,4 +1,4 @@
-import type { TransactionClient } from '@coastal-talk-news/db';
+import type { AdPlacement, TransactionClient } from '@coastal-talk-news/db';
 
 const withMedia = {
   media: {
@@ -27,11 +27,22 @@ export function count(db: TransactionClient) {
   return db.advertisement.count();
 }
 
+export function countByPlacement(
+  db: TransactionClient,
+  placement: AdPlacement,
+  excludeId?: string,
+) {
+  return db.advertisement.count({
+    where: { placement, ...(excludeId ? { id: { not: excludeId } } : {}) },
+  });
+}
+
 export interface AdvertisementWriteData {
   advertiserName: string;
   mediaId: string;
   destinationUrl: string;
   priority: number;
+  placement: AdPlacement;
   startAt: Date;
   endAt: Date;
 }

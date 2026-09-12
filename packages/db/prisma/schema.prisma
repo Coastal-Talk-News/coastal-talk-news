@@ -36,6 +36,11 @@ enum ArticlePriority {
   NORMAL
 }
 
+enum AdPlacement {
+  TOP
+  SIDEBAR
+}
+
 model MediaAsset {
   id         String   @id @default(uuid(7))
   filename   String
@@ -140,24 +145,27 @@ model BreakingNews {
   @@map("breaking_news")
 }
 
-/// No placement column: the reader site defines the ad zones and distributes
-/// active ads across them. priority is the only editorial control — higher
-/// values are dealt into the more prominent zones first.
+/// placement chooses the reader-site ad zone: TOP (a 320.57×73.88 band, capped
+/// at 3 active ads — enforced in the service layer, not a DB constraint) or SIDEBAR
+/// (a 250×300 rail, uncapped, and the column default). priority still orders
+/// ads within whichever zone they land in, not which zone they land in.
 model Advertisement {
-  id             String   @id @default(uuid(7))
-  mediaId        String   @map("media_id")
-  advertiserName String   @map("advertiser_name")
-  destinationUrl String   @map("destination_url")
-  priority       Int      @default(0)
-  startAt        DateTime @map("start_at")
-  endAt          DateTime @map("end_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  id             String      @id @default(uuid(7))
+  mediaId        String      @map("media_id")
+  advertiserName String      @map("advertiser_name")
+  destinationUrl String      @map("destination_url")
+  priority       Int         @default(0)
+  placement      AdPlacement @default(SIDEBAR)
+  startAt        DateTime    @map("start_at")
+  endAt          DateTime    @map("end_at")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
 
   media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
 
   @@index([startAt, endAt])
   @@index([priority(sort: Desc), createdAt])
+  @@index([placement])
   @@map("advertisements")
 }
 

@@ -6,11 +6,12 @@ interface AdColumnProps {
   className?: string;
 }
 
-/**
- * Unlike the horizontal bands, the column has no width to divide between
- * creatives — each one gets the full rail, stacked, so a tall or square
- * image never gets squeezed down to fit beside another.
- */
+// Fixed ad-unit size for the sidebar — every creative renders at exactly
+// this size regardless of what it was uploaded at, so the rail never
+// reflows as ads change.
+const WIDTH = 250;
+const HEIGHT = 300;
+
 export function AdColumn({ advertisements, className = '' }: AdColumnProps) {
   if (advertisements.length === 0) return null;
 
@@ -22,10 +23,7 @@ export function AdColumn({ advertisements, className = '' }: AdColumnProps) {
       aria-label="Advertisement"
       className={`xl:sticky xl:top-6 xl:self-start ${className}`}
     >
-      <p className="text-ink-subtle mb-4 text-center text-[10px] font-semibold tracking-[0.2em] uppercase">
-        Advertisement
-      </p>
-      <ul className="flex flex-col gap-6">
+      <ul className="flex flex-col items-center gap-6">
         {advertisements.map((ad) => (
           <li key={ad.id}>
             <a
@@ -38,10 +36,11 @@ export function AdColumn({ advertisements, className = '' }: AdColumnProps) {
               <Image
                 src={ad.image.url}
                 alt={ad.advertiserName}
-                width={ad.image.width}
-                height={ad.image.height}
-                sizes="288px"
-                className="h-auto w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                width={WIDTH}
+                height={HEIGHT}
+                sizes={`${WIDTH}px`}
+                className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                style={{ width: WIDTH, height: HEIGHT }}
               />
             </a>
           </li>

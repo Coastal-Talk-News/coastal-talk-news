@@ -1,3 +1,4 @@
+import type { AdPlacement } from '@coastal-talk-news/db';
 import type {
   PublicAdvertisementDto,
   PublicArticleCardDto,
@@ -58,6 +59,7 @@ interface AdvertisementRow {
   id: string;
   advertiserName: string;
   destinationUrl: string;
+  placement: AdPlacement;
   media: MediaRow;
 }
 
@@ -69,6 +71,7 @@ export function toAdvertisement(
     id: advertisement.id,
     advertiserName: advertisement.advertiserName,
     destinationUrl: advertisement.destinationUrl,
+    placement: advertisement.placement,
     image: {
       id: advertisement.media.id,
       url: toPublicUrl(advertisement.media.storageKey),

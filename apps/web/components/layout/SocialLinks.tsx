@@ -48,14 +48,10 @@ const ICON_PATHS: Record<Platform, ReactNode> = {
       <path d="M10.4 9.7v4.6l4.2-2.3-4.2-2.3Z" />
     </>
   ),
+  // The official X wordmark, not a plain cross — a generic "×" reads as a
+  // close/dismiss icon rather than the brand.
   x: (
-    <path
-      d="m5.5 5.5 13 13M18.5 5.5l-13 13"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-    />
+    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z" />
   ),
 };
 

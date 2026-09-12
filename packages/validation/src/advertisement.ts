@@ -5,12 +5,18 @@ import { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX } from './limits.js';
 
 export { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX };
 
+export const AdPlacementSchema = Type.Union([
+  Type.Literal('TOP'),
+  Type.Literal('SIDEBAR'),
+]);
+
 const advertisementFields = {
   id: Type.String(),
   advertiserName: Type.String(),
   image: MediaSummarySchema,
   destinationUrl: Type.String(),
   priority: Type.Integer(),
+  placement: AdPlacementSchema,
   startAt: IsoDateTime,
   endAt: IsoDateTime,
   isActive: Type.Boolean(),
@@ -28,6 +34,7 @@ const writableAdvertisementFields = {
     format: 'uri',
   }),
   priority: Type.Integer({ minimum: 0 }),
+  placement: AdPlacementSchema,
   startAt: IsoDateTime,
   endAt: IsoDateTime,
 };
@@ -38,6 +45,7 @@ export const CreateAdvertisementBodySchema = Type.Object(
     mediaId: writableAdvertisementFields.mediaId,
     destinationUrl: writableAdvertisementFields.destinationUrl,
     priority: Type.Optional(writableAdvertisementFields.priority),
+    placement: Type.Optional(writableAdvertisementFields.placement),
     startAt: writableAdvertisementFields.startAt,
     endAt: writableAdvertisementFields.endAt,
   },

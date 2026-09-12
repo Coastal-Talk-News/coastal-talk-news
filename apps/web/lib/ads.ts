@@ -1,30 +1,21 @@
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
 
-export type AdZone = 'rightColumn' | 'headerBand' | 'midBand' | 'footerBand';
+export type AdZone = 'top' | 'sidebar';
 
-const BAND_ZONES: AdZone[] = ['headerBand', 'midBand', 'footerBand'];
-
-/** How many creatives a single horizontal band carries. */
-const BAND_CAPACITY = 5;
+const ZONE_PLACEMENT: Record<AdZone, PublicAdvertisementDto['placement']> = {
+  top: 'TOP',
+  sidebar: 'SIDEBAR',
+};
 
 /**
- * The side column is the house list: it carries every advertisement, so a
- * reader on any page can see the whole roster. The bands are highlight slots
- * that take a slice off the top of the same ordering, which means a banded
- * creative also appears in the column — deliberate here, unlike the zones,
- * which never repeat each other.
+ * Every advertisement lands in exactly one zone, driven by its CMS-assigned
+ * placement. Top is capped at 3 server-side (apps/api); Sidebar is uncapped.
  */
 export function adsForZone(
   advertisements: PublicAdvertisementDto[],
   zone: AdZone,
 ): PublicAdvertisementDto[] {
-  if (zone === 'rightColumn') return advertisements;
-
-  const bandIndex = BAND_ZONES.indexOf(zone);
-  return advertisements.slice(
-    bandIndex * BAND_CAPACITY,
-    (bandIndex + 1) * BAND_CAPACITY,
-  );
+  return advertisements.filter((ad) => ad.placement === ZONE_PLACEMENT[zone]);
 }
 
 export function adAspectRatio(image: PublicAdvertisementDto['image']): number {

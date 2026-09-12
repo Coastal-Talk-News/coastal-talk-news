@@ -56,6 +56,12 @@ export function AdvertisementRow({
         </div>
       </td>
 
+      <td className="py-3 pr-4">
+        <Badge tone={item.placement === 'TOP' ? 'blue' : 'slate'}>
+          {item.placement === 'TOP' ? 'Top' : 'Right Side'}
+        </Badge>
+      </td>
+
       <td className="py-3 pr-4 text-sm">
         <p className="text-ink">
           {formatDate(item.startAt)} · {formatTime(item.startAt)}

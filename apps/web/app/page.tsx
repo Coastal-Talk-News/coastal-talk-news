@@ -1,11 +1,9 @@
 import type { PublicArticleCardDto } from '@coastal-talk-news/types';
-import { AdBand } from '../components/news/AdBand';
 import { CategoryMenu } from '../components/news/CategoryMenu';
 import { HeroStory } from '../components/news/HeroStory';
 import { StoryCard } from '../components/news/StoryCard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SectionHeading } from '../components/ui/SectionHeading';
-import { adsForZone } from '../lib/ads';
 import { getHome, getSite } from '../lib/api';
 
 // The hero banner is one category's lead article plus a sidebar of the next
@@ -78,16 +76,6 @@ export default async function HomePage() {
           <CategoryMenu categories={site.categories} />
         </section>
       )}
-
-      {/* A distinct zone from the header/footer bands in layout.tsx, so a
-          newsroom running more than one band's worth of creatives still gets
-          all of them placed somewhere rather than the extras only ever
-          showing up in the sidebar. */}
-      <AdBand
-        advertisements={adsForZone(site.advertisements, 'midBand')}
-        variant="leaderboard"
-        className="mt-12"
-      />
 
       {topStories.length > 0 && (
         <section aria-label="Top stories" className="mt-12">

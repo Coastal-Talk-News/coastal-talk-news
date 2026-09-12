@@ -1,6 +1,10 @@
-import type { Database } from '@coastal-talk-news/db';
+import type { AdPlacement, Database } from '@coastal-talk-news/db';
 import type { FastifyBaseLogger } from 'fastify';
-import { BadRequestError, NotFoundError } from '../../lib/errors.js';
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+} from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
 import { releaseMedia } from '../media/reference.js';
@@ -19,11 +23,14 @@ export interface CreateAdvertisementInput {
   mediaId: string;
   destinationUrl: string;
   priority?: number;
+  placement?: AdPlacement;
   startAt: string;
   endAt: string;
 }
 
 export type UpdateAdvertisementInput = Partial<CreateAdvertisementInput>;
+
+const TOP_PLACEMENT_CAPACITY = 3;
 
 async function assertMediaExists(db: Database, mediaId: string): Promise<void> {
   if (!(await repository.mediaExists(db, mediaId))) {
@@ -36,6 +43,18 @@ async function assertMediaExists(db: Database, mediaId: string): Promise<void> {
 function assertWindow(startAt: Date, endAt: Date): void {
   if (endAt.getTime() <= startAt.getTime()) {
     throw new BadRequestError('endAt must be after startAt.');
+  }
+}
+
+async function assertTopCapacityAvailable(
+  db: Database,
+  excludeId?: string,
+): Promise<void> {
+  const topCount = await repository.countByPlacement(db, 'TOP', excludeId);
+  if (topCount >= TOP_PLACEMENT_CAPACITY) {
+    throw new ConflictError(
+      `Top placement is full (${TOP_PLACEMENT_CAPACITY}/${TOP_PLACEMENT_CAPACITY}). Move another ad to Right Side first.`,
+    );
   }
 }
 
@@ -68,11 +87,17 @@ export async function create(
   const endAt = new Date(input.endAt);
   assertWindow(startAt, endAt);
 
+  const placement: AdPlacement = input.placement ?? 'SIDEBAR';
+  if (placement === 'TOP') {
+    await assertTopCapacityAvailable(db);
+  }
+
   return repository.create(db, {
     advertiserName: input.advertiserName.trim(),
     mediaId: input.mediaId,
     destinationUrl: input.destinationUrl.trim(),
     priority: input.priority ?? 0,
+    placement,
     startAt,
     endAt,
   });
@@ -98,6 +123,11 @@ export async function update(
   const endAt = input.endAt ? new Date(input.endAt) : existing.endAt;
   assertWindow(startAt, endAt);
 
+  const movingToTop = input.placement === 'TOP' && existing.placement !== 'TOP';
+  if (movingToTop) {
+    await assertTopCapacityAvailable(db, id);
+  }
+
   const mediaChanged =
     input.mediaId !== undefined && input.mediaId !== existing.media.id;
 
@@ -111,6 +141,7 @@ export async function update(
         ? { destinationUrl: input.destinationUrl.trim() }
         : {}),
       ...(input.priority !== undefined ? { priority: input.priority } : {}),
+      ...(input.placement !== undefined ? { placement: input.placement } : {}),
       ...(input.startAt !== undefined ? { startAt } : {}),
       ...(input.endAt !== undefined ? { endAt } : {}),
     });
