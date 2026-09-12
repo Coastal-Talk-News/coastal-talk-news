@@ -90,30 +90,23 @@ export default async function RootLayout({
         <SiteHeader site={site} />
         <BreakingTicker items={site.breakingNews} />
         <AdBand
-          advertisements={adsForZone(advertisements, 'headerBand')}
-          variant="leaderboard"
+          advertisements={adsForZone(advertisements, 'top')}
           className="mt-6"
         />
         <main className="flex-1">
           <div className="mx-auto flex w-full max-w-7xl gap-8 px-4">
             <div className="min-w-0 flex-1">{children}</div>
             <AdColumn
-              advertisements={adsForZone(advertisements, 'rightColumn')}
+              advertisements={adsForZone(advertisements, 'sidebar')}
               className="hidden w-72 shrink-0 py-6 xl:block"
             />
           </div>
         </main>
-        <AdBand
-          advertisements={adsForZone(advertisements, 'footerBand')}
-          variant="banner"
-          className="mb-12"
-        />
 
         {/* Narrow screens have no side column, so the roster runs here instead —
-            after the news, never before it, and as a two-up gallery rather than
-            a full-width stack that would take the whole first screen. */}
+            after the news, never before it. */}
         <AdColumn
-          advertisements={adsForZone(advertisements, 'rightColumn')}
+          advertisements={adsForZone(advertisements, 'sidebar')}
           className="mx-auto w-full max-w-6xl px-4 pb-12 xl:hidden"
         />
         <SiteFooter site={site} />
