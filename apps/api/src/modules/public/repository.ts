@@ -5,7 +5,10 @@ const mediaSelect = {
   select: { id: true, storageKey: true, width: true, height: true },
 } as const;
 
-const cardSelect = {
+// Exported: the categories module reuses this exact shape for its own
+// "published articles in this category" query, so a public article card
+// looks identical whichever route it came from.
+export const cardSelect = {
   id: true,
   headline: true,
   summary: true,

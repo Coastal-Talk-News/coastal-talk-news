@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import type { CSSProperties } from 'react';
 import type { PublicBreakingNewsDto } from '@coastal-talk-news/types';
+import { getDictionary } from '../../lib/i18n/dictionaries';
+import type { Locale } from '../../lib/i18n/types';
 
 // Tuned for the ~14px bold ticker text: an average glyph is roughly this wide,
 // and each item also carries the gap-10 (2.5rem) spacing that follows it.
@@ -19,7 +21,13 @@ function estimateDurationSeconds(items: PublicBreakingNewsDto[]): number {
   return Math.max(widthPx / PIXELS_PER_SECOND, MIN_DURATION_S);
 }
 
-export function BreakingTicker({ items }: { items: PublicBreakingNewsDto[] }) {
+export function BreakingTicker({
+  items,
+  locale = 'en',
+}: {
+  items: PublicBreakingNewsDto[];
+  locale?: Locale;
+}) {
   if (items.length === 0) return null;
 
   // The track is the list duplicated once: the CSS animation slides it by
@@ -29,12 +37,13 @@ export function BreakingTicker({ items }: { items: PublicBreakingNewsDto[] }) {
   // content there is or how wide the viewport is.
   const track = [...items, ...items];
   const durationSeconds = estimateDurationSeconds(items);
+  const label = getDictionary(locale).breakingNews.label;
 
   return (
-    <section aria-label="Breaking news" className="bg-brand text-white">
+    <section aria-label={label} className="bg-brand text-white">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2.5">
         <span className="text-brand shrink-0 rounded-sm bg-white px-2.5 py-1 text-[11px] font-bold tracking-[0.08em] uppercase">
-          Breaking
+          {label}
         </span>
         <div className="group min-w-0 flex-1 overflow-hidden">
           <ul

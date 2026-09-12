@@ -1,5 +1,9 @@
 import type {
+  ApiListSuccess,
   ApiSuccess,
+  CategoryDto,
+  PaginationMeta,
+  PublicArticleCardDto,
   PublicArticleDto,
   PublicHomeDto,
   PublicSiteDto,
@@ -19,9 +23,10 @@ export class ApiUnavailableError extends Error {
 }
 
 /**
- * A 4xx is an answer, not an outage — an unpublished article or a malformed id
- * should reach the not-found page immediately instead of being retried for
- * twenty seconds and then surfacing as a server error.
+ * A 4xx is an answer, not an outage — an unpublished article, an unknown or
+ * deactivated category, or a malformed id should reach the not-found page
+ * immediately instead of being retried for twenty seconds and then
+ * surfacing as a server error.
  */
 export class ApiClientError extends Error {
   constructor(
@@ -39,21 +44,25 @@ export class ApiClientError extends Error {
  */
 const RETRY_DELAYS_MS = [2_000, 6_000, 12_000];
 
-async function fetchPublic<T>(path: string, attempt = 0): Promise<T> {
+async function fetchPublicJson<T>(path: string, attempt = 0): Promise<T> {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/public${path}`, {
       next: { revalidate: REVALIDATE_SECONDS },
     });
+    // A 4xx is a real answer (missing/deactivated resource, bad input) —
+    // retrying it on a backoff would just delay a page that should resolve
+    // (usually to not-found) right now.
     if (response.status >= 400 && response.status < 500) {
       throw new ApiClientError(response.status, path);
     }
     if (!response.ok) {
       throw new ApiUnavailableError(path);
     }
-    const payload = (await response.json()) as ApiSuccess<T>;
-    return payload.data;
+    return (await response.json()) as T;
   } catch (error) {
-    if (error instanceof ApiClientError) throw error;
+    if (error instanceof ApiClientError) {
+      throw error;
+    }
     const delay = RETRY_DELAYS_MS[attempt];
     if (delay === undefined) {
       throw error instanceof ApiUnavailableError
@@ -61,8 +70,20 @@ async function fetchPublic<T>(path: string, attempt = 0): Promise<T> {
         : new ApiUnavailableError(path, error);
     }
     await new Promise((resolve) => setTimeout(resolve, delay));
-    return fetchPublic<T>(path, attempt + 1);
+    return fetchPublicJson<T>(path, attempt + 1);
   }
+}
+
+async function fetchPublic<T>(path: string): Promise<T> {
+  const payload = await fetchPublicJson<ApiSuccess<T>>(path);
+  return payload.data;
+}
+
+async function fetchPublicList<T>(
+  path: string,
+): Promise<{ data: T[]; meta: PaginationMeta }> {
+  const payload = await fetchPublicJson<ApiListSuccess<T>>(path);
+  return { data: list(payload.data), meta: payload.meta };
 }
 
 /**
@@ -93,11 +114,13 @@ export async function getHome(): Promise<PublicHomeDto> {
 }
 
 /**
- * Null when there is no such published article — either the id doesn't resolve
- * (404) or it isn't a well-formed id at all (400, from the route's uuid check).
- * Both mean the same thing to a reader following a stale link.
+ * Null when there is no such published article — either the id doesn't
+ * resolve (404) or it isn't a well-formed id at all (400, from the route's
+ * uuid check). Both mean the same thing to a reader following a stale link.
  */
-export async function getArticle(id: string): Promise<PublicArticleDto | null> {
+export async function getArticle(
+  id: string,
+): Promise<PublicArticleDto | null> {
   try {
     return await fetchPublic<PublicArticleDto>(`/articles/${id}`);
   } catch (error) {
@@ -109,4 +132,60 @@ export async function getArticle(id: string): Promise<PublicArticleDto | null> {
     }
     throw error;
   }
+}
+
+/** Throws ApiClientError (404) for an unknown or deactivated category id. */
+export async function getCategory(id: string): Promise<CategoryDto> {
+  return fetchPublic<CategoryDto>(`/categories/${id}`);
+}
+
+export interface CategoryArticlesPage {
+  articles: PublicArticleCardDto[];
+  meta: PaginationMeta;
+}
+
+/** Throws ApiClientError (404) for an unknown or deactivated category id. */
+export async function getCategoryArticles(
+  id: string,
+  { page, limit }: { page: number; limit: number },
+): Promise<CategoryArticlesPage> {
+  const { data, meta } = await fetchPublicList<PublicArticleCardDto>(
+    `/categories/${id}/articles?page=${page}&limit=${limit}`,
+  );
+  return { articles: data, meta };
+}
+
+/** The content-language filter — 'all' means both, mixed together. */
+export type SearchLanguage = 'all' | 'en' | 'kn';
+
+export interface SearchResultsPage {
+  articles: PublicArticleCardDto[];
+  meta: PaginationMeta;
+}
+
+const SEARCH_LANGUAGE_PARAM: Record<Exclude<SearchLanguage, 'all'>, string> = {
+  en: 'ENGLISH',
+  kn: 'KANNADA',
+};
+
+export async function getSearchResults(
+  query: string,
+  {
+    language,
+    page,
+    limit,
+  }: { language: SearchLanguage; page: number; limit: number },
+): Promise<SearchResultsPage> {
+  const params = new URLSearchParams({
+    q: query,
+    page: String(page),
+    limit: String(limit),
+  });
+  if (language !== 'all') {
+    params.set('language', SEARCH_LANGUAGE_PARAM[language]);
+  }
+  const { data, meta } = await fetchPublicList<PublicArticleCardDto>(
+    `/search?${params.toString()}`,
+  );
+  return { articles: data, meta };
 }

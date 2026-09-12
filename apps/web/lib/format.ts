@@ -1,27 +1,56 @@
-const dateFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-});
+import type { Locale } from './i18n/types';
 
-const longDateFormatter = new Intl.DateTimeFormat('en-IN', {
-  weekday: 'long',
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-});
+// Node ships full ICU, so 'kn-IN' renders real Kannada month/weekday names
+// rather than falling back to transliterated Latin ones.
+const dateFormatters: Record<Locale, Intl.DateTimeFormat> = {
+  en: new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }),
+  kn: new Intl.DateTimeFormat('kn-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }),
+};
 
-const dateTimeFormatter = new Intl.DateTimeFormat('en-IN', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-});
+const dateTimeFormatters: Record<Locale, Intl.DateTimeFormat> = {
+  en: new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }),
+  kn: new Intl.DateTimeFormat('kn-IN', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }),
+};
 
-const relativeFormatter = new Intl.RelativeTimeFormat('en', {
-  numeric: 'auto',
-});
+const longDateFormatters: Record<Locale, Intl.DateTimeFormat> = {
+  en: new Intl.DateTimeFormat('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }),
+  kn: new Intl.DateTimeFormat('kn-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }),
+};
+
+const relativeFormatters: Record<Locale, Intl.RelativeTimeFormat> = {
+  en: new Intl.RelativeTimeFormat('en', { numeric: 'auto' }),
+  kn: new Intl.RelativeTimeFormat('kn', { numeric: 'auto' }),
+};
 
 const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ['year', 365 * 24 * 60 * 60 * 1000],
@@ -31,29 +60,36 @@ const UNITS: Array<[Intl.RelativeTimeFormatUnit, number]> = [
   ['minute', 60 * 1000],
 ];
 
-export function formatDate(iso: string): string {
-  return dateFormatter.format(new Date(iso));
+export function formatDate(iso: string, locale: Locale = 'en'): string {
+  return dateFormatters[locale].format(new Date(iso));
 }
 
 /** Articles carry a byline date and time, unlike the relative card labels. */
-export function formatDateTime(iso: string): string {
-  return dateTimeFormatter.format(new Date(iso));
+export function formatDateTime(iso: string, locale: Locale = 'en'): string {
+  return dateTimeFormatters[locale].format(new Date(iso));
 }
 
-export function formatLongDate(date: Date): string {
-  return longDateFormatter.format(date);
+export function formatLongDate(date: Date, locale: Locale = 'en'): string {
+  return longDateFormatters[locale].format(date);
 }
 
 /** Falls back to an absolute date once a story is more than a week old. */
-export function formatTimeAgo(iso: string): string {
+export function formatTimeAgo(
+  iso: string,
+  locale: Locale = 'en',
+  justNowLabel = 'just now',
+): string {
   const deltaMs = new Date(iso).getTime() - Date.now();
   if (Math.abs(deltaMs) > 7 * 24 * 60 * 60 * 1000) {
-    return formatDate(iso);
+    return formatDate(iso, locale);
   }
   for (const [unit, unitMs] of UNITS) {
     if (Math.abs(deltaMs) >= unitMs) {
-      return relativeFormatter.format(Math.round(deltaMs / unitMs), unit);
+      return relativeFormatters[locale].format(
+        Math.round(deltaMs / unitMs),
+        unit,
+      );
     }
   }
-  return 'just now';
+  return justNowLabel;
 }

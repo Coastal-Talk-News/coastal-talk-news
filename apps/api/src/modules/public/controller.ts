@@ -1,5 +1,6 @@
+import type { Language } from '@coastal-talk-news/db';
 import type { FastifyRequest } from 'fastify';
-import { dataEnvelope } from '../../lib/pagination.js';
+import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
 import type { PublicServiceDeps } from './service.js';
 import * as service from './service.js';
 
@@ -25,4 +26,24 @@ export async function getArticle(
   return dataEnvelope(
     await service.getArticle(deps(request), request.params.id),
   );
+}
+
+interface SearchQuery {
+  q: string;
+  language?: Language;
+  page: number;
+  limit: number;
+}
+
+export async function search(
+  request: FastifyRequest<{ Querystring: SearchQuery }>,
+) {
+  const { q, language, page, limit } = request.query;
+  const pagination = { page, limit };
+  const { rows, total } = await service.search(
+    deps(request),
+    { search: q, language },
+    pagination,
+  );
+  return listEnvelope(rows, pagination, total);
 }

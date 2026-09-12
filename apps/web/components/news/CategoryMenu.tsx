@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
+import { getDictionary } from '../../lib/i18n/dictionaries';
+import type { Locale } from '../../lib/i18n/types';
 
 /**
  * A quick-jump grid to every section, distinct from the header's text nav —
@@ -9,13 +11,15 @@ import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
  */
 export function CategoryMenu({
   categories,
+  locale = 'en',
 }: {
   categories: PublicNavCategoryDto[];
+  locale?: Locale;
 }) {
   if (categories.length === 0) return null;
 
   return (
-    <nav aria-label="Browse by category">
+    <nav aria-label={getDictionary(locale).category.browseByCategory}>
       <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
         {categories.map((category) => (
           <li key={category.id}>

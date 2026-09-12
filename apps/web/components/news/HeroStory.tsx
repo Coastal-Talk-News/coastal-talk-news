@@ -1,10 +1,17 @@
 import Link from 'next/link';
 import type { PublicArticleCardDto } from '@coastal-talk-news/types';
+import type { Locale } from '../../lib/i18n/types';
 import { CategoryTag } from './CategoryTag';
 import { StoryImage } from './StoryImage';
 import { StoryMeta } from './StoryMeta';
 
-export function HeroStory({ article }: { article: PublicArticleCardDto }) {
+export function HeroStory({
+  article,
+  locale = 'en',
+}: {
+  article: PublicArticleCardDto;
+  locale?: Locale;
+}) {
   return (
     <article className="group relative isolate overflow-hidden rounded-card">
       <StoryImage
@@ -32,7 +39,11 @@ export function HeroStory({ article }: { article: PublicArticleCardDto }) {
           {article.summary}
         </p>
         <div className="mt-3">
-          <StoryMeta publicationDate={article.publicationDate} tone="inverse" />
+          <StoryMeta
+            publicationDate={article.publicationDate}
+            tone="inverse"
+            locale={locale}
+          />
         </div>
       </div>
     </article>

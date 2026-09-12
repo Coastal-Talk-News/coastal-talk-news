@@ -6,6 +6,7 @@ import {
   CmsCategorySchema,
   CreateCategoryBodySchema,
   ListResponse,
+  PublicArticleCardSchema,
   PublicCategoryListQuerySchema,
   ReorderCategoriesBodySchema,
   SuccessResponse,
@@ -146,5 +147,23 @@ export const publicCategoryRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.getPublic,
+  );
+
+  app.get(
+    '/:id/articles',
+    {
+      schema: {
+        tags: ['categories'],
+        summary: "List a category's published articles",
+        description: 'Newest first. 404s for an inactive or missing category.',
+        params: CategoryParamsSchema,
+        querystring: PublicCategoryListQuerySchema,
+        response: {
+          200: ListResponse(PublicArticleCardSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.listPublicArticles,
   );
 };

@@ -13,6 +13,7 @@ import { SiteFooter } from '../components/layout/SiteFooter';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { adsForZone } from '../lib/ads';
 import { getSite } from '../lib/api';
+import { getLocale } from '../lib/i18n/server';
 import './globals.css';
 
 // Every route reads live site/news data through this layout, so there is
@@ -78,20 +79,21 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  const site = await getSite();
+  const [site, locale] = await Promise.all([getSite(), getLocale()]);
   const { advertisements } = site;
 
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable}`}
     >
       <body className="flex min-h-screen flex-col">
-        <SiteHeader site={site} />
-        <BreakingTicker items={site.breakingNews} />
+        <SiteHeader site={site} locale={locale} />
+        <BreakingTicker items={site.breakingNews} locale={locale} />
         <AdBand
           advertisements={adsForZone(advertisements, 'top')}
           className="mt-6"
+          locale={locale}
         />
         <main className="flex-1">
           <div className="mx-auto flex w-full max-w-7xl gap-8 px-4">
@@ -99,6 +101,7 @@ export default async function RootLayout({
             <AdColumn
               advertisements={adsForZone(advertisements, 'sidebar')}
               className="hidden w-72 shrink-0 py-6 xl:block"
+              locale={locale}
             />
           </div>
         </main>
@@ -108,8 +111,9 @@ export default async function RootLayout({
         <AdColumn
           advertisements={adsForZone(advertisements, 'sidebar')}
           className="mx-auto w-full max-w-6xl px-4 pb-12 xl:hidden"
+          locale={locale}
         />
-        <SiteFooter site={site} />
+        <SiteFooter site={site} locale={locale} />
       </body>
     </html>
   );

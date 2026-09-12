@@ -7,16 +7,15 @@
 
 ## Decisions locked in this revision
 
-| Topic              | Decision                                                                                                                                                                                                                                                                                                                     |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| UI language        | **No runtime language switcher.** The interface chrome (nav labels, buttons, etc.) renders in a single fixed language. `Article.language` is unaffected — every article is still tagged English or Kannada, and both appear mixed together on the same listing pages (homepage, category pages), not segregated by a toggle. |
-| Article publishing | **Simple: Draft → Published only.** No `Scheduled` status, no future-dated auto-publish. Hitting Publish sets `publication_date` to the current time immediately.                                                                                                                                                            |
-| Article deletion   | **Both actions available**, on any article: **Archive** (soft — status becomes `Archived`, row stays in the DB, hidden from the public site) and **Delete** (hard — the row is permanently removed, subject to the media reference rule in §9 below).                                                                        |
+**Revision note (2026-09-12):** the "no runtime language switcher" UI-language decision below
+is reversed — see the row itself for what replaced it. Article publishing and deletion are
+unchanged from the original pass.
 
-One assumption baked into the first row: the fixed UI language defaults to **Kannada**,
-matching the local audience and the earlier design intent — it's just a static string
-resource, not an architectural decision, so it's cheap to flip to English later if that
-turns out to be wrong. Confirm if you want it the other way.
+| Topic              | Decision                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI language        | **Runtime English/Kannada toggle.** A header control lets a reader switch the interface chrome (nav labels, buttons, empty states, dates) between English and Kannada; the choice is saved in a cookie and takes effect immediately, defaulting to Kannada for a first-time visitor. This is real translation of a small, hand-maintained UI-string dictionary (`apps/web/lib/i18n`) — not machine translation, and no Google Translate–style page-rewriting widget (those mutate the DOM outside of React and are a well-known source of crashes on frameworks like this one). `Article.language` is unaffected: headline, summary and body content are never translated and always render exactly as the newsroom wrote them, in whichever language the toggle happens to be set to. |
+| Article publishing | **Simple: Draft → Published only.** No `Scheduled` status, no future-dated auto-publish. Hitting Publish sets `publication_date` to the current time immediately.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Article deletion   | **Both actions available**, on any article: **Archive** (soft — status becomes `Archived`, row stays in the DB, hidden from the public site) and **Delete** (hard — the row is permanently removed, subject to the media reference rule in §9 below).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ## Overview
 
@@ -29,9 +28,10 @@ site interface itself is single-language. Fully responsive.
 
 ### Header & navigation
 
-Common header across the main pages: logo, site name, main nav, search, mobile menu. No
-language switcher. Navigation reflects the _active_ categories from the CMS — deactivating
-a category (`Category.is_active = false`) must remove it from public navigation immediately.
+Common header across the main pages: logo, site name, main nav, search, mobile menu, an
+English/Kannada UI-language toggle. Navigation reflects the _active_ categories from the
+CMS — deactivating a category (`Category.is_active = false`) must remove it from public
+navigation immediately.
 
 ### Homepage
 
@@ -221,9 +221,11 @@ scheduled sweep in V1. The admin deletes those from the library, or triggers the
 - **General** — site name, tagline, description, logo, favicon, contact email/phone/address, social links (Facebook, Instagram, YouTube, X)
 - **SEO** — default SEO title, default meta description, default OG image
 
-A "Language Settings" screen is no longer needed as a _toggle_ — there's nothing to
-switch. `Site Settings.default_ui_language` can still exist as a fixed configuration value
-if useful for future i18n work, just without a reader-facing control.
+No CMS-side "Language Settings" screen is needed: the reader's UI-language choice is
+per-visitor (a cookie set by the header toggle), not a site-wide setting an admin
+configures. `Site Settings.default_ui_language` predates the toggle, is not read by it
+(the toggle's own first-visit default is a fixed Kannada), and remains unused — a
+pre-existing, still-open cleanup item, not something this revision resolves.
 
 ## Public ↔ CMS mapping
 
@@ -251,8 +253,8 @@ search no-results, mobile menu behavior, image responsiveness.
 - Reporter accounts, reporter approval workflows
 - CMS user roles/permissions (single-tier admin access)
 - Complex analytics dashboard, Most Read / Most Viewed, any reader traffic analytics
-- Automatic article translation
-- Runtime English/Kannada UI switching (see decisions table above)
+- Automatic article translation (the UI-language toggle — see decisions table above —
+  translates chrome text only; it never translates or machine-translates article content)
 - A separate "Videos" content type or section
 - Separate News vs. Video search
 - Contact form

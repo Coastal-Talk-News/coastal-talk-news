@@ -1,9 +1,12 @@
 import Image from 'next/image';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
 import { adAspectRatio, galleryRows, rowMaxWidth } from '../../lib/ads';
+import { getDictionary } from '../../lib/i18n/dictionaries';
+import type { Locale } from '../../lib/i18n/types';
 
 interface AdShowcaseProps {
   advertisements: PublicAdvertisementDto[];
+  locale?: Locale;
 }
 
 const GAP = 24;
@@ -12,8 +15,9 @@ const GAP = 24;
 // the rows are allowed to run taller than a band's.
 const MAX_HEIGHT = 300;
 
-export function AdShowcase({ advertisements }: AdShowcaseProps) {
+export function AdShowcase({ advertisements, locale = 'en' }: AdShowcaseProps) {
   const rows = galleryRows(advertisements, { maxPerRow: 3, ratioBudget: 7 });
+  const dictionary = getDictionary(locale);
 
   return (
     <div className="flex flex-col gap-10">
@@ -33,7 +37,7 @@ export function AdShowcase({ advertisements }: AdShowcaseProps) {
                 href={ad.destinationUrl}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                aria-label={`Advertisement: ${ad.advertiserName}`}
+                aria-label={`${dictionary.common.advertisement}: ${ad.advertiserName}`}
                 className="group block"
               >
                 <Image
@@ -48,7 +52,9 @@ export function AdShowcase({ advertisements }: AdShowcaseProps) {
                   <span className="group-hover:text-brand font-semibold transition-colors">
                     {ad.advertiserName}
                   </span>
-                  <span className="text-ink-subtle text-xs">Visit site →</span>
+                  <span className="text-ink-subtle text-xs">
+                    {dictionary.advertise.visitSite} →
+                  </span>
                 </span>
               </a>
             </li>
