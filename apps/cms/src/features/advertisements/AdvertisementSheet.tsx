@@ -1,9 +1,11 @@
 import type {
+  AdPlacement,
   AdvertisementDto,
   CreateAdvertisementRequest,
   MediaSummaryDto,
 } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
+import { cn } from '@coastal-talk-news/ui/cn';
 import { DateTimeField } from '@coastal-talk-news/ui/date-time-field';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
@@ -13,11 +15,14 @@ import { ImagePlus, Link as LinkIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
 
+const TOP_PLACEMENT_CAPACITY = 3;
+
 interface FormValues {
   advertiserName: string;
   image: MediaSummaryDto | null;
   destinationUrl: string;
   priority: string;
+  placement: AdPlacement;
   startDate: string;
   startTime: string;
   endDate: string;
@@ -56,6 +61,7 @@ function toValues(item: AdvertisementDto | null): FormValues {
       image: null,
       destinationUrl: '',
       priority: '0',
+      placement: 'SIDEBAR',
       startDate: start.date,
       startTime: start.time,
       endDate: '',
@@ -69,6 +75,7 @@ function toValues(item: AdvertisementDto | null): FormValues {
     image: item.image,
     destinationUrl: item.destinationUrl,
     priority: String(item.priority),
+    placement: item.placement,
     startDate: start.date,
     startTime: start.time,
     endDate: end.date,
@@ -79,6 +86,8 @@ function toValues(item: AdvertisementDto | null): FormValues {
 interface AdvertisementSheetProps {
   open: boolean;
   editing: AdvertisementDto | null;
+  /** Ads currently in Top placement, across the whole list — not just what's visible under a filter. */
+  topPlacementCount: number;
   saving: boolean;
   serverError: string | null;
   onOpenChange: (open: boolean) => void;
@@ -88,6 +97,7 @@ interface AdvertisementSheetProps {
 export function AdvertisementSheet({
   open,
   editing,
+  topPlacementCount,
   saving,
   serverError,
   onOpenChange,
@@ -123,10 +133,17 @@ export function AdvertisementSheet({
     (values.image?.id ?? null) !== (initial.current.image?.id ?? null) ||
     trimmedUrl !== initial.current.destinationUrl.trim() ||
     values.priority !== initial.current.priority ||
+    values.placement !== initial.current.placement ||
     values.startDate !== initial.current.startDate ||
     values.startTime !== initial.current.startTime ||
     values.endDate !== initial.current.endDate ||
     values.endTime !== initial.current.endTime;
+
+  // The 3-cap is enforced server-side; this only prevents picking a choice
+  // that's already known to be rejected. An ad already in Top doesn't count
+  // against itself while editing.
+  const topIsFull =
+    topPlacementCount >= TOP_PLACEMENT_CAPACITY && editing?.placement !== 'TOP';
 
   const titleError =
     touched && !trimmedTitle ? 'Title is required.' : undefined;
@@ -148,6 +165,7 @@ export function AdvertisementSheet({
     Boolean(trimmedUrl) &&
     windowValid &&
     priorityValid &&
+    !(values.placement === 'TOP' && topIsFull) &&
     (isDirty || !editing);
 
   function handleSubmit(event: FormEvent) {
@@ -159,6 +177,7 @@ export function AdvertisementSheet({
       mediaId: values.image.id,
       destinationUrl: trimmedUrl,
       priority: values.priority === '' ? 0 : Number(values.priority),
+      placement: values.placement,
       startAt: startIso,
       endAt: endIso,
     });
@@ -236,6 +255,61 @@ export function AdvertisementSheet({
 
         <div className="space-y-1.5">
           <span className="text-ink-muted block text-sm font-medium">
+            Placement<span className="ml-0.5 text-danger">*</span>
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              disabled={topIsFull}
+              aria-pressed={values.placement === 'TOP'}
+              onClick={() =>
+                setValues((current) => ({ ...current, placement: 'TOP' }))
+              }
+              className={cn(
+                'rounded-lg border p-3 text-left transition-colors',
+                values.placement === 'TOP'
+                  ? 'border-accent bg-accent-soft'
+                  : 'border-hairline hover:border-ink-subtle/40',
+                topIsFull &&
+                  'cursor-not-allowed opacity-50 hover:border-hairline',
+              )}
+            >
+              <span className="text-ink block text-sm font-medium">Top</span>
+              <span className="text-ink-subtle block text-xs">
+                242×90 ·{' '}
+                {topIsFull
+                  ? `Full (${TOP_PLACEMENT_CAPACITY}/${TOP_PLACEMENT_CAPACITY})`
+                  : `${topPlacementCount}/${TOP_PLACEMENT_CAPACITY} used`}
+              </span>
+            </button>
+            <button
+              type="button"
+              aria-pressed={values.placement === 'SIDEBAR'}
+              onClick={() =>
+                setValues((current) => ({ ...current, placement: 'SIDEBAR' }))
+              }
+              className={cn(
+                'rounded-lg border p-3 text-left transition-colors',
+                values.placement === 'SIDEBAR'
+                  ? 'border-accent bg-accent-soft'
+                  : 'border-hairline hover:border-ink-subtle/40',
+              )}
+            >
+              <span className="text-ink block text-sm font-medium">
+                Right Side
+              </span>
+              <span className="text-ink-subtle block text-xs">250×300</span>
+            </button>
+          </div>
+          {topIsFull && (
+            <p className="text-ink-subtle text-xs">
+              Top is full — move another ad to Right Side to free a slot.
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
+          <span className="text-ink-muted block text-sm font-medium">
             Image<span className="ml-0.5 text-danger">*</span>
           </span>
 
@@ -285,7 +359,9 @@ export function AdvertisementSheet({
                   Click to upload an image
                 </span>
                 <span className="text-ink-subtle block text-xs">
-                  Recommended size: 1200 × 628px. Supports JPG, PNG, WebP.
+                  Recommended size:{' '}
+                  {values.placement === 'TOP' ? '242 × 90px' : '250 × 300px'}.
+                  Supports JPG, PNG, WebP.
                 </span>
               </span>
             </button>
@@ -333,7 +409,7 @@ export function AdvertisementSheet({
               ? 'Priority must be a whole number.'
               : undefined
           }
-          hint="Higher priority ads are dealt into the more prominent zones first. Leave at 0 for standard priority."
+          hint="Higher priority ads appear first within their placement. Leave at 0 for standard priority."
         >
           <Input
             id="advertisement-priority"

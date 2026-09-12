@@ -77,7 +77,7 @@ display, but it is never persisted — recompute it on every read.
 ### Advertisement
 
 `id`, `media_id` (FK → Media Asset), `advertiser_name`, `destination_url`, `priority`,
-`start_at`, `end_at`, `created_at`, `updated_at`
+`placement`, `start_at`, `end_at`, `created_at`, `updated_at`
 
 There is **no `is_active` database field**, for the same reason as Breaking News. The
 backend derives the active state from the schedule:
@@ -88,11 +88,13 @@ backend derives the active state from the schedule:
 The computed `is_active` value may be included in API responses so the CMS can separate
 active advertisements from inactive/expired ones.
 
-**No `placement` field, confirmed.** The reader site defines its own ad zones and
-distributes active ads across them automatically; `priority` is the only editorial control
-over which ads land in the more prominent zones. This entity previously listed `placement`
-as a field pending design — that was stale, never reconciled with the schema's actual
-(intentional) no-placement design. Don't reintroduce it without a real schema change.
+`placement` chooses one of two reader-site ad zones: `TOP` or `SIDEBAR` (the column
+default). Top is a fixed-size 242×90 band capped at exactly 3 active ads — the API
+rejects a create/update that would push the Top-placement count past 3 with a 409
+Conflict. Sidebar is a fixed-size 250×300 rail with no capacity limit. `priority`
+remains the only ordering control _within_ a placement zone; it no longer decides which
+zone an ad lands in, since `placement` does that directly now. This replaces an earlier
+"no placement field, confirmed" note recorded here — that decision has been reversed.
 
 ### Media Asset
 

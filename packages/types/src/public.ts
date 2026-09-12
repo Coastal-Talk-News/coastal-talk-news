@@ -1,4 +1,5 @@
 import type { Id, IsoDateTime } from './api.js';
+import type { AdPlacement } from './advertisement.js';
 import type { Language } from './article.js';
 import type { MediaSummaryDto } from './media.js';
 
@@ -29,6 +30,7 @@ export interface PublicAdvertisementDto {
   id: Id;
   advertiserName: string;
   destinationUrl: string;
+  placement: AdPlacement;
   image: MediaSummaryDto;
 }
 

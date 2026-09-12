@@ -1,3 +1,4 @@
+import type { AdPlacement } from '@coastal-talk-news/db';
 import type { AdvertisementDto } from '@coastal-talk-news/types';
 import { withIsActive } from '../../lib/schedule.js';
 
@@ -13,6 +14,7 @@ export interface AdvertisementEntity {
   advertiserName: string;
   destinationUrl: string;
   priority: number;
+  placement: AdPlacement;
   startAt: Date;
   endAt: Date;
   createdAt: Date;
@@ -39,6 +41,7 @@ export function toAdvertisementDto(
     },
     destinationUrl: item.destinationUrl,
     priority: item.priority,
+    placement: item.placement,
     startAt: item.startAt.toISOString(),
     endAt: item.endAt.toISOString(),
     isActive,

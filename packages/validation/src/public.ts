@@ -1,4 +1,5 @@
 import { Type } from '@sinclair/typebox';
+import { AdPlacementSchema } from './advertisement.js';
 import { LanguageSchema } from './article.js';
 import { IsoDateTime } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
@@ -28,6 +29,7 @@ export const PublicAdvertisementSchema = Type.Object({
   id: Type.String(),
   advertiserName: Type.String(),
   destinationUrl: Type.String(),
+  placement: AdPlacementSchema,
   image: MediaSummarySchema,
 });
 

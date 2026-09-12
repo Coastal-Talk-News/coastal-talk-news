@@ -166,14 +166,15 @@ active Breaking News.
 
 ### Advertisements
 
-Fields: advertiser name, image, destination URL, priority, start/end datetime.
+Fields: advertiser name, image, destination URL, priority, placement, start/end datetime.
 
-**No `placement` field, confirmed.** The Prisma schema deliberately has no `placement`
-column — the reader site defines its own ad zones and distributes active ads across them,
-with `priority` as the sole editorial control over which ads land in the more prominent
-zones. This section previously listed `placement` as a field; that was stale text never
-reconciled with the schema's actual (and intentional) design. Don't reintroduce it without
-updating the schema first.
+**`placement` chooses the ad's zone: Top or Right Side (Sidebar), confirmed.** The CMS
+create/edit form offers a Top / Right Side choice (default Right Side). Top is a fixed
+242×90 band capped at exactly 3 active ads, enforced server-side (409 Conflict on a
+4th). Right Side is a fixed 250×300 rail with no cap. `priority` still orders ads
+within whichever zone they're in — it no longer selects the zone itself. This reverses
+the earlier "no placement field, confirmed" decision recorded here and in
+DATA-MODEL.md; the reversal is final.
 
 Advertisements are scheduled using `start_at` and `end_at`. The advertisement does not have
 a stored `is_active` field — its active state is derived by the backend from the schedule,
@@ -269,9 +270,11 @@ search no-results, mobile menu behavior, image responsiveness.
 1. **Contact address — resolved, no schema change.** Confirmed against the actual schema:
    `Site Settings.contact_address` already exists as a nullable column. The Settings CMS
    page's General tab reads/writes it directly.
-2. **Advertisement `placement` — resolved, no field.** Confirmed against the actual
-   schema and CMS design: there is no `placement` column. `priority` is the only editorial
-   control; the reader site distributes active ads across its own zones automatically.
+2. **Advertisement `placement` — resolved, field added.** The schema now has a
+   `placement` enum column (`TOP` / `SIDEBAR`, default `SIDEBAR`). The CMS exposes a
+   Top / Right Side choice; Top is capped at exactly 3 active ads, enforced
+   server-side with a 409 Conflict. This reverses the earlier "no placement field"
+   resolution recorded above — see the Advertisements section for the current design.
 3. **Article lifecycle schema cleanup** — with `Scheduled` publishing removed,
    `ArticleStatus` should be `DRAFT / PUBLISHED / ARCHIVED`, and `scheduled_deletion_at`
    is no longer needed. Apply these changes in Prisma before building the dependent features.

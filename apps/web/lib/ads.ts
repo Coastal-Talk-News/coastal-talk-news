@@ -2,20 +2,20 @@ import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
 
 export type AdZone = 'top' | 'sidebar';
 
-/** A firm cap, not a target — the top band never carries more than this. */
-const TOP_CAPACITY = 3;
+const ZONE_PLACEMENT: Record<AdZone, PublicAdvertisementDto['placement']> = {
+  top: 'TOP',
+  sidebar: 'SIDEBAR',
+};
 
 /**
- * Every advertisement lands in exactly one zone, never both: the first
- * TOP_CAPACITY go in the top band, everything else goes in the sidebar.
+ * Every advertisement lands in exactly one zone, driven by its CMS-assigned
+ * placement. Top is capped at 3 server-side (apps/api); Sidebar is uncapped.
  */
 export function adsForZone(
   advertisements: PublicAdvertisementDto[],
   zone: AdZone,
 ): PublicAdvertisementDto[] {
-  return zone === 'top'
-    ? advertisements.slice(0, TOP_CAPACITY)
-    : advertisements.slice(TOP_CAPACITY);
+  return advertisements.filter((ad) => ad.placement === ZONE_PLACEMENT[zone]);
 }
 
 export function adAspectRatio(image: PublicAdvertisementDto['image']): number {

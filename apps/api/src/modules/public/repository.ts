@@ -80,6 +80,7 @@ export function findActiveAdvertisements(db: TransactionClient, now: Date) {
       id: true,
       advertiserName: true,
       destinationUrl: true,
+      placement: true,
       media: mediaSelect,
     },
   });
