@@ -18,7 +18,6 @@ export const cardSelect = {
   media: mediaSelect,
 } as const;
 
-/** The card fields plus the body and per-article SEO, for the article page. */
 const detailSelect = {
   ...cardSelect,
   content: true,
@@ -42,10 +41,7 @@ const newestFirst: Array<{ publicationDate?: 'desc'; createdAt?: 'desc' }> = [
   { createdAt: 'desc' },
 ];
 
-/**
- * Draft and archived articles are absent rather than forbidden: a reader
- * following an old link should meet the 404 page, not a permissions error.
- */
+/** Unpublished articles are absent, not forbidden: a stale link should 404, not 403. */
 export function findPublishedArticle(db: TransactionClient, id: string) {
   return db.article.findFirst({
     where: { ...publishedWhere, id },
@@ -70,7 +66,12 @@ export function findSettings(db: TransactionClient) {
       instagramUrl: true,
       youtubeUrl: true,
       xUrl: true,
+      defaultUiLanguage: true,
+      defaultSeoTitle: true,
+      defaultMetaDescription: true,
       logo: mediaSelect,
+      favicon: mediaSelect,
+      defaultOgImage: mediaSelect,
     },
   });
 }

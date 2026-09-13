@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ArticleBody } from '../../../components/news/ArticleBody';
 import { CategoryTag } from '../../../components/news/CategoryTag';
@@ -7,46 +6,40 @@ import { ShareLinks } from '../../../components/news/ShareLinks';
 import { StoryImage } from '../../../components/news/StoryImage';
 import { YoutubeEmbed } from '../../../components/news/YoutubeEmbed';
 import { formatDateTime } from '../../../lib/format';
-import { getArticle } from '../../../lib/api';
+import { getArticle, getSite } from '../../../lib/api';
+import { getLocale } from '../../../lib/i18n/server';
+import { buildMetadata } from '../../../lib/seo';
+import { getOrigin } from '../../../lib/site-url';
 
 interface ArticlePageProps {
   params: Promise<{ id: string }>;
-}
-
-/**
- * Share intents need an absolute URL, and the site runs on a different host in
- * every environment. Reading the request host keeps that out of the config.
- */
-async function requestOrigin(): Promise<string> {
-  const headerList = await headers();
-  const host = headerList.get('host') ?? 'localhost:3000';
-  const protocol =
-    headerList.get('x-forwarded-proto') ??
-    (host.startsWith('localhost') ? 'http' : 'https');
-  return `${protocol}://${host}`;
 }
 
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { id } = await params;
-  const article = await getArticle(id);
+  const [article, { settings }, locale, origin] = await Promise.all([
+    getArticle(id),
+    getSite(),
+    getLocale(),
+    getOrigin(),
+  ]);
   if (!article) return { title: 'Article not found' };
 
-  const description = article.metaDescription ?? article.summary;
-  const image = article.ogImage ?? article.image;
-
-  return {
+  // Each value falls back to the newsroom's default inside buildMetadata, so
+  // an article with no SEO overrides still gets a full set of tags.
+  return buildMetadata({
+    settings,
+    locale,
+    origin,
     title: article.seoTitle ?? article.headline,
-    description,
-    openGraph: {
-      type: 'article',
-      title: article.seoTitle ?? article.headline,
-      description,
-      publishedTime: article.publicationDate,
-      ...(image ? { images: [{ url: image.url }] } : {}),
-    },
-  };
+    description: article.metaDescription ?? article.summary,
+    image: article.ogImage ?? article.image,
+    path: `/article/${article.id}`,
+    type: 'article',
+    publishedTime: article.publicationDate,
+  });
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
@@ -54,7 +47,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const article = await getArticle(id);
   if (!article) notFound();
 
-  const shareUrl = `${await requestOrigin()}/article/${article.id}`;
+  const shareUrl = `${await getOrigin()}/article/${article.id}`;
 
   return (
     // A news column is capped by line length rather than by the grid: past
@@ -67,9 +60,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           {article.headline}
         </h1>
 
-        {/* The summary is deliberately not repeated here: docs/PROJECT-SCOPE.md
-            scopes it to listings and social previews, and in practice authors
-            open the body with the same sentence. */}
+        {/* The standfirst. A handful of articles open the body with this same
+            sentence, in which case it reads twice — but that is an authoring
+            habit, and dropping it would cost every other article its summary. */}
+        <p className="text-ink-muted mt-4 text-lg leading-relaxed text-pretty">
+          {article.summary}
+        </p>
+
         <div className="border-rule mt-6 flex flex-wrap items-center justify-between gap-4 border-y py-3">
           <time
             dateTime={article.publicationDate}

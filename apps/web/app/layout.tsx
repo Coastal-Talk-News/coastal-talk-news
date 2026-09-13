@@ -14,6 +14,8 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 import { adsForZone } from '../lib/ads';
 import { getSite } from '../lib/api';
 import { getLocale } from '../lib/i18n/server';
+import { buildMetadata } from '../lib/seo';
+import { getOrigin } from '../lib/site-url';
 import './globals.css';
 
 // Every route reads live site/news data through this layout, so there is
@@ -59,18 +61,15 @@ const bodyKannada = Noto_Sans_Kannada({
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const { settings } = await getSite();
-    return {
-      title: {
-        default: settings.tagline
-          ? `${settings.siteName} — ${settings.tagline}`
-          : settings.siteName,
-        template: `%s — ${settings.siteName}`,
-      },
-      description: settings.description ?? undefined,
-    };
+    const [{ settings }, locale, origin] = await Promise.all([
+      getSite(),
+      getLocale(),
+      getOrigin(),
+    ]);
+    return buildMetadata({ settings, locale, origin });
   } catch {
-    return { title: 'Newswire' };
+    // Metadata must never be the reason a page fails to render.
+    return { title: 'News' };
   }
 }
 

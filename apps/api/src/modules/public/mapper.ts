@@ -1,4 +1,4 @@
-import type { AdPlacement } from '@coastal-talk-news/db';
+import type { AdPlacement, Language } from '@coastal-talk-news/db';
 import type {
   ArticleContent,
   PublicAdvertisementDto,
@@ -55,8 +55,7 @@ export function toArticleDetail(
 ): PublicArticleDto {
   return {
     ...toArticleCard(article, toPublicUrl),
-    // Prisma types a Json column as JsonValue; the CMS only ever writes a
-    // Tiptap document here and the response schema re-checks the shape.
+    // Prisma widens a Json column; the response schema re-checks the shape.
     content: article.content as unknown as ArticleContent,
     youtubeUrl: article.youtubeUrl,
     seoTitle: article.seoTitle,
@@ -114,13 +113,23 @@ interface SettingsRow {
   instagramUrl: string | null;
   youtubeUrl: string | null;
   xUrl: string | null;
+  defaultUiLanguage: Language;
+  defaultSeoTitle: string | null;
+  defaultMetaDescription: string | null;
   logo: MediaRow | null;
+  favicon: MediaRow | null;
+  defaultOgImage: MediaRow | null;
 }
 
 export function toSettings(
   settings: SettingsRow,
   toPublicUrl: ToPublicUrl,
 ): PublicSiteSettingsDto {
-  const { logo, ...rest } = settings;
-  return { ...rest, logo: toMedia(logo, toPublicUrl) };
+  const { logo, favicon, defaultOgImage, ...rest } = settings;
+  return {
+    ...rest,
+    logo: toMedia(logo, toPublicUrl),
+    favicon: toMedia(favicon, toPublicUrl),
+    defaultOgImage: toMedia(defaultOgImage, toPublicUrl),
+  };
 }

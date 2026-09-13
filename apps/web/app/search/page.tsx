@@ -3,15 +3,31 @@ import { StoryCard } from '../../components/news/StoryCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { LanguageFilter } from '../../components/ui/LanguageFilter';
 import { Pagination } from '../../components/ui/Pagination';
-import { getSearchResults, type SearchLanguage } from '../../lib/api';
+import { getSearchResults, getSite, type SearchLanguage } from '../../lib/api';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import { getLocale } from '../../lib/i18n/server';
+import { buildMetadata } from '../../lib/seo';
+import { getOrigin } from '../../lib/site-url';
 
 // A denser grid than the category page's — search results skew toward
 // scanning many candidates rather than a curated front-of-section layout.
 const RESULTS_PER_PAGE = 12;
 
-export const metadata: Metadata = { title: 'Search' };
+export async function generateMetadata(): Promise<Metadata> {
+  const [{ settings }, locale, origin] = await Promise.all([
+    getSite(),
+    getLocale(),
+    getOrigin(),
+  ]);
+  return buildMetadata({
+    settings,
+    locale,
+    origin,
+    title: getDictionary(locale).search.title,
+    path: '/search',
+    noIndex: true,
+  });
+}
 
 interface SearchPageProps {
   searchParams: Promise<{ q?: string; lang?: string; page?: string }>;

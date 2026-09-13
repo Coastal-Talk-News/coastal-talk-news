@@ -9,9 +9,12 @@ import {
   ApiClientError,
   getCategory,
   getCategoryArticles,
+  getSite,
 } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/dictionaries';
 import { getLocale } from '../../../lib/i18n/server';
+import { buildMetadata } from '../../../lib/seo';
+import { getOrigin } from '../../../lib/site-url';
 
 // One big lead card plus two rows of three — matches the grid the rest of
 // the site already uses for a "cards" section (see the homepage's Top
@@ -33,12 +36,23 @@ export async function generateMetadata({
 }: CategoryPageProps): Promise<Metadata> {
   try {
     const { id } = await params;
-    const category = await getCategory(id);
-    return {
+    const [category, { settings }, locale, origin] = await Promise.all([
+      getCategory(id),
+      getSite(),
+      getLocale(),
+      getOrigin(),
+    ]);
+    return buildMetadata({
+      settings,
+      locale,
+      origin,
       title: category.name,
-      description: category.description ?? undefined,
-    };
+      description: category.description,
+      image: category.coverImage,
+      path: `/category/${category.id}`,
+    });
   } catch {
+    // An unknown id renders the not-found page; it needs no tags of its own.
     return {};
   }
 }
