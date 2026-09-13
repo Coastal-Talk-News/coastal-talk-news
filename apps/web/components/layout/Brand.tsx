@@ -1,33 +1,36 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import type { MediaSummaryDto } from '@coastal-talk-news/types';
 
 interface BrandProps {
   siteName: string;
   tagline: string | null;
+  logo?: MediaSummaryDto | null;
   tone?: 'default' | 'inverse';
   priority?: boolean;
-  /** `lg` is the header's masthead treatment; `md` (default) fits the footer's tighter column. */
   size?: 'md' | 'lg';
 }
 
+/** Sized to share a phone row with the menu button without wrapping. */
 const LOGO_SIZE = {
-  md: 'size-10',
-  lg: 'size-14 sm:size-[68px]',
+  md: 'size-9 sm:size-10',
+  lg: 'size-9 sm:size-14 lg:size-[68px]',
 };
 
 const GAP = {
-  md: 'gap-2.5',
-  lg: 'gap-3.5',
+  md: 'gap-2 sm:gap-2.5',
+  lg: 'gap-2 sm:gap-3.5',
 };
 
 const NAME_SIZE = {
-  md: 'text-xl sm:text-2xl',
-  lg: 'text-2xl sm:text-[28px]',
+  md: 'text-base sm:text-lg md:text-xl',
+  lg: 'text-base sm:text-2xl lg:text-[28px]',
 };
 
 export function Brand({
   siteName,
   tagline,
+  logo = null,
   tone = 'default',
   priority = false,
   size = 'md',
@@ -38,26 +41,31 @@ export function Brand({
   const ringColor = tone === 'inverse' ? 'ring-white/15' : 'ring-rule';
 
   return (
-    <Link href="/" className={`flex shrink-0 items-center ${GAP[size]}`}>
-      {/* The artwork is a round emblem, so it's framed as a circle rather than
-          the plain rounded-square crop used elsewhere in this app. */}
-      <Image
-        src="/logo.jpeg"
-        alt=""
-        width={136}
-        height={136}
-        priority={priority}
-        className={`${LOGO_SIZE[size]} ring-1 ${ringColor} shrink-0 rounded-full object-cover shadow-sm`}
-      />
-      <span className="leading-none">
+    <Link href="/" className={`flex min-w-0 items-center ${GAP[size]}`}>
+      {/* Nothing is drawn without a logo: an empty frame reads as broken. */}
+      {logo && (
+        <Image
+          src={logo.url}
+          alt=""
+          width={logo.width}
+          height={logo.height}
+          priority={priority}
+          className={`${LOGO_SIZE[size]} ring-1 ${ringColor} shrink-0 rounded-full object-cover shadow-sm`}
+        />
+      )}
+      <span className="min-w-0 leading-none">
+        {/* One phrase: truncate rather than break the name across lines. */}
         <span
-          className={`${nameColor} ${NAME_SIZE[size]} block font-serif font-bold`}
+          className={`${nameColor} ${NAME_SIZE[size]} block truncate font-serif font-bold`}
         >
           {siteName}
           <span className="text-brand">.</span>
         </span>
         {tagline && (
-          <span className={`${taglineColor} mt-1 hidden text-[11px] sm:block`}>
+          // Two lines on a phone rather than moving out of the lockup.
+          <span
+            className={`${taglineColor} mt-1 line-clamp-2 text-[11px] sm:line-clamp-1`}
+          >
             {tagline}
           </span>
         )}

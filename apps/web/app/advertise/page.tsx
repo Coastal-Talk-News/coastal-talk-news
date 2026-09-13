@@ -5,8 +5,23 @@ import { SectionHeading } from '../../components/ui/SectionHeading';
 import { getSite } from '../../lib/api';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import { getLocale } from '../../lib/i18n/server';
+import { buildMetadata } from '../../lib/seo';
+import { getOrigin } from '../../lib/site-url';
 
-export const metadata: Metadata = { title: 'Advertise' };
+export async function generateMetadata(): Promise<Metadata> {
+  const [{ settings }, locale, origin] = await Promise.all([
+    getSite(),
+    getLocale(),
+    getOrigin(),
+  ]);
+  return buildMetadata({
+    settings,
+    locale,
+    origin,
+    title: getDictionary(locale).advertise.title,
+    path: '/advertise',
+  });
+}
 
 export default async function AdvertisePage() {
   const [{ advertisements, settings }, locale] = await Promise.all([

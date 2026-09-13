@@ -19,11 +19,7 @@ export interface PublicArticleCardDto {
   publicationDate: IsoDateTime;
 }
 
-/**
- * The article page. `content` is the Tiptap document, not HTML — the reader
- * site walks it and renders each node itself, so stored content can never
- * inject markup.
- */
+/** `content` is a Tiptap document, not HTML: the reader site renders each node itself. */
 export interface PublicArticleDto extends PublicArticleCardDto {
   content: ArticleContent;
   youtubeUrl: string | null;
@@ -52,6 +48,13 @@ export interface PublicSiteSettingsDto {
   tagline: string | null;
   description: string | null;
   logo: MediaSummaryDto | null;
+  favicon: MediaSummaryDto | null;
+  /** What a reader sees before choosing one themselves. */
+  defaultUiLanguage: Language;
+  /** Site-wide SEO fallbacks for pages with nothing of their own. */
+  defaultSeoTitle: string | null;
+  defaultMetaDescription: string | null;
+  defaultOgImage: MediaSummaryDto | null;
   contactEmail: string | null;
   contactPhone: string | null;
   contactAddress: string | null;

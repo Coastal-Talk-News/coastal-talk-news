@@ -8,6 +8,7 @@ import { SearchField } from './SearchField';
 import { MobileNav } from './MobileNav';
 import { LanguageToggle } from './LanguageToggle';
 import { SocialLinks } from './SocialLinks';
+import { CategoryNav } from './CategoryNav';
 
 export function SiteHeader({
   site,
@@ -47,21 +48,28 @@ export function SiteHeader({
       </div>
 
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-5">
-        <MobileNav categories={categories} locale={locale} />
-
-        <Brand
-          siteName={settings.siteName}
-          tagline={settings.tagline}
-          priority
-          size="lg"
+        <MobileNav
+          categories={categories}
+          settings={settings}
+          locale={locale}
         />
 
-        <div className="ml-auto hidden w-full max-w-xs min-w-0 sm:block">
+        <div className="min-w-0 flex-1">
+          <Brand
+            siteName={settings.siteName}
+            tagline={settings.tagline}
+            logo={settings.logo}
+            priority
+            size="lg"
+          />
+        </div>
+
+        <div className="hidden w-full max-w-xs min-w-0 md:block">
           <SearchField locale={locale} />
         </div>
       </div>
 
-      <div className="border-rule border-t px-4 py-3 sm:hidden">
+      <div className="border-rule border-t px-4 py-3 md:hidden">
         <SearchField locale={locale} />
       </div>
 
@@ -74,28 +82,17 @@ export function SiteHeader({
         <LanguageToggle locale={locale} />
       </div>
 
-      <nav
-        aria-label={dictionary.header.sections}
-        className="border-rule hidden border-t lg:block"
-      >
-        <div className="mx-auto flex max-w-7xl items-center gap-1 px-4">
-          <Link
-            href="/"
-            className="hover:text-brand border-b-2 border-transparent px-3 py-3 text-sm font-semibold transition-colors"
-          >
-            {dictionary.common.home}
-          </Link>
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/category/${category.id}`}
-              className="hover:text-brand border-b-2 border-transparent px-3 py-3 text-sm font-semibold transition-colors"
-            >
-              {category.name}
-            </Link>
-          ))}
+      <div className="border-rule hidden border-t md:block">
+        <div className="mx-auto max-w-7xl px-4">
+          <CategoryNav
+            categories={categories}
+            homeLabel={dictionary.common.home}
+            moreLabel={dictionary.header.more}
+            moreAriaLabel={dictionary.header.moreSections}
+            sectionsLabel={dictionary.header.sections}
+          />
         </div>
-      </nav>
+      </div>
     </header>
   );
 }

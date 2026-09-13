@@ -23,6 +23,8 @@ const en = {
     openMenu: 'Open menu',
     closeMenu: 'Close menu',
     sections: 'Sections',
+    more: 'More',
+    moreSections: 'More sections',
   },
   breakingNews: {
     label: 'Breaking',
@@ -124,6 +126,8 @@ const kn: typeof en = {
     openMenu: 'ಮೆನು ತೆರೆಯಿರಿ',
     closeMenu: 'ಮೆನು ಮುಚ್ಚಿ',
     sections: 'ವಿಭಾಗಗಳು',
+    more: 'ಇನ್ನಷ್ಟು',
+    moreSections: 'ಇನ್ನಷ್ಟು ವಿಭಾಗಗಳು',
   },
   breakingNews: {
     label: 'ತುರ್ತು ಸುದ್ದಿ',
