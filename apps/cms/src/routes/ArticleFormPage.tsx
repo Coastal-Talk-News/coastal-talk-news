@@ -141,12 +141,15 @@ export function ArticleFormPage() {
       content,
       featuredImageId: values.featuredImage?.id ?? null,
       ogImageId: values.ogImage?.id ?? null,
-      youtubeUrl: values.youtubeUrl.trim() || undefined,
+      // Cleared fields must be sent as null, not undefined: undefined drops
+      // out of the JSON body, which the API reads as "leave unchanged", so an
+      // editor removing a video or an SEO override would silently keep it.
+      youtubeUrl: values.youtubeUrl.trim() || null,
       tags: values.tags,
       priority: values.priority,
       status,
-      seoTitle: values.seoTitle.trim() || undefined,
-      metaDescription: values.metaDescription.trim() || undefined,
+      seoTitle: values.seoTitle.trim() || null,
+      metaDescription: values.metaDescription.trim() || null,
     };
   }
 

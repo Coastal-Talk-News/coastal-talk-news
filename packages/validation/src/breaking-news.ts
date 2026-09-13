@@ -21,7 +21,15 @@ export const CreateBreakingNewsBodySchema = Type.Object(
       minLength: 1,
       maxLength: BREAKING_NEWS_HEADLINE_MAX,
     }),
-    articleUrl: Type.Optional(Type.String({ maxLength: 2048, format: 'uri' })),
+    // '' is how "no link" is stored, so it has to be accepted alongside a
+    // real URL — otherwise a cleared link fails the uri check and there is no
+    // way to remove a link once it has been saved.
+    articleUrl: Type.Optional(
+      Type.Union([
+        Type.String({ maxLength: 2048, format: 'uri' }),
+        Type.Literal(''),
+      ]),
+    ),
     startAt: IsoDateTime,
     endAt: Type.Optional(Type.Union([IsoDateTime, Type.Null()])),
   },

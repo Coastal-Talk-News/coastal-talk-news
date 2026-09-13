@@ -145,7 +145,10 @@ export function BreakingNewsSheet({
     if (!canSubmit || !startIso) return;
     onSubmit({
       headline: trimmedHeadline,
-      articleUrl: values.articleUrl.trim() || undefined,
+      // Empty string, not undefined: the column is non-nullable and uses ''
+      // for "no link", and undefined would be dropped from the body and read
+      // as "leave unchanged".
+      articleUrl: values.articleUrl.trim(),
       startAt: startIso,
       endAt: values.hasEnd ? endIso : null,
     });
