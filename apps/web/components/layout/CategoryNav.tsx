@@ -14,7 +14,7 @@ interface CategoryNavProps {
 }
 
 const ITEM_CLASS =
-  'block border-b-2 px-3 py-3 text-sm font-semibold whitespace-nowrap transition-colors';
+  'block border-b-2 px-2 py-2.5 text-sm font-semibold whitespace-nowrap transition-colors';
 const IDLE = 'border-transparent hover:text-brand';
 const ACTIVE = 'border-brand text-brand';
 
@@ -109,7 +109,7 @@ export function CategoryNav({
 
   return (
     <nav ref={navRef} aria-label={sectionsLabel} className="relative">
-      <div ref={rowRef} className="flex items-center gap-1 overflow-hidden">
+      <div ref={rowRef} className="flex items-center gap-0.5 overflow-hidden">
         <Link
           href="/"
           aria-current={isHome ? 'page' : undefined}
@@ -189,7 +189,7 @@ export function CategoryNav({
       >
         <div
           ref={measureRef}
-          className="invisible flex w-max items-center gap-1"
+          className="invisible flex w-max items-center gap-0.5"
         >
           <span className={`${ITEM_CLASS} ${IDLE}`}>{homeLabel}</span>
           {categories.map((category) => (

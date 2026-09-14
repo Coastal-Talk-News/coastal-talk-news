@@ -33,7 +33,7 @@ export default async function HomePage() {
 
   if (categorySections.length === 0) {
     return (
-      <div className="mx-auto max-w-7xl px-4 py-16">
+      <div className="mx-auto max-w-7xl px-4 py-12">
         <EmptyState
           variant="page"
           title={dictionary.home.noStoriesTitle}
@@ -58,10 +58,10 @@ export default async function HomePage() {
     .filter(isArticle);
 
   return (
-    <div className="py-6 sm:py-8">
+    <div className="py-5 sm:py-6">
       <section
         aria-label="Featured categories"
-        className="grid gap-6 lg:grid-cols-12 lg:gap-8"
+        className="grid gap-5 lg:grid-cols-12 lg:gap-6"
       >
         <div className={sideStories.length > 0 ? 'lg:col-span-8' : ''}>
           {hero && <HeroStory article={hero} locale={locale} />}
@@ -70,7 +70,7 @@ export default async function HomePage() {
         {sideStories.length > 0 && (
           <ul className="divide-rule flex flex-col divide-y lg:col-span-4">
             {sideStories.map((article) => (
-              <li key={article.id} className="py-4 first:pt-0 last:pb-0">
+              <li key={article.id} className="py-3 first:pt-0 last:pb-0">
                 <StoryCard
                   article={article}
                   layout="row"
@@ -84,15 +84,15 @@ export default async function HomePage() {
       </section>
 
       {site.categories.length > 0 && (
-        <section aria-label="Browse by category" className="mt-10 sm:mt-12">
+        <section aria-label="Browse by category" className="mt-8 sm:mt-10">
           <CategoryMenu categories={site.categories} locale={locale} />
         </section>
       )}
 
       {topStories.length > 0 && (
-        <section aria-label="Top stories" className="mt-12">
+        <section aria-label="Top stories" className="mt-10">
           <SectionHeading title={dictionary.home.topStories} />
-          <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
             {topStories.map((article) => (
               <StoryCard
                 key={article.id}

@@ -53,7 +53,7 @@ export function AdColumn({
 
   return (
     <aside aria-label={advertisement} className={className}>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         {rows.map((row) => (
           <ul
             key={row.key}

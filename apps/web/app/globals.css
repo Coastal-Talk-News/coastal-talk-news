@@ -70,21 +70,21 @@
   }
 
   .article-body > * + * {
-    @apply mt-5;
+    @apply mt-4;
   }
 
   .article-body h2 {
-    @apply mt-10 mb-3 font-serif text-2xl font-bold;
+    @apply mt-8 mb-2 font-serif text-2xl font-bold;
   }
 
   .article-body h3 {
-    @apply mt-8 mb-2 font-serif text-xl font-bold;
+    @apply mt-7 mb-2 font-serif text-xl font-bold;
   }
 
   .article-body h4,
   .article-body h5,
   .article-body h6 {
-    @apply mt-6 mb-2 text-lg font-semibold;
+    @apply mt-5 mb-2 text-lg font-semibold;
   }
 
   .article-body a {
@@ -108,7 +108,7 @@
   }
 
   .article-body blockquote {
-    @apply border-brand text-ink-muted my-7 border-l-2 pl-5 font-serif text-xl italic;
+    @apply border-brand text-ink-muted my-6 border-l-2 pl-5 font-serif text-xl italic;
   }
 
   .article-body pre {
@@ -124,11 +124,11 @@
   }
 
   .article-body hr {
-    @apply border-rule my-8;
+    @apply border-rule my-7;
   }
 
   .article-body figure {
-    @apply my-7;
+    @apply my-6;
   }
 
   .article-body figcaption {

@@ -88,7 +88,7 @@ export function Pagination({
   return (
     <nav
       aria-label={dictionary.navLabel}
-      className="mt-12 flex items-center justify-center gap-1.5"
+      className="mt-10 flex items-center justify-center gap-1.5"
     >
       <PageLink
         page={currentPage - 1}

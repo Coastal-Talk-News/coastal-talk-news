@@ -93,7 +93,7 @@ export default async function CategoryPage({
   const gridArticles = isFirstPage ? rest : articles;
 
   return (
-    <div className="py-6 sm:py-8">
+    <div className="py-5 sm:py-6">
       <nav
         aria-label="Breadcrumb"
         className="text-ink-subtle mb-4 flex items-center gap-1.5 text-sm"
@@ -105,7 +105,7 @@ export default async function CategoryPage({
         <span className="text-ink font-medium">{category.name}</span>
       </nav>
 
-      <header className="mb-8">
+      <header className="mb-6">
         <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
         {category.description && (
           <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
@@ -123,13 +123,13 @@ export default async function CategoryPage({
       ) : (
         <>
           {isFirstPage && lead && (
-            <div className="mb-10">
+            <div className="mb-8">
               <HeroStory article={lead} locale={locale} />
             </div>
           )}
 
           {gridArticles.length > 0 && (
-            <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
               {gridArticles.map((article) => (
                 <StoryCard
                   key={article.id}

@@ -31,7 +31,7 @@ export default async function AdvertisePage() {
   const dictionary = getDictionary(locale);
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-10 sm:py-14">
+    <div className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
       <header className="border-rule border-b pb-8 text-center">
         <h1 className="font-serif text-3xl font-bold sm:text-4xl">
           {dictionary.advertise.title}
@@ -61,7 +61,7 @@ export default async function AdvertisePage() {
         )}
       </header>
 
-      <section aria-label="Current advertisers" className="mt-10">
+      <section aria-label="Current advertisers" className="mt-8">
         <SectionHeading title={dictionary.advertise.currentlyRunning} />
         {advertisements.length > 0 ? (
           <AdShowcase advertisements={advertisements} locale={locale} />

@@ -29,9 +29,9 @@ export function SiteHeader({
   return (
     <header className="border-rule bg-paper grain border-b">
       <div className="border-rule hidden border-b lg:block">
-        <div className="text-ink-muted mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs">
+        <div className="text-ink-muted mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-xs">
           <p>{formatLongDate(new Date(), locale)}</p>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {utilityLinks.map((link) => (
               <Link
                 key={link.href}
@@ -47,7 +47,7 @@ export function SiteHeader({
         </div>
       </div>
 
-      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-5">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
         <MobileNav
           categories={categories}
           settings={settings}
@@ -69,17 +69,15 @@ export function SiteHeader({
         </div>
       </div>
 
-      <div className="border-rule border-t px-4 py-3 md:hidden">
-        <SearchField locale={locale} />
-      </div>
-
-      {/* Its own row rather than squeezed alongside the masthead: the
-          non-shrinking logo+name already fills a phone-width row on its
-          own, so anything else sharing that line would just overflow
-          off-screen. Below lg the utility bar above is hidden, so this is
-          the toggle's only home there. */}
-      <div className="border-rule flex justify-end border-t px-4 py-2 lg:hidden">
-        <LanguageToggle locale={locale} />
+      {/* The two controls with no room in the masthead below lg share one row
+          rather than stacking two: the non-shrinking logo+name already fills a
+          phone-width line, and the utility bar that holds the toggle from lg up
+          is hidden here. The search drops out at md, where it moves inline. */}
+      <div className="border-rule flex items-center gap-3 border-t px-4 py-2 lg:hidden">
+        <div className="min-w-0 flex-1 md:hidden">
+          <SearchField locale={locale} />
+        </div>
+        <LanguageToggle locale={locale} className="ms-auto" />
       </div>
 
       <div className="border-rule hidden border-t md:block">

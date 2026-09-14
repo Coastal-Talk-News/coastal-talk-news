@@ -20,11 +20,11 @@ export function AdShowcase({ advertisements, locale = 'en' }: AdShowcaseProps) {
   const dictionary = getDictionary(locale);
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-8">
       {rows.map((row) => (
         <ul
           key={row.key}
-          className="mx-auto flex w-full flex-col gap-6 sm:flex-row"
+          className="mx-auto flex w-full flex-col gap-5 sm:flex-row"
           style={{ maxWidth: rowMaxWidth(row, MAX_HEIGHT, GAP) }}
         >
           {row.ads.map((ad) => (

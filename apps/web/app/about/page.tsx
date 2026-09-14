@@ -27,7 +27,7 @@ export default async function AboutPage() {
   const dictionary = getDictionary(locale);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-14 text-center sm:py-20">
+    <div className="mx-auto max-w-3xl px-4 py-10 text-center sm:py-14">
       {settings.logo && (
         <Image
           src={settings.logo.url}
@@ -48,11 +48,11 @@ export default async function AboutPage() {
       )}
 
       {settings.description ? (
-        <p className="text-ink-muted mx-auto mt-8 max-w-2xl text-lg leading-relaxed whitespace-pre-line">
+        <p className="text-ink-muted mx-auto mt-6 max-w-2xl text-lg leading-relaxed whitespace-pre-line">
           {settings.description}
         </p>
       ) : (
-        <div className="mt-10">
+        <div className="mt-8">
           <EmptyState
             title={dictionary.about.noDescriptionTitle}
             description={dictionary.about.noDescriptionDescription}

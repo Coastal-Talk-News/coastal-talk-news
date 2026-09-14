@@ -92,13 +92,13 @@ export default async function RootLayout({
         <BreakingTicker items={site.breakingNews} locale={locale} />
         <AdBand
           advertisements={adsForZone(advertisements, 'top')}
-          className="mt-6"
+          className="mt-5"
           locale={locale}
         />
         <main className="flex-1">
-          <div className="mx-auto flex w-full max-w-7xl gap-8 px-4">
+          <div className="mx-auto flex w-full max-w-7xl gap-6 px-4">
             <div className="min-w-0 flex-1">{children}</div>
-            <StickyRail className="hidden w-72 shrink-0 py-6 xl:block">
+            <StickyRail className="hidden w-96 shrink-0 py-5 xl:block">
               <AdColumn
                 advertisements={adsForZone(advertisements, 'sidebar')}
                 locale={locale}
@@ -112,7 +112,7 @@ export default async function RootLayout({
         <AdColumn
           advertisements={adsForZone(advertisements, 'sidebar')}
           variant="block"
-          className="mx-auto w-full max-w-6xl px-4 pb-12 xl:hidden"
+          className="mx-auto w-full max-w-6xl px-4 pb-8 xl:hidden"
           locale={locale}
         />
         <SiteFooter site={site} locale={locale} />

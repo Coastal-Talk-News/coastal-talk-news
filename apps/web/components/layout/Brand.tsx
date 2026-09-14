@@ -14,7 +14,7 @@ interface BrandProps {
 /** Sized to share a phone row with the menu button without wrapping. */
 const LOGO_SIZE = {
   md: 'size-9 sm:size-10',
-  lg: 'size-9 sm:size-14 lg:size-[68px]',
+  lg: 'size-9 sm:size-12 lg:size-[52px]',
 };
 
 const GAP = {
@@ -24,7 +24,7 @@ const GAP = {
 
 const NAME_SIZE = {
   md: 'text-base sm:text-lg md:text-xl',
-  lg: 'text-base sm:text-2xl lg:text-[28px]',
+  lg: 'text-base sm:text-xl lg:text-[26px]',
 };
 
 export function Brand({

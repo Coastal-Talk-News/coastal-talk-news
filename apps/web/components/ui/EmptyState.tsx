@@ -17,7 +17,7 @@ export function EmptyState({
   return (
     <div
       className={`border-rule flex flex-col items-center rounded-card border border-dashed text-center ${
-        variant === 'page' ? 'px-6 py-20' : 'px-6 py-12'
+        variant === 'page' ? 'px-6 py-14' : 'px-6 py-10'
       }`}
     >
       <span

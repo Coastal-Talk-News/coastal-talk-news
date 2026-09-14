@@ -24,7 +24,7 @@ export function YoutubeEmbed({ url, title }: { url: string; title: string }) {
   if (!id) return null;
 
   return (
-    <figure className="my-8">
+    <figure className="my-6">
       <div className="bg-paper-sunken relative aspect-video w-full overflow-hidden rounded-card">
         <iframe
           // nocookie keeps YouTube from setting tracking cookies until play.

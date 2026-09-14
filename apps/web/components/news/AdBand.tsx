@@ -32,7 +32,7 @@ export function AdBand({
       aria-label={advertisement}
       className={`mx-auto w-full max-w-6xl px-4 ${className}`}
     >
-      <div className="border-rule border-y py-5">
+      <div className="border-rule border-y py-4">
         <ul className="flex flex-wrap items-center justify-center gap-4">
           {advertisements.map((ad) => (
             <li key={ad.id}>

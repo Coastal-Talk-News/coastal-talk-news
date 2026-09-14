@@ -17,7 +17,7 @@ export default async function NotFound() {
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center">
+    <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-16 text-center">
       <p className="text-brand font-serif text-6xl font-bold sm:text-7xl">
         404
       </p>
@@ -36,7 +36,7 @@ export default async function NotFound() {
       </Link>
 
       {categories.length > 0 && (
-        <div className="mt-12 w-full">
+        <div className="mt-10 w-full">
           <p className="text-ink-subtle text-xs font-semibold tracking-[0.12em] uppercase">
             {dictionary.notFound.popularSections}
           </p>
