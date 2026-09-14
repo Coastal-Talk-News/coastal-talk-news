@@ -1,25 +1,13 @@
+'use client';
+
 import Link from 'next/link';
-import type { CSSProperties } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import type { PublicBreakingNewsDto } from '@coastal-talk-news/types';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 
-// Tuned for the ~14px bold ticker text: an average glyph is roughly this wide,
-// and each item also carries the gap-10 (2.5rem) spacing that follows it.
-const AVERAGE_CHAR_PX = 8;
-const ITEM_GAP_PX = 40;
-const PIXELS_PER_SECOND = 55;
-// A one- or two-item ticker would otherwise finish its loop in a couple of
-// seconds — too fast to read — so the pace never drops below this floor.
-const MIN_DURATION_S = 14;
-
-function estimateDurationSeconds(items: PublicBreakingNewsDto[]): number {
-  const widthPx = items.reduce(
-    (sum, item) => sum + item.headline.length * AVERAGE_CHAR_PX + ITEM_GAP_PX,
-    0,
-  );
-  return Math.max(widthPx / PIXELS_PER_SECOND, MIN_DURATION_S);
-}
+/** Reading pace, in pixels per second. */
+const SPEED_PX_PER_SECOND = 55;
 
 export function BreakingTicker({
   items,
@@ -28,16 +16,39 @@ export function BreakingTicker({
   items: PublicBreakingNewsDto[];
   locale?: Locale;
 }) {
+  const windowRef = useRef<HTMLDivElement>(null);
+  const copyRef = useRef<HTMLUListElement>(null);
+  const [copyWidth, setCopyWidth] = useState(0);
+  const [copies, setCopies] = useState(2);
+
+  useLayoutEffect(() => {
+    const viewport = windowRef.current;
+    const copy = copyRef.current;
+    if (!viewport || !copy) return;
+
+    const measure = () => {
+      const width = copy.getBoundingClientRect().width;
+      if (width === 0) return;
+      setCopyWidth(width);
+      // The loop restarts the moment one copy has passed, so the track has to
+      // stay a full copy wider than the window — otherwise the tail runs out
+      // mid-window and the list appears to jump back before it has finished.
+      setCopies(Math.max(2, Math.ceil(viewport.clientWidth / width) + 1));
+    };
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(viewport);
+    observer.observe(copy);
+    measure();
+    return () => observer.disconnect();
+  }, [items, locale]);
+
   if (items.length === 0) return null;
 
-  // The track is the list duplicated once: the CSS animation slides it by
-  // exactly one copy's width, so the moment the first copy scrolls fully
-  // offscreen the second is sitting in the exact position it started in —
-  // a continuous loop with no jump or reset, independent of how much
-  // content there is or how wide the viewport is.
-  const track = [...items, ...items];
-  const durationSeconds = estimateDurationSeconds(items);
   const label = getDictionary(locale).breakingNews.label;
+  // Measured rather than estimated from character counts: a Kannada headline
+  // and an English one of the same length are nowhere near the same width.
+  const duration = copyWidth > 0 ? copyWidth / SPEED_PX_PER_SECOND : 0;
 
   return (
     <section aria-label={label} className="bg-brand text-white">
@@ -45,39 +56,46 @@ export function BreakingTicker({
         <span className="text-brand shrink-0 rounded-sm bg-white px-2.5 py-1 text-[11px] font-bold tracking-[0.08em] uppercase">
           {label}
         </span>
-        <div className="group min-w-0 flex-1 overflow-hidden">
-          <ul
+
+        <div ref={windowRef} className="group min-w-0 flex-1 overflow-hidden">
+          <div
             style={
-              { animationDuration: `${durationSeconds}s` } as CSSProperties
+              {
+                '--marquee-shift': `${copyWidth}px`,
+                animationDuration: `${duration}s`,
+              } as CSSProperties
             }
-            className="animate-marquee flex w-max items-center gap-10 text-sm font-semibold group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused]"
+            className={`flex w-max group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] ${
+              duration > 0 ? 'animate-marquee' : ''
+            }`}
           >
-            {track.map((item, index) => {
-              // The second copy of the list exists only to keep the loop
-              // seamless — it must stay invisible to screen readers and
-              // out of tab order, or every headline gets announced twice.
-              const isDuplicate = index >= items.length;
-              return (
-                <li
-                  key={`${item.id}-${index}`}
-                  aria-hidden={isDuplicate}
-                  className="shrink-0"
-                >
-                  {item.articleUrl ? (
-                    <Link
-                      href={item.articleUrl}
-                      tabIndex={isDuplicate ? -1 : 0}
-                      className="whitespace-nowrap transition-opacity hover:opacity-80"
-                    >
-                      {item.headline}
-                    </Link>
-                  ) : (
-                    <span className="whitespace-nowrap">{item.headline}</span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
+            {Array.from({ length: copies }, (_, copyIndex) => (
+              <ul
+                key={copyIndex}
+                ref={copyIndex === 0 ? copyRef : undefined}
+                // Only the first copy is content; the rest fill the window and
+                // would otherwise be announced several times over.
+                aria-hidden={copyIndex > 0}
+                className="flex shrink-0 text-sm font-semibold"
+              >
+                {items.map((item) => (
+                  <li key={item.id} className="shrink-0 pe-10">
+                    {item.articleUrl ? (
+                      <Link
+                        href={item.articleUrl}
+                        tabIndex={copyIndex > 0 ? -1 : 0}
+                        className="whitespace-nowrap transition-opacity hover:opacity-80"
+                      >
+                        {item.headline}
+                      </Link>
+                    ) : (
+                      <span className="whitespace-nowrap">{item.headline}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
         </div>
       </div>
     </section>
