@@ -27,7 +27,7 @@ export function HeroStory({
         className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-transparent"
       />
 
-      <div className="absolute inset-x-0 bottom-0 p-5 sm:p-7">
+      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
         <CategoryTag category={article.category} tone="solid" />
         <h2 className="mt-3 text-2xl leading-tight font-bold text-white sm:text-3xl lg:text-[2.1rem]">
           <Link href={`/article/${article.id}`}>

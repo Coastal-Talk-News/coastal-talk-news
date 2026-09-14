@@ -10,7 +10,7 @@ export default function Error({ reset }: { error: Error; reset: () => void }) {
   const dictionary = getDictionary(getClientLocale());
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center">
+    <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-16 text-center">
       <h1 className="text-3xl font-bold sm:text-4xl">
         {dictionary.errorPage.heading}
       </h1>

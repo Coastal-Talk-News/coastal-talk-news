@@ -25,7 +25,7 @@ export function CategoryMenu({
           <li key={category.id}>
             <Link
               href={`/category/${category.id}`}
-              className="border-rule bg-paper-sunken hover:border-brand hover:bg-brand-soft group flex flex-col items-center gap-2 rounded-card border px-3 py-4 text-center transition-colors"
+              className="border-rule bg-paper-sunken hover:border-brand hover:bg-brand-soft group flex flex-col items-center gap-2 rounded-card border px-3 py-3.5 text-center transition-colors"
             >
               {category.image ? (
                 <Image

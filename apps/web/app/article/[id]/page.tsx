@@ -7,6 +7,7 @@ import { StoryImage } from '../../../components/news/StoryImage';
 import { YoutubeEmbed } from '../../../components/news/YoutubeEmbed';
 import { formatDateTime } from '../../../lib/format';
 import { getArticle, getSite } from '../../../lib/api';
+import { getDictionary } from '../../../lib/i18n/dictionaries';
 import { getLocale } from '../../../lib/i18n/server';
 import { buildMetadata } from '../../../lib/seo';
 import { getOrigin } from '../../../lib/site-url';
@@ -44,42 +45,47 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { id } = await params;
-  const article = await getArticle(id);
+  const [article, locale] = await Promise.all([getArticle(id), getLocale()]);
   if (!article) notFound();
 
+  const dictionary = getDictionary(locale);
   const shareUrl = `${await getOrigin()}/article/${article.id}`;
 
   return (
     // A news column is capped by line length rather than by the grid: past
     // roughly 70 characters a reader starts losing their place between lines.
-    <article className="max-w-[44rem] py-8 sm:py-12">
+    <article className="max-w-[44rem] py-6 sm:py-8">
       <header>
         <CategoryTag category={article.category} />
 
-        <h1 className="mt-4 font-serif text-3xl leading-tight font-bold text-balance sm:text-4xl lg:text-[2.75rem]">
+        <h1 className="mt-3 font-serif text-3xl leading-tight font-bold text-balance sm:text-4xl lg:text-[2.75rem]">
           {article.headline}
         </h1>
 
         {/* The standfirst. A handful of articles open the body with this same
             sentence, in which case it reads twice — but that is an authoring
             habit, and dropping it would cost every other article its summary. */}
-        <p className="text-ink-muted mt-4 text-lg leading-relaxed text-pretty">
+        <p className="text-ink-muted mt-3 text-lg leading-relaxed text-pretty">
           {article.summary}
         </p>
 
-        <div className="border-rule mt-6 flex flex-wrap items-center justify-between gap-4 border-y py-3">
+        <div className="border-rule mt-5 flex flex-wrap items-center justify-between gap-4 border-y py-3">
           <time
             dateTime={article.publicationDate}
             className="text-ink-subtle text-sm"
           >
             {formatDateTime(article.publicationDate)}
           </time>
-          <ShareLinks url={shareUrl} headline={article.headline} />
+          <ShareLinks
+            url={shareUrl}
+            headline={article.headline}
+            locale={locale}
+          />
         </div>
       </header>
 
       {article.image && (
-        <figure className="mt-8">
+        <figure className="mt-6">
           <StoryImage
             image={article.image}
             alt=""
@@ -96,11 +102,23 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         <YoutubeEmbed url={article.youtubeUrl} title={article.headline} />
       )}
 
-      <footer className="border-rule mt-10 flex flex-wrap items-center justify-between gap-4 border-t pt-6">
-        <p className="text-ink-subtle text-sm">
-          Share this story with your circle
-        </p>
-        <ShareLinks url={shareUrl} headline={article.headline} />
+      <footer className="border-rule bg-paper-sunken rounded-card mt-8 border p-5">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+          <div>
+            <h2 className="font-serif text-lg font-bold">
+              {dictionary.article.shareHeading}
+            </h2>
+            <p className="text-ink-subtle mt-1 text-sm">
+              {dictionary.article.shareDescription}
+            </p>
+          </div>
+          <ShareLinks
+            url={shareUrl}
+            headline={article.headline}
+            locale={locale}
+            variant="panel"
+          />
+        </div>
       </footer>
     </article>
   );

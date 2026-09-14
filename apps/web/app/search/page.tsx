@@ -65,7 +65,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   // search has actually been attempted.
   if (!query) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16">
+      <div className="mx-auto max-w-2xl px-4 py-12">
         <EmptyState
           variant="page"
           title={dictionary.search.promptTitle}
@@ -82,8 +82,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   });
 
   return (
-    <div className="py-6 sm:py-8">
-      <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div className="py-5 sm:py-6">
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h1 className="min-w-0 text-2xl font-bold break-words sm:text-3xl">
           {dictionary.search.resultsFor(query)}
         </h1>
@@ -102,7 +102,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         />
       ) : (
         <>
-          <div className="grid gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
             {articles.map((article) => (
               <StoryCard
                 key={article.id}

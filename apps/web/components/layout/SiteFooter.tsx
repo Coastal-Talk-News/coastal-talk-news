@@ -23,8 +23,8 @@ export function SiteFooter({
   ];
 
   return (
-    <footer className="bg-night mt-16 text-white">
-      <div className="mx-auto grid max-w-7xl gap-x-8 gap-y-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-12">
+    <footer className="bg-night mt-12 text-white">
+      <div className="mx-auto grid max-w-7xl gap-x-6 gap-y-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-12">
         <div className="sm:col-span-2 lg:col-span-4">
           <Brand
             siteName={settings.siteName}
@@ -33,11 +33,11 @@ export function SiteFooter({
             tone="inverse"
           />
           {settings.description && (
-            <p className="text-night-muted mt-4 max-w-sm text-sm leading-relaxed">
+            <p className="text-night-muted mt-3 max-w-sm text-sm leading-relaxed">
               {settings.description}
             </p>
           )}
-          <SocialLinks settings={settings} tone="inverse" className="mt-5" />
+          <SocialLinks settings={settings} tone="inverse" className="mt-4" />
         </div>
 
         {categories.length > 0 && (
@@ -51,7 +51,7 @@ export function SiteFooter({
             {/* Two lists wide so a dozen sections stay the height of the
                 groups beside them; none are hidden, since a footer is where
                 the full index is looked for. */}
-            <ul className="text-night-muted mt-4 grid grid-cols-2 gap-x-6 gap-y-2.5 text-sm">
+            <ul className="text-night-muted mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               {categories.map((category) => (
                 <li key={category.id}>
                   <Link
@@ -73,7 +73,7 @@ export function SiteFooter({
           <h2 className="text-sm font-semibold tracking-wide">
             {dictionary.footer.quickLinks}
           </h2>
-          <ul className="text-night-muted mt-4 space-y-2.5 text-sm">
+          <ul className="text-night-muted mt-3 space-y-2 text-sm">
             {quickLinks.map((link) => (
               <li key={link.href}>
                 <Link
@@ -91,7 +91,7 @@ export function SiteFooter({
           <h2 className="text-sm font-semibold tracking-wide">
             {dictionary.footer.contact}
           </h2>
-          <ul className="text-night-muted mt-4 space-y-2.5 text-sm break-words">
+          <ul className="text-night-muted mt-3 space-y-2 text-sm break-words">
             {settings.contactAddress && <li>{settings.contactAddress}</li>}
             {settings.contactEmail && (
               <li>
@@ -118,7 +118,7 @@ export function SiteFooter({
       </div>
 
       <div className="border-white/10 border-t">
-        <p className="text-night-muted mx-auto max-w-7xl px-4 py-5 text-xs">
+        <p className="text-night-muted mx-auto max-w-7xl px-4 py-4 text-xs">
           © {new Date().getFullYear()} {settings.siteName}.{' '}
           {dictionary.footer.rightsReserved}
         </p>

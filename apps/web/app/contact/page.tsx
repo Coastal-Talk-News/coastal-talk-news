@@ -37,15 +37,15 @@ export default async function ContactPage() {
   );
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-14 sm:py-20">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:py-14">
       <h1 className="text-center font-serif text-3xl font-bold sm:text-4xl">
         {dictionary.contact.heading}
       </h1>
 
       {hasDetails ? (
-        <ul className="border-rule divide-rule mt-10 divide-y rounded-card border text-center">
+        <ul className="border-rule divide-rule mt-8 divide-y rounded-card border text-center">
           {settings.contactAddress && (
-            <li className="px-6 py-5">
+            <li className="px-6 py-4">
               <p className="text-ink-subtle text-xs font-semibold tracking-[0.12em] uppercase">
                 {dictionary.contact.addressLabel}
               </p>
@@ -80,7 +80,7 @@ export default async function ContactPage() {
           )}
         </ul>
       ) : (
-        <div className="mt-10">
+        <div className="mt-8">
           <EmptyState
             title={dictionary.contact.noDetailsTitle}
             description={dictionary.contact.noDetailsDescription}
@@ -89,7 +89,7 @@ export default async function ContactPage() {
       )}
 
       {hasSocials && (
-        <div className="mt-10 text-center">
+        <div className="mt-8 text-center">
           <p className="text-ink-subtle text-xs font-semibold tracking-[0.12em] uppercase">
             {dictionary.contact.followUs}
           </p>

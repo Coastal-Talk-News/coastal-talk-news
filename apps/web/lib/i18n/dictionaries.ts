@@ -41,6 +41,14 @@ const en = {
       'Once the newsroom publishes its first article it will appear right here.',
     topStories: 'Top Stories',
   },
+  article: {
+    share: 'Share',
+    shareOn: (network: string) => `Share on ${network}`,
+    copyLink: 'Copy link',
+    linkCopied: 'Link copied',
+    shareHeading: 'Share this story',
+    shareDescription: 'Pass it on to someone who should read it.',
+  },
   category: {
     noStoriesTitle: 'No stories here yet',
     noStoriesDescription: (categoryName: string) =>
@@ -143,6 +151,14 @@ const kn: typeof en = {
     noStoriesDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ತನ್ನ ಮೊದಲ ಲೇಖನವನ್ನು ಪ್ರಕಟಿಸಿದ ತಕ್ಷಣ ಅದು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.',
     topStories: 'ಪ್ರಮುಖ ಸುದ್ದಿಗಳು',
+  },
+  article: {
+    share: 'ಹಂಚಿಕೊಳ್ಳಿ',
+    shareOn: (network: string) => `${network} ನಲ್ಲಿ ಹಂಚಿಕೊಳ್ಳಿ`,
+    copyLink: 'ಲಿಂಕ್ ನಕಲಿಸಿ',
+    linkCopied: 'ಲಿಂಕ್ ನಕಲಾಗಿದೆ',
+    shareHeading: 'ಈ ಸುದ್ದಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ',
+    shareDescription: 'ಓದಬೇಕಾದವರಿಗೆ ಇದನ್ನು ತಲುಪಿಸಿ.',
   },
   category: {
     noStoriesTitle: 'ಇಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಸುದ್ದಿ ಇಲ್ಲ',
