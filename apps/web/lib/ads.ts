@@ -37,6 +37,13 @@ interface GalleryOptions {
    * containerWidth / ratioSum, so a larger budget means shorter rows.
    */
   ratioBudget: number;
+  /**
+   * How different two creatives' shapes may be before they stop sharing a row.
+   * Everything in a row is drawn at one height, so a portrait beside a wide
+   * landscape is squeezed to a sliver — in a narrow column that is worse than
+   * simply giving each its own row.
+   */
+  maxShapeSpread?: number;
 }
 
 /**
@@ -47,24 +54,41 @@ interface GalleryOptions {
  */
 export function galleryRows(
   advertisements: PublicAdvertisementDto[],
-  { maxPerRow, ratioBudget }: GalleryOptions,
+  { maxPerRow, ratioBudget, maxShapeSpread = Infinity }: GalleryOptions,
 ): AdRow[] {
   const rows: AdRow[] = [];
   let ads: PublicAdvertisementDto[] = [];
-  let ratioSum = 0;
+  let ratios: number[] = [];
 
   const close = () => {
     const [first] = ads;
-    if (first) rows.push({ key: first.id, ads, ratioSum });
+    if (first) {
+      rows.push({
+        key: first.id,
+        ads,
+        ratioSum: ratios.reduce((sum, ratio) => sum + ratio, 0),
+      });
+    }
     ads = [];
-    ratioSum = 0;
+    ratios = [];
   };
 
   for (const ad of advertisements) {
     const ratio = adAspectRatio(ad.image);
-    if (ads.length >= maxPerRow || ratioSum + ratio > ratioBudget) close();
+    const ratioSum = ratios.reduce((sum, value) => sum + value, 0);
+    const spread =
+      ratios.length === 0
+        ? 1
+        : Math.max(...ratios, ratio) / Math.min(...ratios, ratio);
+
+    const full =
+      ads.length >= maxPerRow ||
+      ratioSum + ratio > ratioBudget ||
+      spread > maxShapeSpread;
+    if (full) close();
+
     ads.push(ad);
-    ratioSum += ratio;
+    ratios.push(ratio);
   }
   close();
 

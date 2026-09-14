@@ -31,7 +31,12 @@ export function AdShowcase({ advertisements, locale = 'en' }: AdShowcaseProps) {
             <li
               key={ad.id}
               className="min-w-0"
-              style={{ flexGrow: adAspectRatio(ad.image), flexBasis: 0 }}
+              // Normalised so a row's grow factors sum to 1: below 1,
+              // flexbox leaves the rest of the row empty.
+              style={{
+                flexGrow: adAspectRatio(ad.image) / row.ratioSum,
+                flexBasis: 0,
+              }}
             >
               <a
                 href={ad.destinationUrl}
