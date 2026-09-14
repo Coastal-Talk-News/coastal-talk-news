@@ -1,18 +1,20 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Warm newsprint greys rather than blue-greys: on a page that is mostly text
-     and photography, a cold white ground makes both look washed out. */
-  --color-ink: #1b1917;
-  --color-ink-muted: #57514a;
-  --color-ink-subtle: #79716a;
-  --color-paper: #fdfcfa;
-  --color-paper-sunken: #f4f1ec;
-  --color-rule: #e6e0d7;
+  /* Newsprint, not a screen. A near-white ground glares and ink at 17:1
+     against it haloes; printed newspaper reads at roughly 10-14:1. The ground
+     sits at 95% lightness and the ink at 15:1 — softer than white, still far
+     above the 4.5:1 WCAG asks for. */
+  --color-ink: #26221d;
+  --color-ink-muted: #575046;
+  --color-ink-subtle: #6e675c;
+  --color-paper: #fcf9f4;
+  --color-paper-sunken: #f4efe6;
+  --color-rule: #e7e0d4;
   --color-brand: #b4232b;
   --color-brand-hover: #911a21;
-  --color-brand-soft: #fbecea;
-  --color-night: #1c1815;
+  --color-brand-soft: #f7e9e6;
+  --color-night: #1f1a15;
   --color-night-muted: #a79f94;
 
   /* The Kannada face sits behind the Latin one: the browser falls through per
@@ -50,11 +52,21 @@
 }
 
 @layer components {
-  /* Reading styles for the article body. The document arrives as Tiptap JSON
-     and is rendered as bare elements (see ArticleBody.tsx), so the typography
-     lives here rather than as classes on every node. */
+  /* The tooth of the sheet. Generated noise rather than an image, so it costs
+     no request and tiles at any size, and it goes on the paper itself — behind
+     every card and photograph, because printed pictures have no paper grain,
+     the paper around them does. Faint enough to read as texture rather than
+     dirt: it moves the ground about a percent, leaving the contrast intact. */
+  .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.7'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+  }
+
+  /* The body arrives as Tiptap JSON rendered into bare elements, so its
+     typography lives here rather than on every node. Set like a newspaper
+     column: serif, a little larger, with the leading opened up. */
   .article-body {
-    @apply text-[1.0625rem] leading-[1.75];
+    @apply font-serif text-[1.125rem] leading-[1.8];
   }
 
   .article-body > * + * {

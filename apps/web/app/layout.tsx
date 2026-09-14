@@ -87,7 +87,7 @@ export default async function RootLayout({
       lang={locale}
       className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable}`}
     >
-      <body className="flex min-h-screen flex-col">
+      <body className="grain flex min-h-screen flex-col">
         <SiteHeader site={site} locale={locale} />
         <BreakingTicker items={site.breakingNews} locale={locale} />
         <AdBand

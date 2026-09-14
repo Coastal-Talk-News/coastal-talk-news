@@ -161,7 +161,7 @@ export function CategoryNav({
 
       {/* Outside the row: nested inside, its clipping would hide this. */}
       {open && overflow.length > 0 && (
-        <ul className="border-rule bg-paper absolute top-full right-0 z-40 mt-1 max-h-[70vh] w-56 overflow-y-auto rounded-sm border py-1 shadow-lg">
+        <ul className="border-rule bg-paper grain absolute top-full right-0 z-40 mt-1 max-h-[70vh] w-56 overflow-y-auto rounded-sm border py-1 shadow-lg">
           {overflow.map((category) => (
             <li key={category.id}>
               <Link
