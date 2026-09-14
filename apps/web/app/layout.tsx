@@ -98,7 +98,7 @@ export default async function RootLayout({
         <main className="flex-1">
           <div className="mx-auto flex w-full max-w-7xl gap-8 px-4">
             <div className="min-w-0 flex-1">{children}</div>
-            <StickyRail className="hidden w-72 shrink-0 py-6 xl:block">
+            <StickyRail className="hidden w-96 shrink-0 py-6 xl:block">
               <AdColumn
                 advertisements={adsForZone(advertisements, 'sidebar')}
                 locale={locale}
