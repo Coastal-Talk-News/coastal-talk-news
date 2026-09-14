@@ -9,6 +9,7 @@ import type { ReactNode } from 'react';
 import { BreakingTicker } from '../components/layout/BreakingTicker';
 import { AdBand } from '../components/news/AdBand';
 import { AdColumn } from '../components/news/AdColumn';
+import { StickyRail } from '../components/news/StickyRail';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { adsForZone } from '../lib/ads';
@@ -86,7 +87,7 @@ export default async function RootLayout({
       lang={locale}
       className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable}`}
     >
-      <body className="flex min-h-screen flex-col">
+      <body className="grain flex min-h-screen flex-col">
         <SiteHeader site={site} locale={locale} />
         <BreakingTicker items={site.breakingNews} locale={locale} />
         <AdBand
@@ -97,11 +98,12 @@ export default async function RootLayout({
         <main className="flex-1">
           <div className="mx-auto flex w-full max-w-7xl gap-8 px-4">
             <div className="min-w-0 flex-1">{children}</div>
-            <AdColumn
-              advertisements={adsForZone(advertisements, 'sidebar')}
-              className="hidden w-72 shrink-0 py-6 xl:block"
-              locale={locale}
-            />
+            <StickyRail className="hidden w-72 shrink-0 py-6 xl:block">
+              <AdColumn
+                advertisements={adsForZone(advertisements, 'sidebar')}
+                locale={locale}
+              />
+            </StickyRail>
           </div>
         </main>
 
@@ -109,6 +111,7 @@ export default async function RootLayout({
             after the news, never before it. */}
         <AdColumn
           advertisements={adsForZone(advertisements, 'sidebar')}
+          variant="block"
           className="mx-auto w-full max-w-6xl px-4 pb-12 xl:hidden"
           locale={locale}
         />

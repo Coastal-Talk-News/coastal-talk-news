@@ -29,7 +29,7 @@ export function SearchField({ locale }: { locale: Locale }) {
         value={term}
         onChange={(event) => setTerm(event.target.value)}
         placeholder={dictionary.header.searchPlaceholder}
-        className="border-rule bg-paper-sunken placeholder:text-ink-subtle focus:border-brand h-10 w-full rounded-sm border pr-3 pl-9 text-sm transition-colors focus:bg-white focus:outline-none"
+        className="border-rule bg-paper-sunken placeholder:text-ink-subtle focus:border-brand h-10 w-full rounded-sm border pr-3 pl-9 text-sm transition-colors focus:bg-paper focus:outline-none"
       />
       <svg
         aria-hidden

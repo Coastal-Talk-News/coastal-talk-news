@@ -27,7 +27,7 @@ export function SiteHeader({
   ];
 
   return (
-    <header className="border-rule bg-paper border-b">
+    <header className="border-rule bg-paper grain border-b">
       <div className="border-rule hidden border-b lg:block">
         <div className="text-ink-muted mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-2 text-xs">
           <p>{formatLongDate(new Date(), locale)}</p>
