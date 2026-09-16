@@ -15,7 +15,7 @@ export const DESTINATION_URL_MAX = 2048;
 
 export const SETTINGS_SITE_NAME_MAX = 120;
 export const SETTINGS_TAGLINE_MAX = 160;
-export const SETTINGS_DESCRIPTION_MAX = 160;
+export const SETTINGS_DESCRIPTION_MAX = 5000;
 export const SETTINGS_EMAIL_MAX = 254;
 export const SETTINGS_PHONE_MAX = 32;
 export const SETTINGS_ADDRESS_MAX = 200;
