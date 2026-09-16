@@ -1,15 +1,26 @@
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
 
-export type AdZone = 'top' | 'sidebar';
+export type AdZone = 'masthead' | 'top' | 'sidebar';
 
 const ZONE_PLACEMENT: Record<AdZone, PublicAdvertisementDto['placement']> = {
+  masthead: 'MASTHEAD',
   top: 'TOP',
   sidebar: 'SIDEBAR',
 };
 
 /**
+ * Every creative links to the ad's own page rather than straight out to the
+ * advertiser, because that page is where the detail image, the copy and the
+ * advertiser's own link live.
+ */
+export function adHref(id: string): string {
+  return `/advertisement/${id}`;
+}
+
+/**
  * Every advertisement lands in exactly one zone, driven by its CMS-assigned
- * placement. Top is capped at 3 server-side (apps/api); Sidebar is uncapped.
+ * placement. Masthead holds 1 and Top 3, both capped server-side (apps/api);
+ * Sidebar is uncapped.
  */
 export function adsForZone(
   advertisements: PublicAdvertisementDto[],
@@ -105,4 +116,26 @@ export function rowMaxWidth(
   gap: number,
 ): number {
   return Math.round(maxHeight * row.ratioSum + gap * (row.ads.length - 1));
+}
+
+/**
+ * Sidebar advertisers all buy the same zone, so no one of them owns the top of
+ * it. Shuffling per request shares that position out: over a run, every ad
+ * spends time at the top instead of the same one holding it for weeks.
+ *
+ * The Top band is deliberately not shuffled - those three slots are sold by
+ * position, and the API already returns them in their CMS-assigned order.
+ */
+export function rotated(
+  advertisements: PublicAdvertisementDto[],
+): PublicAdvertisementDto[] {
+  const order = [...advertisements];
+  for (let i = order.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]] as [
+      PublicAdvertisementDto,
+      PublicAdvertisementDto,
+    ];
+  }
+  return order;
 }

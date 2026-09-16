@@ -1,5 +1,9 @@
 import type { AdPlacement } from '@coastal-talk-news/db';
-import type { AdvertisementDto } from '@coastal-talk-news/types';
+import type {
+  AdvertisementDto,
+  MediaSummaryDto,
+  RichTextContent,
+} from '@coastal-talk-news/types';
 import { withIsActive } from '../../lib/schedule.js';
 
 interface MediaRow {
@@ -12,7 +16,8 @@ interface MediaRow {
 export interface AdvertisementEntity {
   id: string;
   advertiserName: string;
-  destinationUrl: string;
+  destinationUrl: string | null;
+  description: unknown;
   priority: number;
   placement: AdPlacement;
   startAt: Date;
@@ -20,9 +25,30 @@ export interface AdvertisementEntity {
   createdAt: Date;
   updatedAt: Date;
   media: MediaRow;
+  detailMedia: MediaRow | null;
 }
 
 export type ToPublicUrl = (storageKey: string) => string;
+
+export function toMediaSummary(
+  media: MediaRow,
+  toPublicUrl: ToPublicUrl,
+): MediaSummaryDto {
+  return {
+    id: media.id,
+    url: toPublicUrl(media.storageKey),
+    width: media.width,
+    height: media.height,
+  };
+}
+
+/**
+ * Prisma types a Json column as unknown, so the document is narrowed here once
+ * rather than at every call site. It was schema-checked on the way in.
+ */
+export function toRichText(value: unknown): RichTextContent | null {
+  return value ? (value as RichTextContent) : null;
+}
 
 export function toAdvertisementDto(
   item: AdvertisementEntity,
@@ -33,12 +59,11 @@ export function toAdvertisementDto(
   return {
     id: item.id,
     advertiserName: item.advertiserName,
-    image: {
-      id: item.media.id,
-      url: toPublicUrl(item.media.storageKey),
-      width: item.media.width,
-      height: item.media.height,
-    },
+    image: toMediaSummary(item.media, toPublicUrl),
+    detailImage: item.detailMedia
+      ? toMediaSummary(item.detailMedia, toPublicUrl)
+      : null,
+    description: toRichText(item.description),
     destinationUrl: item.destinationUrl,
     priority: item.priority,
     placement: item.placement,

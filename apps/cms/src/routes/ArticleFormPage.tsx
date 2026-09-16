@@ -29,7 +29,7 @@ import { ArticleSeoFields } from '../features/articles/ArticleSeoFields.js';
 import { toValues, type FormValues } from '../features/articles/formValues.js';
 import { hasText } from '../features/articles/readTime.js';
 import { TagsInput } from '../features/articles/TagsInput.js';
-import { TiptapEditor } from '../features/articles/TiptapEditor.js';
+import { TiptapEditor } from '../components/TiptapEditor.js';
 import { STATUS_LABELS, STATUS_TONES } from '../features/articles/status.js';
 import { useArticleMutations } from '../features/articles/useArticleMutations.js';
 import { MediaPickerDialog } from '../features/media/MediaPickerDialog.js';

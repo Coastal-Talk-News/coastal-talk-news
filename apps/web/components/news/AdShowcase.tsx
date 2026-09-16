@@ -1,6 +1,7 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
-import { adAspectRatio, galleryRows, rowMaxWidth } from '../../lib/ads';
+import { adAspectRatio, adHref, galleryRows, rowMaxWidth } from '../../lib/ads';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 
@@ -38,10 +39,10 @@ export function AdShowcase({ advertisements, locale = 'en' }: AdShowcaseProps) {
                 flexBasis: 0,
               }}
             >
-              <a
-                href={ad.destinationUrl}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
+              <Link
+                href={adHref(ad.id)}
+                rel="sponsored"
+                prefetch={false}
                 aria-label={`${dictionary.common.advertisement}: ${ad.advertiserName}`}
                 className="group block"
               >
@@ -61,7 +62,7 @@ export function AdShowcase({ advertisements, locale = 'en' }: AdShowcaseProps) {
                     {dictionary.advertise.visitSite} →
                   </span>
                 </span>
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

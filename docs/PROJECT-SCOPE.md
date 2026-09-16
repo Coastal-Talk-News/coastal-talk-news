@@ -166,15 +166,25 @@ active Breaking News.
 
 ### Advertisements
 
-Fields: advertiser name, image, destination URL, priority, placement, start/end datetime.
+Fields: advertiser name, banner image, detail image (optional), description (optional
+rich text), destination URL (optional), priority, placement, start/end datetime.
 
-**`placement` chooses the ad's zone: Top or Right Side (Sidebar), confirmed.** The CMS
-create/edit form offers a Top / Right Side choice (default Right Side). Top is a fixed
-320.57×73.88 band capped at exactly 3 active ads, enforced server-side (409 Conflict on a
-4th). Right Side is a fixed 250×300 rail with no cap. `priority` still orders ads
-within whichever zone they're in — it no longer selects the zone itself. This reverses
-the earlier "no placement field, confirmed" decision recorded here and in
-DATA-MODEL.md; the reversal is final.
+**Every advertisement has its own page** on the reader site at `/advertisement/{id}`,
+with all of them listed at `/advertisements`. A banner in any zone links to that page
+rather than straight out to the advertiser; the advertiser's own URL is a button on the
+page. Advertisements form one fixed "Advertisement" section, hardcoded on the reader site
+rather than stored as a Category, so it never appears in category navigation.
+
+**`placement` chooses the ad's zone: Masthead, Top or Right Side (Sidebar).** The CMS
+create/edit form offers all three (default Right Side). Masthead is the single premium
+slot beside the site name, capped at 1. Top is a 320.57×73.88 band capped at 3. Right
+Side is a 250×300 rail with no cap. Each zone is priced separately, which is why
+placement is a stored field rather than a rendering detail. Caps count only bookings
+whose run **overlaps** the one being saved, enforced server-side (409 Conflict), so a
+finished booking frees its slot. `priority` still orders ads within whichever zone
+they're in — it no longer selects the zone itself. This reverses the earlier "no
+placement field, confirmed" decision recorded here and in DATA-MODEL.md; the reversal is
+final.
 
 Advertisements are scheduled using `start_at` and `end_at`. The advertisement does not have
 a stored `is_active` field — its active state is derived by the backend from the schedule,
@@ -190,8 +200,9 @@ expired advertisements and permanently delete unwanted ones later.
 
 ### Advertisement images
 
-One image per ad, any resolution, rendered responsively with aspect ratio preserved. No
-separate desktop/tablet/mobile variants in V1. Optimized server-side on upload (Sharp).
+Up to two images per ad - the banner shown in its zone, and an optional larger detail
+image for the ad's own page - each any resolution, rendered responsively with aspect
+ratio preserved. No separate desktop/tablet/mobile variants in V1. Optimized server-side on upload (Sharp).
 
 ### Media Library
 

@@ -17,7 +17,11 @@ export function AppLayout() {
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.key.toLowerCase() === 'b' && (event.ctrlKey || event.metaKey)) {
+      if (
+        event.key.toLowerCase() === 'b' &&
+        event.shiftKey &&
+        (event.ctrlKey || event.metaKey)
+      ) {
         event.preventDefault();
         setCollapsed(!collapsed);
       }

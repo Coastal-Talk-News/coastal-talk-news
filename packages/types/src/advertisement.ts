@@ -1,14 +1,23 @@
-import type { Id, IsoDateTime } from './api.js';
+import type { Id, IsoDateTime, RichTextContent } from './api.js';
 import type { MediaSummaryDto } from './media.js';
 
-/** TOP is a fixed 320.57×73.88 band capped at 3 active ads; SIDEBAR is a fixed 250×300 rail, uncapped. */
-export type AdPlacement = 'TOP' | 'SIDEBAR';
+/**
+ * Each zone is sold separately, which is why placement is a field rather than
+ * a rendering detail: MASTHEAD is the single premium slot beside the site name,
+ * TOP the band under the header (3 slots), SIDEBAR the uncapped rail.
+ */
+export type AdPlacement = 'MASTHEAD' | 'TOP' | 'SIDEBAR';
 
 export interface AdvertisementDto {
   id: Id;
   advertiserName: string;
   image: MediaSummaryDto;
-  destinationUrl: string;
+  /** Larger creative for the ad's own page; the banner is used when absent. */
+  detailImage: MediaSummaryDto | null;
+  /** Long-form copy for the ad's own page. */
+  description: RichTextContent | null;
+  /** Null when the advertiser has no site of their own to link to. */
+  destinationUrl: string | null;
   priority: number;
   placement: AdPlacement;
   startAt: IsoDateTime;
@@ -21,7 +30,9 @@ export interface AdvertisementDto {
 export interface CreateAdvertisementRequest {
   advertiserName: string;
   mediaId: Id;
-  destinationUrl: string;
+  detailMediaId?: Id | null;
+  description?: RichTextContent | null;
+  destinationUrl?: string | null;
   priority?: number;
   /** Defaults to SIDEBAR server-side when omitted. */
   placement?: AdPlacement;

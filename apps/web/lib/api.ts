@@ -3,6 +3,7 @@ import type {
   ApiSuccess,
   CategoryDto,
   PaginationMeta,
+  PublicAdvertisementDetailDto,
   PublicArticleCardDto,
   PublicArticleDto,
   PublicHomeDto,
@@ -118,11 +119,32 @@ export async function getHome(): Promise<PublicHomeDto> {
  * resolve (404) or it isn't a well-formed id at all (400, from the route's
  * uuid check). Both mean the same thing to a reader following a stale link.
  */
-export async function getArticle(
-  id: string,
-): Promise<PublicArticleDto | null> {
+export async function getArticle(id: string): Promise<PublicArticleDto | null> {
   try {
     return await fetchPublic<PublicArticleDto>(`/articles/${id}`);
+  } catch (error) {
+    if (
+      error instanceof ApiClientError &&
+      (error.status === 404 || error.status === 400)
+    ) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+/**
+ * Null when no advertisement with this id is currently running - it never
+ * started, its run is over, or the id is malformed. All of them mean the same
+ * thing to a reader following a link: there is no page here.
+ */
+export async function getAdvertisement(
+  id: string,
+): Promise<PublicAdvertisementDetailDto | null> {
+  try {
+    return await fetchPublic<PublicAdvertisementDetailDto>(
+      `/advertisements/${id}`,
+    );
   } catch (error) {
     if (
       error instanceof ApiClientError &&

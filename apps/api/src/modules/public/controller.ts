@@ -28,6 +28,14 @@ export async function getArticle(
   );
 }
 
+export async function getAdvertisement(
+  request: FastifyRequest<{ Params: { id: string } }>,
+) {
+  return dataEnvelope(
+    await service.getAdvertisement(deps(request), request.params.id),
+  );
+}
+
 interface SearchQuery {
   q: string;
   language?: Language;

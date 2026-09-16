@@ -41,6 +41,15 @@ const en = {
       'Once the newsroom publishes its first article it will appear right here.',
     topStories: 'Top Stories',
   },
+  advertisement: {
+    allTitle: 'Advertisements',
+    allDescription:
+      'Every advertisement currently running on the site. Each one has its own page.',
+    backToAll: 'All advertisements',
+    moreInfo: 'More info',
+    visitWebsite: 'Visit website',
+    browseAll: 'Browse current advertisements',
+  },
   article: {
     share: 'Share',
     shareOn: (network: string) => `Share on ${network}`,
@@ -151,6 +160,15 @@ const kn: typeof en = {
     noStoriesDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ತನ್ನ ಮೊದಲ ಲೇಖನವನ್ನು ಪ್ರಕಟಿಸಿದ ತಕ್ಷಣ ಅದು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.',
     topStories: 'ಪ್ರಮುಖ ಸುದ್ದಿಗಳು',
+  },
+  advertisement: {
+    allTitle: 'ಜಾಹೀರಾತುಗಳು',
+    allDescription:
+      'ಸಧ್ಯ ಈ ತಾಣದಲ್ಲಿ ಪ್ರಸಾರವಾಗುತ್ತಿರುವ ಎಲ್ಲಾ ಜಾಹೀರಾತುಗಳು. ಪ್ರತಿಯೊಂದಕ್ಕೂ ತನ್ನದೇ ಪುಟವಿದೆ.',
+    backToAll: 'ಎಲ್ಲಾ ಜಾಹೀರಾತುಗಳು',
+    moreInfo: 'ಹೆಚ್ಚಿನ ಮಾಹಿತಿ',
+    visitWebsite: 'ವೆಬ್‌ಸೈಟ್‌ಗೆ ಭೇಟಿ ನೀಡಿ',
+    browseAll: 'ಪ್ರಸ್ತುತ ಜಾಹೀರಾತುಗಳನ್ನು ನೋಡಿ',
   },
   article: {
     share: 'ಹಂಚಿಕೊಳ್ಳಿ',

@@ -54,7 +54,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   return (
     // A news column is capped by line length rather than by the grid: past
     // roughly 70 characters a reader starts losing their place between lines.
-    <article className="max-w-[44rem] py-6 sm:py-8">
+    <article className="max-w-[44rem] xl:max-w-[52rem] py-6 sm:py-8">
       <header>
         <CategoryTag category={article.category} />
 

@@ -18,6 +18,7 @@ import {
 import { dashboardRoutes } from './modules/dashboard/routes.js';
 import { mediaRoutes } from './modules/media/routes.js';
 import {
+  publicAdvertisementRoutes,
   publicArticleRoutes,
   publicSiteRoutes,
 } from './modules/public/routes.js';
@@ -130,6 +131,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
     prefix: `${API_BASE_PATH}/public/categories`,
   });
   await app.register(publicSiteRoutes, { prefix: `${API_BASE_PATH}/public` });
+  await app.register(publicAdvertisementRoutes, {
+    prefix: `${API_BASE_PATH}/public/advertisements`,
+  });
   await app.register(publicArticleRoutes, {
     prefix: `${API_BASE_PATH}/public/articles`,
   });

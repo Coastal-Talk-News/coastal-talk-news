@@ -29,12 +29,25 @@ export const PublicBreakingNewsSchema = Type.Object({
   articleUrl: Type.String(),
 });
 
-export const PublicAdvertisementSchema = Type.Object({
+const publicAdvertisementFields = {
   id: Type.String(),
   advertiserName: Type.String(),
-  destinationUrl: Type.String(),
   placement: AdPlacementSchema,
   image: MediaSummarySchema,
+};
+
+export const PublicAdvertisementSchema = Type.Object(publicAdvertisementFields);
+
+export const PublicAdvertisementDetailSchema = Type.Object({
+  ...publicAdvertisementFields,
+  detailImage: Type.Union([MediaSummarySchema, Type.Null()]),
+  description: Type.Union([ArticleContentSchema, Type.Null()]),
+  destinationUrl: Type.Union([Type.String(), Type.Null()]),
+  metaDescription: Type.Union([Type.String(), Type.Null()]),
+});
+
+export const PublicAdvertisementParamsSchema = Type.Object({
+  id: Type.String({ format: 'uuid' }),
 });
 
 const Nullable = (schema: ReturnType<typeof Type.String>) =>

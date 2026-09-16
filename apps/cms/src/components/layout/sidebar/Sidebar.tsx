@@ -90,7 +90,7 @@ export function Sidebar({
 
         {showCollapseControl && (
           <Tooltip
-            label={`${collapsed ? 'Expand' : 'Collapse'} sidebar  ·  Ctrl B`}
+            label={`${collapsed ? 'Expand' : 'Collapse'} sidebar  ·  Ctrl Shift B`}
             side="right"
           >
             <button

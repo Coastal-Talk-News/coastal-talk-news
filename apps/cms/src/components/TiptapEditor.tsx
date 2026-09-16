@@ -1,4 +1,4 @@
-import type { ArticleContent } from '@coastal-talk-news/types';
+import type { RichTextContent } from '@coastal-talk-news/types';
 import { cn } from '@coastal-talk-news/ui/cn';
 import ImageExtension from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
@@ -23,8 +23,8 @@ import {
 import { useEffect, type ReactNode } from 'react';
 
 interface TiptapEditorProps {
-  content: ArticleContent | null;
-  onChange: (content: ArticleContent) => void;
+  content: RichTextContent | null;
+  onChange: (content: RichTextContent) => void;
   placeholder?: string;
 }
 
@@ -169,7 +169,7 @@ export function TiptapEditor({
       Placeholder.configure({ placeholder }),
     ],
     content: (content ?? '') as Content,
-    onUpdate: ({ editor }) => onChange(editor.getJSON() as ArticleContent),
+    onUpdate: ({ editor }) => onChange(editor.getJSON() as RichTextContent),
     editorProps: {
       attributes: {
         class:

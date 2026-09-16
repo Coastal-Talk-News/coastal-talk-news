@@ -101,19 +101,45 @@ export function findActiveBreakingNews(db: TransactionClient, now: Date) {
   });
 }
 
+// Carried by every page render, so it stays at what a banner draws: no
+// description document, no detail image, no advertiser URL. Each banner links
+// to the ad's own page, which loads those itself.
+const adCardSelect = {
+  id: true,
+  advertiserName: true,
+  placement: true,
+  media: mediaSelect,
+} as const;
+
 export function findActiveAdvertisements(db: TransactionClient, now: Date) {
   return db.advertisement.findMany({
     where: activeWindowWhere(now),
     orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+    select: adCardSelect,
+  });
+}
+
+/** Absent rather than forbidden once the run is over, so a stale link 404s. */
+export function findActiveAdvertisement(
+  db: TransactionClient,
+  id: string,
+  now: Date,
+) {
+  return db.advertisement.findFirst({
+    where: { id, ...activeWindowWhere(now) },
     select: {
-      id: true,
-      advertiserName: true,
+      ...adCardSelect,
       destinationUrl: true,
-      placement: true,
-      media: mediaSelect,
+      description: true,
+      descriptionText: true,
+      detailMedia: mediaSelect,
     },
   });
 }
+
+export type AdvertisementDetailRow = NonNullable<
+  Awaited<ReturnType<typeof findActiveAdvertisement>>
+>;
 
 /**
  * One query for every category section rather than one per category: fetch a

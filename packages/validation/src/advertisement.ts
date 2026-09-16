@@ -1,4 +1,5 @@
 import { Type } from '@sinclair/typebox';
+import { ArticleContentSchema } from './article.js';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
 import { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX } from './limits.js';
@@ -6,6 +7,7 @@ import { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX } from './limits.js';
 export { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX };
 
 export const AdPlacementSchema = Type.Union([
+  Type.Literal('MASTHEAD'),
   Type.Literal('TOP'),
   Type.Literal('SIDEBAR'),
 ]);
@@ -14,7 +16,9 @@ const advertisementFields = {
   id: Type.String(),
   advertiserName: Type.String(),
   image: MediaSummarySchema,
-  destinationUrl: Type.String(),
+  detailImage: Type.Union([MediaSummarySchema, Type.Null()]),
+  description: Type.Union([ArticleContentSchema, Type.Null()]),
+  destinationUrl: Type.Union([Type.String(), Type.Null()]),
   priority: Type.Integer(),
   placement: AdPlacementSchema,
   startAt: IsoDateTime,
@@ -29,10 +33,15 @@ export const AdvertisementSchema = Type.Object(advertisementFields);
 const writableAdvertisementFields = {
   advertiserName: Type.String({ minLength: 1, maxLength: ADVERTISER_NAME_MAX }),
   mediaId: Type.String({ format: 'uuid' }),
-  destinationUrl: Type.String({
-    maxLength: DESTINATION_URL_MAX,
-    format: 'uri',
-  }),
+  detailMediaId: Type.Union([Type.String({ format: 'uuid' }), Type.Null()]),
+  description: Type.Union([ArticleContentSchema, Type.Null()]),
+  // '' is how a cleared link arrives from the form, so it has to pass
+  // alongside a real URL — the uri check alone would make a link unremovable.
+  destinationUrl: Type.Union([
+    Type.String({ maxLength: DESTINATION_URL_MAX, format: 'uri' }),
+    Type.Literal(''),
+    Type.Null(),
+  ]),
   priority: Type.Integer({ minimum: 0 }),
   placement: AdPlacementSchema,
   startAt: IsoDateTime,
@@ -43,7 +52,9 @@ export const CreateAdvertisementBodySchema = Type.Object(
   {
     advertiserName: writableAdvertisementFields.advertiserName,
     mediaId: writableAdvertisementFields.mediaId,
-    destinationUrl: writableAdvertisementFields.destinationUrl,
+    detailMediaId: Type.Optional(writableAdvertisementFields.detailMediaId),
+    description: Type.Optional(writableAdvertisementFields.description),
+    destinationUrl: Type.Optional(writableAdvertisementFields.destinationUrl),
     priority: Type.Optional(writableAdvertisementFields.priority),
     placement: Type.Optional(writableAdvertisementFields.placement),
     startAt: writableAdvertisementFields.startAt,

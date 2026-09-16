@@ -4,6 +4,15 @@ export type IsoDateTime = string;
 
 export type Id = string;
 
+/**
+ * A Tiptap document, as authored in the CMS. Rendered node by node on the
+ * reader site — never as HTML — so it stays untrusted input end to end.
+ */
+export interface RichTextContent {
+  type: 'doc';
+  content: unknown[];
+}
+
 export interface ApiSuccess<TData> {
   success: true;
   data: TData;
