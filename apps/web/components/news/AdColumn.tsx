@@ -1,6 +1,7 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
-import { adAspectRatio, galleryRows, rowMaxWidth } from '../../lib/ads';
+import { adAspectRatio, adHref, galleryRows, rowMaxWidth } from '../../lib/ads';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 
@@ -18,19 +19,27 @@ interface GalleryShape {
   maxPerRow: number;
   ratioBudget: number;
   maxShapeSpread: number;
-  maxHeight?: number;
+  maxHeight: number;
 }
 
 /**
- * A narrow rail can only pair creatives of similar shape before one of them is
- * squeezed to a sliver, so it is stricter than the full-width block.
+ * A photo-gallery pack: creatives keep their own proportions and share a row
+ * when their shapes suit each other, so nothing is cropped or letterboxed.
+ *
+ * Both numbers exist to keep the rows a similar height, which is what stops
+ * one advertiser dwarfing another. The budget sets the height a full-width row
+ * lands on (rail width / budget), and the cap catches the other end: a lone
+ * tall creative with no partner would otherwise stretch the full width of the
+ * rail and tower over everything below it - measured at 474px against a
+ * neighbour's 116px before the cap existed.
  */
 const SHAPE = {
-  // No height cap in the rail: every row fills the column, so the creatives
-  // share one left and right edge however tall each one turns out.
-  rail: { maxPerRow: 2, ratioBudget: 3.2, maxShapeSpread: 1.6 },
-  // The block is wide enough that an unconstrained row would be enormous, so
-  // rows there are capped and centred instead.
+  rail: {
+    maxPerRow: 2,
+    ratioBudget: 1.6,
+    maxShapeSpread: 1.6,
+    maxHeight: 260,
+  },
   block: {
     maxPerRow: 4,
     ratioBudget: 9,
@@ -62,11 +71,9 @@ export function AdColumn({
               // rail never gets that wide, so this is the block's problem only.
               variant === 'block' ? 'flex-col sm:flex-row' : ''
             }`}
-            style={
-              shape.maxHeight
-                ? { maxWidth: rowMaxWidth(row, shape.maxHeight, GAP) }
-                : undefined
-            }
+            // Capping the row's width is what caps its height, since the two
+            // move together once the creatives' proportions are fixed.
+            style={{ maxWidth: rowMaxWidth(row, shape.maxHeight, GAP) }}
           >
             {row.ads.map((ad) => (
               // Growing by each creative's own ratio lands every image in the
@@ -82,12 +89,12 @@ export function AdColumn({
                   flexBasis: 0,
                 }}
               >
-                <a
-                  href={ad.destinationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer sponsored"
+                <Link
+                  href={adHref(ad.id)}
+                  rel="sponsored"
+                  prefetch={false}
                   aria-label={`${advertisement}: ${ad.advertiserName}`}
-                  className="border-rule group block overflow-hidden rounded-card border transition-shadow hover:shadow-lg"
+                  className="border-rule group rounded-card block overflow-hidden border transition-shadow hover:shadow-lg"
                 >
                   <Image
                     src={ad.image.url}
@@ -96,12 +103,12 @@ export function AdColumn({
                     height={ad.image.height}
                     sizes={
                       variant === 'rail'
-                        ? '288px'
+                        ? '(min-width: 1100px) 320px, (min-width: 1024px) 340px, 240px'
                         : '(min-width: 640px) 640px, 100vw'
                     }
                     className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.03]"
                   />
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

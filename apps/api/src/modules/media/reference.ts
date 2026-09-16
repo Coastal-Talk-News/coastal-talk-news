@@ -9,7 +9,9 @@ async function countReferences(
       where: { OR: [{ mediaId }, { ogImageId: mediaId }] },
     }),
     tx.category.count({ where: { mediaId } }),
-    tx.advertisement.count({ where: { mediaId } }),
+    tx.advertisement.count({
+      where: { OR: [{ mediaId }, { detailMediaId: mediaId }] },
+    }),
     tx.siteSettings.count({
       where: {
         OR: [
@@ -80,6 +82,7 @@ export async function findUnreferencedMedia(
       ogImageForArticles: { none: {} },
       categories: { none: {} },
       advertisements: { none: {} },
+      detailForAds: { none: {} },
       logoForSettings: { none: {} },
       faviconForSettings: { none: {} },
       ogImageForSettings: { none: {} },
@@ -110,7 +113,7 @@ export async function countUsage(
     return usage;
   }
 
-  const [featured, ogImages, categories, advertisements, settings] =
+  const [featured, ogImages, categories, advertisements, adDetails, settings] =
     await Promise.all([
       tx.article.groupBy({
         by: ['mediaId'],
@@ -130,6 +133,11 @@ export async function countUsage(
       tx.advertisement.groupBy({
         by: ['mediaId'],
         where: { mediaId: { in: mediaIds } },
+        _count: { _all: true },
+      }),
+      tx.advertisement.groupBy({
+        by: ['detailMediaId'],
+        where: { detailMediaId: { in: mediaIds } },
         _count: { _all: true },
       }),
       tx.siteSettings.findMany({
@@ -158,6 +166,8 @@ export async function countUsage(
   for (const row of categories) add(row.mediaId, 'categories', row._count._all);
   for (const row of advertisements)
     add(row.mediaId, 'advertisements', row._count._all);
+  for (const row of adDetails)
+    add(row.detailMediaId, 'advertisements', row._count._all);
   for (const row of settings) {
     add(row.logoMediaId, 'settings', 1);
     add(row.faviconMediaId, 'settings', 1);

@@ -5,6 +5,7 @@ import { Tooltip } from '@coastal-talk-news/ui/tooltip';
 import { iconButtonClass } from '@coastal-talk-news/ui/icon-button';
 import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
 import { formatDate, formatTime } from '../../lib/format.js';
+import { PLACEMENT_META } from './placement.js';
 import { advertisementStatus } from './status.js';
 
 interface AdvertisementRowProps {
@@ -44,21 +45,23 @@ export function AdvertisementRow({
       <td className="py-3 pr-4">
         <div className="flex max-w-xs items-center gap-1.5">
           <p className="text-ink truncate font-medium">{item.advertiserName}</p>
-          <a
-            href={item.destinationUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={`Open link for ${item.advertiserName}`}
-            className="text-ink-subtle shrink-0 transition-colors hover:text-accent-text"
-          >
-            <ExternalLink className="size-3.5" aria-hidden />
-          </a>
+          {item.destinationUrl && (
+            <a
+              href={item.destinationUrl}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Open link for ${item.advertiserName}`}
+              className="text-ink-subtle shrink-0 transition-colors hover:text-accent-text"
+            >
+              <ExternalLink className="size-3.5" aria-hidden />
+            </a>
+          )}
         </div>
       </td>
 
       <td className="py-3 pr-4">
-        <Badge tone={item.placement === 'TOP' ? 'blue' : 'slate'}>
-          {item.placement === 'TOP' ? 'Top' : 'Right Side'}
+        <Badge tone={PLACEMENT_META[item.placement].tone}>
+          {PLACEMENT_META[item.placement].label}
         </Badge>
       </td>
 

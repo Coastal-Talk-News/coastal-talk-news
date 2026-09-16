@@ -76,8 +76,10 @@ display, but it is never persisted — recompute it on every read.
 
 ### Advertisement
 
-`id`, `media_id` (FK → Media Asset), `advertiser_name`, `destination_url`, `priority`,
-`placement`, `start_at`, `end_at`, `created_at`, `updated_at`
+`id`, `media_id` (FK → Media Asset), `detail_media_id` (FK → Media Asset, nullable),
+`advertiser_name`, `destination_url` (nullable), `description` (Tiptap JSON, nullable),
+`description_text` (nullable), `priority`, `placement`, `start_at`, `end_at`,
+`created_at`, `updated_at`
 
 There is **no `is_active` database field**, for the same reason as Breaking News. The
 backend derives the active state from the schedule:
@@ -88,13 +90,30 @@ backend derives the active state from the schedule:
 The computed `is_active` value may be included in API responses so the CMS can separate
 active advertisements from inactive/expired ones.
 
-`placement` chooses one of two reader-site ad zones: `TOP` or `SIDEBAR` (the column
-default). Top is a fixed-size 320.57×73.88 band capped at exactly 3 active ads — the API
-rejects a create/update that would push the Top-placement count past 3 with a 409
-Conflict. Sidebar is a fixed-size 250×300 rail with no capacity limit. `priority`
-remains the only ordering control _within_ a placement zone; it no longer decides which
-zone an ad lands in, since `placement` does that directly now. This replaces an earlier
-"no placement field, confirmed" note recorded here — that decision has been reversed.
+`placement` chooses one of three reader-site ad zones, each sold separately:
+
+| Placement  | Zone                           | Capacity  |
+| ---------- | ------------------------------ | --------- |
+| `MASTHEAD` | Beside the site name           | 1         |
+| `TOP`      | 320.57×73.88 band under header | 3         |
+| `SIDEBAR`  | 250×300 rail (column default)  | unlimited |
+
+Capacity counts the ads whose run **overlaps** the one being saved, not every row with
+that placement: a zone's cap is on how many run at once, so a finished booking frees its
+slot for the next advertiser. The API rejects an overflowing create/update with a 409
+Conflict. `priority` remains the only ordering control _within_ a zone; it no longer
+decides which zone an ad lands in, since `placement` does that directly now. This
+replaces an earlier "no placement field, confirmed" note recorded here — that decision
+has been reversed.
+
+**Every advertisement has its own reader-site page** at `/advertisement/{id}`, listed at
+`/advertisements`. `detail_media_id` is the larger creative shown there, `description` is
+the Tiptap document beneath it, and `destination_url` — now optional — becomes a "Visit
+website" button rather than the banner's own href. Every banner links to that page
+instead of straight out to the advertiser. `description_text` is a plain-text mirror of
+`description`, written on save so listings and meta tags never load the document itself.
+Advertisements sit in one fixed "Advertisement" section that is hardcoded on the reader
+site — it is **not** a Category row and never appears in category navigation.
 
 ### Media Asset
 
@@ -131,6 +150,7 @@ schema change was needed for it.
 - `Article.media_id`, `Article.og_image_id → MediaAsset.id`
 - `Category.media_id → MediaAsset.id`
 - `Advertisement.media_id → MediaAsset.id`
+- `Advertisement.detail_media_id → MediaAsset.id` (nullable)
 - `SiteSettings.logo_media_id`, `favicon_media_id`, `default_og_image_id → MediaAsset.id`
 - `BreakingNews` does **not** FK to `Article` — it stores a raw URL string
 

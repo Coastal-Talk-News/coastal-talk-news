@@ -1,6 +1,8 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
   ListResponse,
+  PublicAdvertisementDetailSchema,
+  PublicAdvertisementParamsSchema,
   PublicArticleCardSchema,
   PublicArticleParamsSchema,
   PublicArticleSchema,
@@ -82,5 +84,27 @@ export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.getArticle,
+  );
+};
+
+export const publicAdvertisementRoutes: FastifyPluginAsyncTypebox = async (
+  app,
+) => {
+  app.get(
+    '/:id',
+    {
+      schema: {
+        tags: ['public'],
+        summary: "Get a running advertisement's own page",
+        description:
+          'Only while the ad is within its schedule: an expired or not-yet-started ad 404s, the same way an unpublished article does.',
+        params: PublicAdvertisementParamsSchema,
+        response: {
+          200: SuccessResponse(PublicAdvertisementDetailSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.getAdvertisement,
   );
 };

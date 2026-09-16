@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
-import { AdShowcase } from '../../components/news/AdShowcase';
-import { EmptyState } from '../../components/ui/EmptyState';
-import { SectionHeading } from '../../components/ui/SectionHeading';
+import Link from 'next/link';
 import { getSite } from '../../lib/api';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import { getLocale } from '../../lib/i18n/server';
@@ -24,10 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AdvertisePage() {
-  const [{ advertisements, settings }, locale] = await Promise.all([
-    getSite(),
-    getLocale(),
-  ]);
+  const [{ settings }, locale] = await Promise.all([getSite(), getLocale()]);
   const dictionary = getDictionary(locale);
 
   return (
@@ -61,17 +56,14 @@ export default async function AdvertisePage() {
         )}
       </header>
 
-      <section aria-label="Current advertisers" className="mt-8">
-        <SectionHeading title={dictionary.advertise.currentlyRunning} />
-        {advertisements.length > 0 ? (
-          <AdShowcase advertisements={advertisements} locale={locale} />
-        ) : (
-          <EmptyState
-            title={dictionary.advertise.noCampaignsTitle}
-            description={dictionary.advertise.noCampaignsDescription}
-          />
-        )}
-      </section>
+      <p className="mt-8 text-center">
+        <Link
+          href="/advertisements"
+          className="border-rule hover:border-brand hover:text-brand inline-flex h-11 items-center rounded-sm border px-6 text-sm font-semibold transition-colors"
+        >
+          {dictionary.advertisement.browseAll}
+        </Link>
+      </p>
     </div>
   );
 }

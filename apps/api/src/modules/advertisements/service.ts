@@ -1,4 +1,6 @@
+import { Prisma } from '@coastal-talk-news/db';
 import type { AdPlacement, Database } from '@coastal-talk-news/db';
+import type { RichTextContent } from '@coastal-talk-news/types';
 import type { FastifyBaseLogger } from 'fastify';
 import {
   BadRequestError,
@@ -7,6 +9,7 @@ import {
 } from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
+import { extractPlainText } from '../../lib/tiptap-text.js';
 import { releaseMedia } from '../media/reference.js';
 import { purgeStorageObjects } from '../media/service.js';
 import type { ObjectStorage } from '../media/storage.js';
@@ -21,7 +24,9 @@ export interface AdvertisementServiceDeps {
 export interface CreateAdvertisementInput {
   advertiserName: string;
   mediaId: string;
-  destinationUrl: string;
+  detailMediaId?: string | null;
+  description?: RichTextContent | null;
+  destinationUrl?: string | null;
   priority?: number;
   placement?: AdPlacement;
   startAt: string;
@@ -30,7 +35,17 @@ export interface CreateAdvertisementInput {
 
 export type UpdateAdvertisementInput = Partial<CreateAdvertisementInput>;
 
-const TOP_PLACEMENT_CAPACITY = 3;
+/** Zones sold by the slot. Sidebar is absent because it is uncapped. */
+const PLACEMENT_CAPACITY: Partial<Record<AdPlacement, number>> = {
+  MASTHEAD: 1,
+  TOP: 3,
+};
+
+const PLACEMENT_LABEL: Record<AdPlacement, string> = {
+  MASTHEAD: 'Masthead',
+  TOP: 'Top',
+  SIDEBAR: 'Right Side',
+};
 
 async function assertMediaExists(db: Database, mediaId: string): Promise<void> {
   if (!(await repository.mediaExists(db, mediaId))) {
@@ -46,16 +61,50 @@ function assertWindow(startAt: Date, endAt: Date): void {
   }
 }
 
-async function assertTopCapacityAvailable(
+async function assertPlacementCapacity(
   db: Database,
+  placement: AdPlacement,
+  window: { startAt: Date; endAt: Date },
   excludeId?: string,
 ): Promise<void> {
-  const topCount = await repository.countByPlacement(db, 'TOP', excludeId);
-  if (topCount >= TOP_PLACEMENT_CAPACITY) {
+  const capacity = PLACEMENT_CAPACITY[placement];
+  if (capacity === undefined) {
+    return;
+  }
+
+  const taken = await repository.countOverlappingInPlacement(
+    db,
+    placement,
+    window,
+    excludeId,
+  );
+  if (taken >= capacity) {
     throw new ConflictError(
-      `Top placement is full (${TOP_PLACEMENT_CAPACITY}/${TOP_PLACEMENT_CAPACITY}). Move another ad to Right Side first.`,
+      `${PLACEMENT_LABEL[placement]} placement is full (${capacity}/${capacity}) for these dates. Move another ad, or run this one over different dates.`,
     );
   }
+}
+
+/** An empty string is how a cleared link arrives from the form. */
+function normalizeUrl(value: string | null | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+/**
+ * The text is stored beside the document so listings and meta tags can read a
+ * sentence of it without loading and walking the document itself.
+ */
+function descriptionWrite(
+  description: RichTextContent | null | undefined,
+): Partial<repository.AdvertisementWriteData> {
+  if (description === undefined) {
+    return {};
+  }
+  return {
+    description: description ?? Prisma.DbNull,
+    descriptionText: description ? extractPlainText(description) : null,
+  };
 }
 
 export async function listForCms(
@@ -82,24 +131,30 @@ export async function create(
   input: CreateAdvertisementInput,
 ) {
   await assertMediaExists(db, input.mediaId);
+  if (input.detailMediaId) {
+    await assertMediaExists(db, input.detailMediaId);
+  }
 
   const startAt = new Date(input.startAt);
   const endAt = new Date(input.endAt);
   assertWindow(startAt, endAt);
 
   const placement: AdPlacement = input.placement ?? 'SIDEBAR';
-  if (placement === 'TOP') {
-    await assertTopCapacityAvailable(db);
-  }
+  await assertPlacementCapacity(db, placement, { startAt, endAt });
 
   return repository.create(db, {
     advertiserName: input.advertiserName.trim(),
     mediaId: input.mediaId,
-    destinationUrl: input.destinationUrl.trim(),
+    detailMediaId: input.detailMediaId ?? null,
+    destinationUrl: normalizeUrl(input.destinationUrl),
     priority: input.priority ?? 0,
     placement,
     startAt,
     endAt,
+    description: input.description ?? Prisma.DbNull,
+    descriptionText: input.description
+      ? extractPlainText(input.description)
+      : null,
   });
 }
 
@@ -118,18 +173,41 @@ export async function update(
   if (input.mediaId) {
     await assertMediaExists(db, input.mediaId);
   }
+  if (input.detailMediaId) {
+    await assertMediaExists(db, input.detailMediaId);
+  }
 
   const startAt = input.startAt ? new Date(input.startAt) : existing.startAt;
   const endAt = input.endAt ? new Date(input.endAt) : existing.endAt;
   assertWindow(startAt, endAt);
 
-  const movingToTop = input.placement === 'TOP' && existing.placement !== 'TOP';
-  if (movingToTop) {
-    await assertTopCapacityAvailable(db, id);
+  // Re-checked whenever the zone or the dates move: either can push the ad
+  // into a period that is already sold out.
+  const placement = input.placement ?? existing.placement;
+  const scheduleTouched =
+    input.placement !== undefined ||
+    input.startAt !== undefined ||
+    input.endAt !== undefined;
+  if (scheduleTouched) {
+    await assertPlacementCapacity(db, placement, { startAt, endAt }, id);
   }
 
-  const mediaChanged =
-    input.mediaId !== undefined && input.mediaId !== existing.media.id;
+  const detailMediaId =
+    input.detailMediaId === undefined
+      ? undefined
+      : (input.detailMediaId ?? null);
+
+  const replaced: Array<string | null> = [];
+  if (input.mediaId !== undefined && input.mediaId !== existing.media.id) {
+    replaced.push(existing.media.id);
+  }
+  if (
+    detailMediaId !== undefined &&
+    existing.detailMedia &&
+    detailMediaId !== existing.detailMedia.id
+  ) {
+    replaced.push(existing.detailMedia.id);
+  }
 
   const { advertisement, orphanedKeys } = await db.$transaction(async (tx) => {
     const advertisement = await repository.update(tx, id, {
@@ -137,19 +215,18 @@ export async function update(
         ? { advertiserName: input.advertiserName.trim() }
         : {}),
       ...(input.mediaId !== undefined ? { mediaId: input.mediaId } : {}),
+      ...(detailMediaId !== undefined ? { detailMediaId } : {}),
       ...(input.destinationUrl !== undefined
-        ? { destinationUrl: input.destinationUrl.trim() }
+        ? { destinationUrl: normalizeUrl(input.destinationUrl) }
         : {}),
       ...(input.priority !== undefined ? { priority: input.priority } : {}),
       ...(input.placement !== undefined ? { placement: input.placement } : {}),
       ...(input.startAt !== undefined ? { startAt } : {}),
       ...(input.endAt !== undefined ? { endAt } : {}),
+      ...descriptionWrite(input.description),
     });
 
-    const orphanedKeys = mediaChanged
-      ? await releaseMedia(tx, [existing.media.id])
-      : [];
-
+    const orphanedKeys = await releaseMedia(tx, replaced);
     return { advertisement, orphanedKeys };
   });
 
@@ -170,7 +247,10 @@ export async function remove(
 
   const orphanedKeys = await db.$transaction(async (tx) => {
     await repository.remove(tx, id);
-    return releaseMedia(tx, [existing.media.id]);
+    return releaseMedia(tx, [
+      existing.media.id,
+      existing.detailMedia?.id ?? null,
+    ]);
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);

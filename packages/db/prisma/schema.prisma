@@ -36,7 +36,10 @@ enum ArticlePriority {
   NORMAL
 }
 
+/// MASTHEAD is the single premium slot beside the site name; TOP is the band
+/// below the header; SIDEBAR is the rail. Each is sold separately.
 enum AdPlacement {
+  MASTHEAD
   TOP
   SIDEBAR
 }
@@ -56,7 +59,8 @@ model MediaAsset {
   featuredForArticles Article[]       @relation("ArticleFeaturedImage")
   ogImageForArticles  Article[]       @relation("ArticleOgImage")
   categories          Category[]
-  advertisements      Advertisement[]
+  advertisements      Advertisement[] @relation("AdvertisementImage")
+  detailForAds        Advertisement[] @relation("AdvertisementDetailImage")
   logoForSettings     SiteSettings[]  @relation("SettingsLogo")
   faviconForSettings  SiteSettings[]  @relation("SettingsFavicon")
   ogImageForSettings  SiteSettings[]  @relation("SettingsDefaultOgImage")
@@ -88,12 +92,12 @@ model Article {
   mediaId    String? @map("media_id")
   ogImageId  String? @map("og_image_id")
 
-  language Language
-  headline String
-  summary  String
+  language    Language
+  headline    String
+  summary     String
   /// Tiptap document JSON, not HTML. The public site renders it
   /// programmatically, so stored content cannot inject markup.
-  content  Json
+  content     Json
   /// Flattened plain text of content, maintained by the API for search.
   contentText String   @map("content_text")
   youtubeUrl  String?  @map("youtube_url")
@@ -150,18 +154,27 @@ model BreakingNews {
 /// (a 250×300 rail, uncapped, and the column default). priority still orders
 /// ads within whichever zone they land in, not which zone they land in.
 model Advertisement {
-  id             String      @id @default(uuid(7))
-  mediaId        String      @map("media_id")
-  advertiserName String      @map("advertiser_name")
-  destinationUrl String      @map("destination_url")
-  priority       Int         @default(0)
-  placement      AdPlacement @default(SIDEBAR)
-  startAt        DateTime    @map("start_at")
-  endAt          DateTime    @map("end_at")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  updatedAt      DateTime    @updatedAt @map("updated_at")
+  id              String      @id @default(uuid(7))
+  mediaId         String      @map("media_id")
+  /// Larger creative shown on the ad's own page, where there is room for it.
+  detailMediaId   String?     @map("detail_media_id")
+  advertiserName  String      @map("advertiser_name")
+  /// Optional: an advertiser may have no website of their own to link to.
+  destinationUrl  String?     @map("destination_url")
+  /// Tiptap document, rendered only on the ad's own page.
+  description     Json?
+  /// Plain-text mirror of description, so listings and meta tags never have to
+  /// load and walk the document.
+  descriptionText String?     @map("description_text")
+  priority        Int         @default(0)
+  placement       AdPlacement @default(SIDEBAR)
+  startAt         DateTime    @map("start_at")
+  endAt           DateTime    @map("end_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
 
-  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+  media       MediaAsset  @relation("AdvertisementImage", fields: [mediaId], references: [id], onDelete: Restrict)
+  detailMedia MediaAsset? @relation("AdvertisementDetailImage", fields: [detailMediaId], references: [id], onDelete: Restrict)
 
   @@index([startAt, endAt])
   @@index([priority(sort: Desc), createdAt])

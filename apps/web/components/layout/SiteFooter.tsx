@@ -20,6 +20,7 @@ export function SiteFooter({
     { href: '/about', label: dictionary.common.about },
     { href: '/contact', label: dictionary.common.contact },
     { href: '/advertise', label: dictionary.common.advertise },
+    { href: '/advertisements', label: dictionary.advertisement.allTitle },
   ];
 
   return (

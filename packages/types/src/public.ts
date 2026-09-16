@@ -1,4 +1,4 @@
-import type { Id, IsoDateTime } from './api.js';
+import type { Id, IsoDateTime, RichTextContent } from './api.js';
 import type { AdPlacement } from './advertisement.js';
 import type { ArticleContent, Language } from './article.js';
 import type { MediaSummaryDto } from './media.js';
@@ -35,12 +35,25 @@ export interface PublicBreakingNewsDto {
   articleUrl: string;
 }
 
+/**
+ * What a banner needs and nothing more. Every ad links to its own page, so the
+ * advertiser's URL and copy stay out of the site payload that each and every
+ * page render carries.
+ */
 export interface PublicAdvertisementDto {
   id: Id;
   advertiserName: string;
-  destinationUrl: string;
   placement: AdPlacement;
   image: MediaSummaryDto;
+}
+
+/** The ad's own page. Only this route pays for the description document. */
+export interface PublicAdvertisementDetailDto extends PublicAdvertisementDto {
+  detailImage: MediaSummaryDto | null;
+  description: RichTextContent | null;
+  destinationUrl: string | null;
+  /** Server-trimmed excerpt for meta tags, so the page walks nothing itself. */
+  metaDescription: string | null;
 }
 
 export interface PublicSiteSettingsDto {

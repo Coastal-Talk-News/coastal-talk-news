@@ -1,9 +1,16 @@
-import type { AdPlacement, TransactionClient } from '@coastal-talk-news/db';
+import type {
+  AdPlacement,
+  Prisma,
+  TransactionClient,
+} from '@coastal-talk-news/db';
+
+const mediaSelect = {
+  select: { id: true, storageKey: true, width: true, height: true },
+} as const;
 
 const withMedia = {
-  media: {
-    select: { id: true, storageKey: true, width: true, height: true },
-  },
+  media: mediaSelect,
+  detailMedia: mediaSelect,
 } as const;
 
 export type AdvertisementRow = Awaited<ReturnType<typeof findById>>;
@@ -27,20 +34,36 @@ export function count(db: TransactionClient) {
   return db.advertisement.count();
 }
 
-export function countByPlacement(
+/**
+ * Counts the ads that would share the zone with this booking — the ones whose
+ * run overlaps it. A zone's cap is on how many run at once, so an ad that has
+ * already finished, or that starts after this one ends, never occupies a slot;
+ * counting every row instead would make a one-slot zone impossible to re-book.
+ */
+export function countOverlappingInPlacement(
   db: TransactionClient,
   placement: AdPlacement,
+  window: { startAt: Date; endAt: Date },
   excludeId?: string,
 ) {
   return db.advertisement.count({
-    where: { placement, ...(excludeId ? { id: { not: excludeId } } : {}) },
+    where: {
+      placement,
+      startAt: { lte: window.endAt },
+      endAt: { gte: window.startAt },
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
   });
 }
 
 export interface AdvertisementWriteData {
   advertiserName: string;
   mediaId: string;
-  destinationUrl: string;
+  detailMediaId: string | null;
+  /** Prisma.DbNull clears the column; a plain null would be rejected. */
+  description: object | typeof Prisma.DbNull;
+  descriptionText: string | null;
+  destinationUrl: string | null;
   priority: number;
   placement: AdPlacement;
   startAt: Date;

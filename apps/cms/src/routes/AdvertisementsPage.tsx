@@ -65,13 +65,6 @@ export function AdvertisementsPage() {
   const mutations = useAdvertisementMutations();
   const items = data?.data ?? [];
 
-  // Computed from the full list, not `visible` below — the Status/Sort filter
-  // must never skew how many ads are actually in Top placement right now.
-  const topPlacementCount = useMemo(
-    () => items.filter((item) => item.placement === 'TOP').length,
-    [items],
-  );
-
   const visible = useMemo(() => {
     const filtered =
       status === 'all'
@@ -220,7 +213,7 @@ export function AdvertisementsPage() {
       <AdvertisementSheet
         open={sheetOpen}
         editing={editing}
-        topPlacementCount={topPlacementCount}
+        advertisements={items}
         saving={mutations.create.isPending || mutations.update.isPending}
         serverError={
           saveError instanceof ApiError

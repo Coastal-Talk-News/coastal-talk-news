@@ -1,5 +1,7 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
+import { adHref } from '../../lib/ads';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 
@@ -36,10 +38,12 @@ export function AdBand({
         <ul className="flex flex-wrap items-center justify-center gap-4">
           {advertisements.map((ad) => (
             <li key={ad.id}>
-              <a
-                href={ad.destinationUrl}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
+              <Link
+                href={adHref(ad.id)}
+                rel="sponsored"
+                // A band of ads would otherwise prefetch a page each as it
+                // scrolls into view, for a click most readers never make.
+                prefetch={false}
                 aria-label={`${advertisement}: ${ad.advertiserName}`}
                 className="block overflow-hidden rounded-sm transition-opacity hover:opacity-90"
               >
@@ -52,7 +56,7 @@ export function AdBand({
                   className="object-cover"
                   style={{ width: WIDTH, height: HEIGHT }}
                 />
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

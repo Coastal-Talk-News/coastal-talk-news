@@ -3,6 +3,7 @@ import type {
   AdvertisementDto,
   CreateAdvertisementRequest,
   MediaSummaryDto,
+  RichTextContent,
 } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
 import { cn } from '@coastal-talk-news/ui/cn';
@@ -13,13 +14,19 @@ import { Sheet } from '@coastal-talk-news/ui/sheet';
 import { ADVERTISER_NAME_MAX } from '@coastal-talk-news/validation/limits';
 import { ImagePlus, Link as LinkIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { TiptapEditor } from '../../components/TiptapEditor.js';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
-
-const TOP_PLACEMENT_CAPACITY = 3;
+import {
+  PLACEMENTS,
+  PLACEMENT_META,
+  overlappingInPlacement,
+} from './placement.js';
 
 interface FormValues {
   advertiserName: string;
   image: MediaSummaryDto | null;
+  detailImage: MediaSummaryDto | null;
+  description: RichTextContent | null;
   destinationUrl: string;
   priority: string;
   placement: AdPlacement;
@@ -28,6 +35,9 @@ interface FormValues {
   endDate: string;
   endTime: string;
 }
+
+/** Which image picker the one dialog is currently filling. */
+type PickerTarget = 'image' | 'detailImage' | null;
 
 function pad(value: number): string {
   return String(value).padStart(2, '0');
@@ -53,12 +63,18 @@ function defaultStart(): { date: string; time: string } {
   return splitIso(now.toISOString());
 }
 
+function isEmptyDoc(doc: RichTextContent | null): boolean {
+  return !doc || doc.content.length === 0;
+}
+
 function toValues(item: AdvertisementDto | null): FormValues {
   if (!item) {
     const start = defaultStart();
     return {
       advertiserName: '',
       image: null,
+      detailImage: null,
+      description: null,
       destinationUrl: '',
       priority: '0',
       placement: 'SIDEBAR',
@@ -73,7 +89,9 @@ function toValues(item: AdvertisementDto | null): FormValues {
   return {
     advertiserName: item.advertiserName,
     image: item.image,
-    destinationUrl: item.destinationUrl,
+    detailImage: item.detailImage,
+    description: item.description,
+    destinationUrl: item.destinationUrl ?? '',
     priority: String(item.priority),
     placement: item.placement,
     startDate: start.date,
@@ -86,8 +104,8 @@ function toValues(item: AdvertisementDto | null): FormValues {
 interface AdvertisementSheetProps {
   open: boolean;
   editing: AdvertisementDto | null;
-  /** Ads currently in Top placement, across the whole list — not just what's visible under a filter. */
-  topPlacementCount: number;
+  /** The whole list, so zone capacity is judged against every booking. */
+  advertisements: AdvertisementDto[];
   saving: boolean;
   serverError: string | null;
   onOpenChange: (open: boolean) => void;
@@ -97,7 +115,7 @@ interface AdvertisementSheetProps {
 export function AdvertisementSheet({
   open,
   editing,
-  topPlacementCount,
+  advertisements,
   saving,
   serverError,
   onOpenChange,
@@ -105,7 +123,7 @@ export function AdvertisementSheet({
 }: AdvertisementSheetProps) {
   const [values, setValues] = useState<FormValues>(() => toValues(null));
   const [touched, setTouched] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [picker, setPicker] = useState<PickerTarget>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const initial = useRef<FormValues>(toValues(null));
 
@@ -131,6 +149,10 @@ export function AdvertisementSheet({
   const isDirty =
     trimmedTitle !== initial.current.advertiserName.trim() ||
     (values.image?.id ?? null) !== (initial.current.image?.id ?? null) ||
+    (values.detailImage?.id ?? null) !==
+      (initial.current.detailImage?.id ?? null) ||
+    JSON.stringify(values.description) !==
+      JSON.stringify(initial.current.description) ||
     trimmedUrl !== initial.current.destinationUrl.trim() ||
     values.priority !== initial.current.priority ||
     values.placement !== initial.current.placement ||
@@ -139,16 +161,26 @@ export function AdvertisementSheet({
     values.endDate !== initial.current.endDate ||
     values.endTime !== initial.current.endTime;
 
-  // The 3-cap is enforced server-side; this only prevents picking a choice
-  // that's already known to be rejected. An ad already in Top doesn't count
-  // against itself while editing.
-  const topIsFull =
-    topPlacementCount >= TOP_PLACEMENT_CAPACITY && editing?.placement !== 'TOP';
+  function slotsTaken(placement: AdPlacement): number {
+    if (!startIso || !endIso) return 0;
+    return overlappingInPlacement(
+      advertisements,
+      placement,
+      { startAt: startIso, endAt: endIso },
+      editing?.id,
+    );
+  }
+
+  function isFull(placement: AdPlacement): boolean {
+    const { capacity } = PLACEMENT_META[placement];
+    return capacity !== undefined && slotsTaken(placement) >= capacity;
+  }
+
+  const chosenIsFull = isFull(values.placement);
 
   const titleError =
     touched && !trimmedTitle ? 'Title is required.' : undefined;
   const imageError = touched && !values.image ? 'Choose an image.' : undefined;
-  const urlError = touched && !trimmedUrl ? 'Link URL is required.' : undefined;
   const startError =
     touched && !startIso ? 'Start date and time are required.' : undefined;
   const endError = touched
@@ -162,10 +194,9 @@ export function AdvertisementSheet({
   const canSubmit =
     Boolean(trimmedTitle) &&
     Boolean(values.image) &&
-    Boolean(trimmedUrl) &&
     windowValid &&
     priorityValid &&
-    !(values.placement === 'TOP' && topIsFull) &&
+    !chosenIsFull &&
     (isDirty || !editing);
 
   function handleSubmit(event: FormEvent) {
@@ -175,6 +206,8 @@ export function AdvertisementSheet({
     onSubmit({
       advertiserName: trimmedTitle,
       mediaId: values.image.id,
+      detailMediaId: values.detailImage?.id ?? null,
+      description: isEmptyDoc(values.description) ? null : values.description,
       destinationUrl: trimmedUrl,
       priority: values.priority === '' ? 0 : Number(values.priority),
       placement: values.placement,
@@ -195,12 +228,32 @@ export function AdvertisementSheet({
       : false;
   const scheduled = startIso ? new Date(startIso) > new Date() : false;
 
+  const imageSlots = [
+    {
+      key: 'image' as const,
+      label: 'Banner image',
+      required: true,
+      value: values.image,
+      hint: PLACEMENT_META[values.placement].hint,
+      error: imageError,
+    },
+    {
+      key: 'detailImage' as const,
+      label: 'Detail image',
+      required: false,
+      value: values.detailImage,
+      hint: 'Shown on the advertisement’s own page, where there is room for a larger creative. The banner is used when this is empty.',
+      error: undefined,
+    },
+  ];
+
   return (
     <Sheet
       open={open}
       onOpenChange={requestClose}
+      size="lg"
       title={editing ? 'Edit Advertisement' : 'Add Advertisement'}
-      description="Manage banner advertisements on your website."
+      description="Manage banner advertisements and their pages."
       footer={
         <div className="flex gap-3">
           <Button
@@ -234,7 +287,7 @@ export function AdvertisementSheet({
           htmlFor="advertisement-title"
           required
           error={titleError}
-          hint={titleError ? undefined : 'This is for internal reference only.'}
+          hint={titleError ? undefined : 'Shown as the heading on the ad page.'}
         >
           <Input
             id="advertisement-title"
@@ -257,142 +310,149 @@ export function AdvertisementSheet({
           <span className="text-ink-muted block text-sm font-medium">
             Placement<span className="ml-0.5 text-danger">*</span>
           </span>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              type="button"
-              disabled={topIsFull}
-              aria-pressed={values.placement === 'TOP'}
-              onClick={() =>
-                setValues((current) => ({ ...current, placement: 'TOP' }))
-              }
-              className={cn(
-                'rounded-lg border p-3 text-left transition-colors',
-                values.placement === 'TOP'
-                  ? 'border-accent bg-accent-soft'
-                  : 'border-hairline hover:border-ink-subtle/40',
-                topIsFull &&
-                  'cursor-not-allowed opacity-50 hover:border-hairline',
-              )}
-            >
-              <span className="text-ink block text-sm font-medium">Top</span>
-              <span className="text-ink-subtle block text-xs">
-                320.57×73.88 ·{' '}
-                {topIsFull
-                  ? `Full (${TOP_PLACEMENT_CAPACITY}/${TOP_PLACEMENT_CAPACITY})`
-                  : `${topPlacementCount}/${TOP_PLACEMENT_CAPACITY} used`}
-              </span>
-            </button>
-            <button
-              type="button"
-              aria-pressed={values.placement === 'SIDEBAR'}
-              onClick={() =>
-                setValues((current) => ({ ...current, placement: 'SIDEBAR' }))
-              }
-              className={cn(
-                'rounded-lg border p-3 text-left transition-colors',
-                values.placement === 'SIDEBAR'
-                  ? 'border-accent bg-accent-soft'
-                  : 'border-hairline hover:border-ink-subtle/40',
-              )}
-            >
-              <span className="text-ink block text-sm font-medium">
-                Right Side
-              </span>
-              <span className="text-ink-subtle block text-xs">250×300</span>
-            </button>
+          <div className="grid gap-2 sm:grid-cols-3">
+            {PLACEMENTS.map((placement) => {
+              const meta = PLACEMENT_META[placement];
+              const selected = values.placement === placement;
+              const full = isFull(placement) && !selected;
+              return (
+                <button
+                  key={placement}
+                  type="button"
+                  disabled={full}
+                  aria-pressed={selected}
+                  onClick={() =>
+                    setValues((current) => ({ ...current, placement }))
+                  }
+                  className={cn(
+                    'rounded-lg border p-3 text-left transition-colors',
+                    selected
+                      ? 'border-accent bg-accent-soft'
+                      : 'border-hairline hover:border-ink-subtle/40',
+                    full && 'cursor-not-allowed opacity-50',
+                  )}
+                >
+                  <span className="text-ink block text-sm font-medium">
+                    {meta.label}
+                  </span>
+                  <span className="text-ink-subtle block text-xs">
+                    {meta.capacity === undefined
+                      ? meta.hint
+                      : `${slotsTaken(placement)}/${meta.capacity} booked for these dates`}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-          {topIsFull && (
-            <p className="text-ink-subtle text-xs">
-              Top is full — move another ad to Right Side to free a slot.
+          {chosenIsFull && (
+            <p role="alert" className="text-danger-text text-xs">
+              {PLACEMENT_META[values.placement].label} is fully booked for these
+              dates. Pick another zone, or change the schedule below.
             </p>
           )}
         </div>
 
-        <div className="space-y-1.5">
-          <span className="text-ink-muted block text-sm font-medium">
-            Image<span className="ml-0.5 text-danger">*</span>
-          </span>
+        {imageSlots.map((slot) => (
+          <div key={slot.key} className="space-y-1.5">
+            <span className="text-ink-muted block text-sm font-medium">
+              {slot.label}
+              {slot.required && <span className="ml-0.5 text-danger">*</span>}
+            </span>
 
-          {values.image ? (
-            <div className="border-hairline flex items-center gap-3 rounded-lg border p-3">
-              <img
-                src={values.image.url}
-                alt=""
-                width={64}
-                height={48}
-                className="h-12 w-16 shrink-0 rounded-md object-cover"
-              />
-              <p className="text-ink-muted min-w-0 flex-1 truncate text-sm">
-                {values.image.width}×{values.image.height}
+            {slot.value ? (
+              <div className="border-hairline flex items-center gap-3 rounded-lg border p-3">
+                <img
+                  src={slot.value.url}
+                  alt=""
+                  width={64}
+                  height={48}
+                  className="h-12 w-16 shrink-0 rounded-md object-cover"
+                />
+                <p className="text-ink-muted min-w-0 flex-1 truncate text-sm">
+                  {slot.value.width}x{slot.value.height}
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setPicker(slot.key)}
+                >
+                  Change
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`Remove ${slot.label.toLowerCase()}`}
+                  onClick={() =>
+                    setValues((current) => ({ ...current, [slot.key]: null }))
+                  }
+                >
+                  <X className="size-4" aria-hidden />
+                </Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setPicker(slot.key)}
+                className={cn(
+                  'border-hairline bg-surface-sunken hover:border-accent hover:bg-accent-soft flex w-full items-center gap-3 rounded-lg border border-dashed px-4 py-4 text-left transition-colors',
+                  slot.error && 'border-danger',
+                )}
+              >
+                <span className="text-ink-subtle bg-surface grid size-10 shrink-0 place-items-center rounded-full">
+                  <ImagePlus className="size-5" aria-hidden />
+                </span>
+                <span className="text-sm">
+                  <span className="text-ink-muted block font-medium">
+                    Click to upload an image
+                  </span>
+                  <span className="text-ink-subtle block text-xs">
+                    {slot.hint}
+                  </span>
+                </span>
+              </button>
+            )}
+            {slot.error && (
+              <p
+                role="alert"
+                className="animate-fade-in text-danger-text text-xs"
+              >
+                {slot.error}
               </p>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => setPickerOpen(true)}
-              >
-                Change
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                aria-label="Remove image"
-                onClick={() =>
-                  setValues((current) => ({ ...current, image: null }))
-                }
-              >
-                <X className="size-4" aria-hidden />
-              </Button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setPickerOpen(true)}
-              className={`border-hairline bg-surface-sunken hover:border-accent hover:bg-accent-soft flex w-full items-center gap-3 rounded-lg border border-dashed px-4 py-4 text-left transition-colors ${imageError ? 'border-danger' : ''}`}
-            >
-              <span className="text-ink-subtle bg-surface grid size-10 shrink-0 place-items-center rounded-full">
-                <ImagePlus className="size-5" aria-hidden />
-              </span>
-              <span className="text-sm">
-                <span className="text-ink-muted block font-medium">
-                  Click to upload an image
-                </span>
-                <span className="text-ink-subtle block text-xs">
-                  Recommended size:{' '}
-                  {values.placement === 'TOP'
-                    ? '320.57 × 73.88px'
-                    : '250 × 300px'}
-                  . Supports JPG, PNG, WebP.
-                </span>
-              </span>
-            </button>
-          )}
-          {imageError && (
-            <p
-              role="alert"
-              className="animate-fade-in text-danger-text text-xs"
-            >
-              {imageError}
-            </p>
-          )}
-        </div>
+            )}
+          </div>
+        ))}
+
+        <Field
+          label="More information"
+          htmlFor="advertisement-description"
+          optional
+          hint="Shown on the advertisement's own page, under the image."
+        >
+          <div id="advertisement-description">
+            <TiptapEditor
+              content={values.description}
+              placeholder="Offer details, opening hours, address, anything the reader should know."
+              onChange={(description) =>
+                setValues((current) => ({ ...current, description }))
+              }
+            />
+          </div>
+        </Field>
 
         <Field
           label="Link URL"
           htmlFor="advertisement-link"
-          required
-          error={urlError}
-          hint={urlError ? undefined : "Link to the advertiser's website."}
+          optional
+          hint="Where the ad page's button sends readers. Leave empty if the advertiser has no website."
         >
           <Input
             id="advertisement-link"
             type="url"
             value={values.destinationUrl}
             placeholder="https://"
-            invalid={Boolean(urlError)}
             icon={<LinkIcon className="size-4" aria-hidden />}
-            onBlur={() => setTouched(true)}
             onChange={(event) =>
               setValues((current) => ({
                 ...current,
@@ -402,34 +462,36 @@ export function AdvertisementSheet({
           />
         </Field>
 
-        <Field
-          label="Priority"
-          htmlFor="advertisement-priority"
-          optional
-          error={
-            touched && !priorityValid
-              ? 'Priority must be a whole number.'
-              : undefined
-          }
-          hint="Higher priority ads appear first within their placement. Leave at 0 for standard priority."
-        >
-          <Input
-            id="advertisement-priority"
-            type="number"
-            min={0}
-            step={1}
-            inputMode="numeric"
-            value={values.priority}
-            invalid={touched && !priorityValid}
-            onBlur={() => setTouched(true)}
-            onChange={(event) =>
-              setValues((current) => ({
-                ...current,
-                priority: event.target.value,
-              }))
+        {values.placement === 'TOP' && (
+          <Field
+            label="Priority"
+            htmlFor="advertisement-priority"
+            optional
+            error={
+              touched && !priorityValid
+                ? 'Priority must be a whole number.'
+                : undefined
             }
-          />
-        </Field>
+            hint="Orders the three Top slots - the highest number shows first. Leave at 0 for no preference."
+          >
+            <Input
+              id="advertisement-priority"
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              value={values.priority}
+              invalid={touched && !priorityValid}
+              onBlur={() => setTouched(true)}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  priority: event.target.value,
+                }))
+              }
+            />
+          </Field>
+        )}
 
         <Field
           label="Start Date & Time"
@@ -480,7 +542,7 @@ export function AdvertisementSheet({
             {liveNow ? 'Live now' : scheduled ? 'Scheduled' : 'Not live'}
           </p>
           <p className="text-ink-muted mt-0.5 text-xs">
-            Status isn&rsquo;t set manually — it follows the schedule above,
+            Status isn&rsquo;t set manually - it follows the schedule above,
             turning on at Start and off at End.
           </p>
         </div>
@@ -496,22 +558,26 @@ export function AdvertisementSheet({
       </form>
 
       <MediaPickerDialog
-        open={pickerOpen}
-        selectedId={values.image?.id ?? null}
-        onOpenChange={setPickerOpen}
+        open={picker !== null}
+        selectedId={(picker && values[picker]?.id) ?? null}
+        onOpenChange={(next) => !next && setPicker(null)}
         onSelect={(asset) => {
           setValues((current) => ({
             ...current,
-            image: asset
+            ...(picker
               ? {
-                  id: asset.id,
-                  url: asset.url,
-                  width: asset.width,
-                  height: asset.height,
+                  [picker]: asset
+                    ? {
+                        id: asset.id,
+                        url: asset.url,
+                        width: asset.width,
+                        height: asset.height,
+                      }
+                    : null,
                 }
-              : null,
+              : {}),
           }));
-          setPickerOpen(false);
+          setPicker(null);
         }}
       />
     </Sheet>

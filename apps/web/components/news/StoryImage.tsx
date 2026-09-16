@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import type { CSSProperties } from 'react';
 import type { MediaSummaryDto } from '@coastal-talk-news/types';
 
 interface StoryImageProps {
@@ -7,6 +8,7 @@ interface StoryImageProps {
   sizes: string;
   priority?: boolean;
   className?: string;
+  style?: CSSProperties;
 }
 
 export function StoryImage({
@@ -15,6 +17,7 @@ export function StoryImage({
   sizes,
   priority = false,
   className = '',
+  style,
 }: StoryImageProps) {
   if (!image) {
     return (
@@ -36,6 +39,7 @@ export function StoryImage({
       sizes={sizes}
       priority={priority}
       className={className}
+      style={style}
     />
   );
 }

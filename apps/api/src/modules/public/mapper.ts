@@ -1,13 +1,16 @@
 import type { AdPlacement, Language } from '@coastal-talk-news/db';
 import type {
   ArticleContent,
+  PublicAdvertisementDetailDto,
   PublicAdvertisementDto,
   PublicArticleCardDto,
   PublicArticleDto,
   PublicNavCategoryDto,
   PublicSiteSettingsDto,
+  RichTextContent,
 } from '@coastal-talk-news/types';
 import type {
+  AdvertisementDetailRow,
   ArticleCardRow,
   ArticleDetailRow,
   NavCategoryRow,
@@ -79,7 +82,6 @@ export function toNavCategory(
 interface AdvertisementRow {
   id: string;
   advertiserName: string;
-  destinationUrl: string;
   placement: AdPlacement;
   media: MediaRow;
 }
@@ -91,7 +93,6 @@ export function toAdvertisement(
   return {
     id: advertisement.id,
     advertiserName: advertisement.advertiserName,
-    destinationUrl: advertisement.destinationUrl,
     placement: advertisement.placement,
     image: {
       id: advertisement.media.id,
@@ -99,6 +100,30 @@ export function toAdvertisement(
       width: advertisement.media.width,
       height: advertisement.media.height,
     },
+  };
+}
+
+/** Meta descriptions are truncated, so the tag never carries the whole copy. */
+const META_DESCRIPTION_MAX = 160;
+
+function toMetaDescription(text: string | null): string | null {
+  const trimmed = text?.replace(/\s+/g, ' ').trim();
+  if (!trimmed) return null;
+  return trimmed.length > META_DESCRIPTION_MAX
+    ? `${trimmed.slice(0, META_DESCRIPTION_MAX - 1).trimEnd()}…`
+    : trimmed;
+}
+
+export function toAdvertisementDetail(
+  advertisement: AdvertisementDetailRow,
+  toPublicUrl: ToPublicUrl,
+): PublicAdvertisementDetailDto {
+  return {
+    ...toAdvertisement(advertisement, toPublicUrl),
+    detailImage: toMedia(advertisement.detailMedia, toPublicUrl),
+    description: (advertisement.description as RichTextContent | null) ?? null,
+    destinationUrl: advertisement.destinationUrl,
+    metaDescription: toMetaDescription(advertisement.descriptionText),
   };
 }
 

@@ -7,15 +7,23 @@ interface SheetProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description?: string;
+  /** `lg` suits forms with a rich-text editor, which a 28rem panel cramps. */
+  size?: 'md' | 'lg';
   children: ReactNode;
   footer?: ReactNode;
 }
+
+const WIDTH = {
+  md: 'w-[min(28rem,100vw)]',
+  lg: 'w-[min(44rem,100vw)]',
+};
 
 export function Sheet({
   open,
   onOpenChange,
   title,
   description,
+  size = 'md',
   children,
   footer,
 }: SheetProps) {
@@ -23,7 +31,9 @@ export function Sheet({
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="data-[state=open]:animate-fade-in data-[state=closed]:animate-fade-out fixed inset-0 z-40 bg-black/45 backdrop-blur-[2px]" />
-        <Dialog.Content className="data-[state=open]:animate-slide-in-right data-[state=closed]:animate-slide-out-right fixed inset-y-0 right-0 z-50 flex w-[min(28rem,100vw)] flex-col bg-surface-raised shadow-2xl">
+        <Dialog.Content
+          className={`data-[state=open]:animate-slide-in-right data-[state=closed]:animate-slide-out-right fixed inset-y-0 right-0 z-50 flex ${WIDTH[size]} flex-col bg-surface-raised shadow-2xl`}
+        >
           <div className="border-hairline flex items-start justify-between border-b px-6 py-5">
             <div>
               <Dialog.Title className="text-ink text-lg font-semibold">

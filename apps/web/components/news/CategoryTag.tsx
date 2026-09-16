@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Tag } from '../ui/Tag';
 
 interface CategoryTagProps {
   category: { id: string; name: string } | null;
@@ -8,17 +8,9 @@ interface CategoryTagProps {
 export function CategoryTag({ category, tone = 'quiet' }: CategoryTagProps) {
   if (!category) return null;
 
-  const className =
-    tone === 'solid'
-      ? 'bg-brand text-white'
-      : 'bg-brand-soft text-brand hover:bg-brand hover:text-white';
-
   return (
-    <Link
-      href={`/category/${category.id}`}
-      className={`${className} inline-flex w-fit items-center rounded-sm px-2 py-0.5 text-[11px] font-semibold tracking-[0.08em] uppercase transition-colors`}
-    >
+    <Tag href={`/category/${category.id}`} tone={tone}>
       {category.name}
-    </Link>
+    </Tag>
   );
 }

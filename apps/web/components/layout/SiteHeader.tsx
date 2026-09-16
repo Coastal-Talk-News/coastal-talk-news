@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { Brand } from './Brand';
 import type { PublicSiteDto } from '@coastal-talk-news/types';
+import { MastheadAd } from '../news/MastheadAd';
+import { adsForZone } from '../../lib/ads';
 import { formatLongDate } from '../../lib/format';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
@@ -17,8 +19,9 @@ export function SiteHeader({
   site: PublicSiteDto;
   locale: Locale;
 }) {
-  const { settings, categories } = site;
+  const { settings, categories, advertisements } = site;
   const dictionary = getDictionary(locale);
+  const mastheadAds = adsForZone(advertisements, 'masthead');
 
   const utilityLinks = [
     { href: '/about', label: dictionary.common.about },
@@ -64,10 +67,20 @@ export function SiteHeader({
           />
         </div>
 
-        <div className="hidden w-full max-w-xs min-w-0 md:block">
+        <MastheadAd
+          advertisements={mastheadAds}
+          variant="inline"
+          locale={locale}
+        />
+
+        {/* Narrower at lg so the masthead ad keeps its full width there; the
+            search has room to grow again at xl. */}
+        <div className="hidden w-full min-w-0 md:block md:max-w-xs lg:max-w-[15rem] xl:max-w-xs">
           <SearchField locale={locale} />
         </div>
       </div>
+
+      <MastheadAd advertisements={mastheadAds} variant="band" locale={locale} />
 
       {/* The two controls with no room in the masthead below lg share one row
           rather than stacking two: the non-shrinking logo+name already fills a

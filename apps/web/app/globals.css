@@ -1,21 +1,23 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Newsprint, not a screen. A near-white ground glares and ink at 17:1
-     against it haloes; printed newspaper reads at roughly 10-14:1. The ground
-     sits at 95% lightness and the ink at 15:1 — softer than white, still far
-     above the 4.5:1 WCAG asks for. */
-  --color-ink: #26221d;
-  --color-ink-muted: #575046;
-  --color-ink-subtle: #6e675c;
-  --color-paper: #fcf9f4;
-  --color-paper-sunken: #f4efe6;
-  --color-rule: #e7e0d4;
-  --color-brand: #b4232b;
-  --color-brand-hover: #911a21;
-  --color-brand-soft: #f7e9e6;
-  --color-night: #1f1a15;
-  --color-night-muted: #a79f94;
+  /* Newsprint, not a screen. These are the tokens; what a reader actually
+     sees is each one under the paper grain, which lifts a little of the
+     colour out of them: #faf9f6 lands at #f2f1ee on screen, the whitish
+     grey of a printed sheet. Near neutral on purpose - red over blue is held
+     at 3 and green over blue at 3, where 11 reads as buttermilk and 0 reads
+     as a screen. Ink sits near black, as in print, at 15.2:1 on that ground. */
+  --color-ink: #1c1b19;
+  --color-ink-muted: #4b4945;
+  --color-ink-subtle: #68655f;
+  --color-paper: #faf9f6;
+  --color-paper-sunken: #f1efea;
+  --color-rule: #dedcd7;
+  --color-brand: #a81e26;
+  --color-brand-hover: #87161d;
+  --color-brand-soft: #f6e6e1;
+  --color-night: #1a1a19;
+  --color-night-muted: #a3a19d;
 
   /* The Kannada face sits behind the Latin one: the browser falls through per
      character, so each script is drawn by its own sibling of the family. */
@@ -55,10 +57,10 @@
   /* The tooth of the sheet. Generated noise rather than an image, so it costs
      no request and tiles at any size, and it goes on the paper itself — behind
      every card and photograph, because printed pictures have no paper grain,
-     the paper around them does. Faint enough to read as texture rather than
-     dirt: it moves the ground about a percent, leaving the contrast intact. */
+     the paper around them does. Kept light: at 0.7 it desaturated the ground
+     into grey concrete, which is what stopped the site reading as paper. */
   .grain {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.7'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)' opacity='0.25'/%3E%3C/svg%3E");
     background-size: 140px 140px;
   }
 

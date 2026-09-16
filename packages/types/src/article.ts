@@ -1,14 +1,11 @@
-import type { Id, IsoDateTime } from './api.js';
+import type { Id, IsoDateTime, RichTextContent } from './api.js';
 import type { ArticleStatus } from './dashboard.js';
 import type { MediaSummaryDto } from './media.js';
 
 export type Language = 'ENGLISH' | 'KANNADA';
 export type ArticlePriority = 'LEAD_STORY' | 'FEATURED' | 'NORMAL';
 
-export interface ArticleContent {
-  type: 'doc';
-  content: unknown[];
-}
+export type ArticleContent = RichTextContent;
 
 export interface ArticleDto {
   id: Id;

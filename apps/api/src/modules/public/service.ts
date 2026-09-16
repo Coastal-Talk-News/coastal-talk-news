@@ -1,5 +1,6 @@
 import type { Database, Language } from '@coastal-talk-news/db';
 import type {
+  PublicAdvertisementDetailDto,
   PublicArticleDto,
   PublicHomeDto,
   PublicSiteDto,
@@ -10,6 +11,7 @@ import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
 import {
   toAdvertisement,
+  toAdvertisementDetail,
   toArticleCard,
   toArticleDetail,
   toNavCategory,
@@ -40,6 +42,21 @@ export async function getArticle(
     throw new NotFoundError('Article');
   }
   return toArticleDetail(article, toPublicUrl);
+}
+
+export async function getAdvertisement(
+  { db, toPublicUrl }: PublicServiceDeps,
+  id: string,
+): Promise<PublicAdvertisementDetailDto> {
+  const advertisement = await repository.findActiveAdvertisement(
+    db,
+    id,
+    new Date(),
+  );
+  if (!advertisement) {
+    throw new NotFoundError('Advertisement');
+  }
+  return toAdvertisementDetail(advertisement, toPublicUrl);
 }
 
 export async function getSite({
