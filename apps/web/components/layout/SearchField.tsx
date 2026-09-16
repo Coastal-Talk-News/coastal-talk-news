@@ -5,7 +5,13 @@ import { useId, useState, type FormEvent } from 'react';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 
-export function SearchField({ locale }: { locale: Locale }) {
+export function SearchField({
+  locale,
+  autoFocus = false,
+}: {
+  locale: Locale;
+  autoFocus?: boolean;
+}) {
   const router = useRouter();
   const [term, setTerm] = useState('');
   const inputId = useId();
@@ -29,6 +35,7 @@ export function SearchField({ locale }: { locale: Locale }) {
         value={term}
         onChange={(event) => setTerm(event.target.value)}
         placeholder={dictionary.header.searchPlaceholder}
+        autoFocus={autoFocus}
         className="border-rule bg-paper-sunken placeholder:text-ink-subtle focus:border-brand h-10 w-full rounded-sm border pr-3 pl-9 text-sm transition-colors focus:bg-paper focus:outline-none"
       />
       <svg

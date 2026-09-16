@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { PublicArticleCardDto } from '@coastal-talk-news/types';
+import { highlightMatches } from '../../lib/highlight';
 import type { Locale } from '../../lib/i18n/types';
 import { CategoryTag } from './CategoryTag';
 import { StoryImage } from './StoryImage';
@@ -13,6 +14,8 @@ interface StoryCardProps {
   showCategory?: boolean;
   sizes?: string;
   locale?: Locale;
+  /** Set only on search results — highlights matches in the headline/summary. */
+  highlightQuery?: string;
 }
 
 export function StoryCard({
@@ -22,8 +25,15 @@ export function StoryCard({
   showCategory = false,
   sizes = '(min-width: 1024px) 20vw, (min-width: 640px) 45vw, 90vw',
   locale = 'en',
+  highlightQuery,
 }: StoryCardProps) {
   const href = `/article/${article.id}`;
+  const headline = highlightQuery
+    ? highlightMatches(article.headline, highlightQuery)
+    : article.headline;
+  const summary = highlightQuery
+    ? highlightMatches(article.summary, highlightQuery)
+    : article.summary;
 
   if (layout === 'row') {
     return (
@@ -52,7 +62,7 @@ export function StoryCard({
               href={href}
               className="clamp-2 group-hover:text-brand transition-colors"
             >
-              {article.headline}
+              {headline}
             </Link>
           </h3>
           <div className="mt-1">
@@ -89,12 +99,12 @@ export function StoryCard({
             href={href}
             className="clamp-3 group-hover:text-brand transition-colors"
           >
-            {article.headline}
+            {headline}
           </Link>
         </h3>
         {showSummary && (
           <p className="text-ink-muted clamp-2 mt-2 text-sm leading-relaxed">
-            {article.summary}
+            {summary}
           </p>
         )}
         <div className="mt-auto pt-3">

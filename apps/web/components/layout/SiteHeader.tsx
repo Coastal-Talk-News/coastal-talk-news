@@ -11,6 +11,7 @@ import { MobileNav } from './MobileNav';
 import { LanguageToggle } from './LanguageToggle';
 import { SocialLinks } from './SocialLinks';
 import { CategoryNav } from './CategoryNav';
+import { HeaderSearchToggle } from './HeaderSearchToggle';
 
 export function SiteHeader({
   site,
@@ -72,12 +73,6 @@ export function SiteHeader({
           variant="inline"
           locale={locale}
         />
-
-        {/* Narrower at lg so the masthead ad keeps its full width there; the
-            search has room to grow again at xl. */}
-        <div className="hidden w-full min-w-0 md:block md:max-w-xs lg:max-w-[15rem] xl:max-w-xs">
-          <SearchField locale={locale} />
-        </div>
       </div>
 
       <MastheadAd advertisements={mastheadAds} variant="band" locale={locale} />
@@ -94,13 +89,19 @@ export function SiteHeader({
       </div>
 
       <div className="border-rule hidden border-t md:block">
-        <div className="mx-auto max-w-7xl px-4">
-          <CategoryNav
-            categories={categories}
-            homeLabel={dictionary.common.home}
-            moreLabel={dictionary.header.more}
-            moreAriaLabel={dictionary.header.moreSections}
-            sectionsLabel={dictionary.header.sections}
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-4">
+          <div className="min-w-0 flex-1">
+            <CategoryNav
+              categories={categories}
+              homeLabel={dictionary.common.home}
+              moreLabel={dictionary.header.more}
+              moreAriaLabel={dictionary.header.moreSections}
+              sectionsLabel={dictionary.header.sections}
+            />
+          </div>
+          <HeaderSearchToggle
+            locale={locale}
+            searchLabel={dictionary.header.searchLabel}
           />
         </div>
       </div>

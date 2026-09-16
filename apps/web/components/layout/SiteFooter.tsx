@@ -33,11 +33,6 @@ export function SiteFooter({
             logo={settings.logo}
             tone="inverse"
           />
-          {settings.description && (
-            <p className="text-night-muted mt-3 max-w-sm text-sm leading-relaxed">
-              {settings.description}
-            </p>
-          )}
           <SocialLinks settings={settings} tone="inverse" className="mt-4" />
         </div>
 
