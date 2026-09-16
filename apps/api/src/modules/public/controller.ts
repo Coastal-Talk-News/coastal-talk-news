@@ -16,8 +16,12 @@ export async function getSite(request: FastifyRequest) {
   return dataEnvelope(await service.getSite(deps(request)));
 }
 
-export async function getHome(request: FastifyRequest) {
-  return dataEnvelope(await service.getHome(deps(request)));
+export async function getHome(
+  request: FastifyRequest<{ Querystring: { language?: Language } }>,
+) {
+  return dataEnvelope(
+    await service.getHome(deps(request), request.query.language),
+  );
 }
 
 export async function getArticle(

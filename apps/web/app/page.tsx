@@ -23,11 +23,8 @@ function isArticle(
 }
 
 export default async function HomePage() {
-  const [home, site, locale] = await Promise.all([
-    getHome(),
-    getSite(),
-    getLocale(),
-  ]);
+  const locale = await getLocale();
+  const [home, site] = await Promise.all([getHome(locale), getSite()]);
   const { categorySections } = home;
   const dictionary = getDictionary(locale);
 

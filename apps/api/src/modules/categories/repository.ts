@@ -1,4 +1,4 @@
-import type { TransactionClient } from '@coastal-talk-news/db';
+import type { Language, TransactionClient } from '@coastal-talk-news/db';
 import { cardSelect } from '../public/repository.js';
 
 const withMedia = {
@@ -135,10 +135,11 @@ export type PublishedArticleRow = Awaited<
 export function findPublishedArticles(
   db: TransactionClient,
   categoryId: string,
+  { language }: { language?: Language },
   page: { skip: number; take: number },
 ) {
   return db.article.findMany({
-    where: { categoryId, status: 'PUBLISHED' },
+    where: { categoryId, status: 'PUBLISHED', ...(language && { language }) },
     orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }],
     select: cardSelect,
     ...page,
@@ -148,6 +149,9 @@ export function findPublishedArticles(
 export function countPublishedArticles(
   db: TransactionClient,
   categoryId: string,
+  { language }: { language?: Language } = {},
 ) {
-  return db.article.count({ where: { categoryId, status: 'PUBLISHED' } });
+  return db.article.count({
+    where: { categoryId, status: 'PUBLISHED', ...(language && { language }) },
+  });
 }

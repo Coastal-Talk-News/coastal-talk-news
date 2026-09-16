@@ -1,4 +1,5 @@
 import { Type } from '@sinclair/typebox';
+import { LanguageSchema } from './article.js';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
 import { CATEGORY_NAME_MAX, CATEGORY_DESCRIPTION_MAX } from './limits.js';
@@ -57,6 +58,12 @@ export const CmsCategoryListQuerySchema = Type.Object({
 
 export const PublicCategoryListQuerySchema = Type.Object({
   ...paginationQueryFields,
+});
+
+export const PublicCategoryArticlesQuerySchema = Type.Object({
+  ...paginationQueryFields,
+  // Omitted entirely means both languages, mixed together.
+  language: Type.Optional(LanguageSchema),
 });
 
 export const ReorderCategoriesBodySchema = Type.Object(

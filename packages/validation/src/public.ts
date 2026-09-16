@@ -112,3 +112,8 @@ export const PublicSearchQuerySchema = Type.Object({
   language: Type.Optional(LanguageSchema),
   ...paginationQueryFields,
 });
+
+export const PublicHomeQuerySchema = Type.Object({
+  // Omitted entirely means both languages, mixed together.
+  language: Type.Optional(LanguageSchema),
+});

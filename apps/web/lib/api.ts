@@ -9,6 +9,13 @@ import type {
   PublicHomeDto,
   PublicSiteDto,
 } from '@coastal-talk-news/types';
+import type { Locale } from './i18n/types';
+
+/** Maps the UI-language toggle to the article-content language it now filters to. */
+const ARTICLE_LANGUAGE_BY_LOCALE: Record<Locale, string> = {
+  en: 'ENGLISH',
+  kn: 'KANNADA',
+};
 
 const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8000';
 
@@ -106,8 +113,9 @@ export async function getSite(): Promise<PublicSiteDto> {
   };
 }
 
-export async function getHome(): Promise<PublicHomeDto> {
-  const home = await fetchPublic<PublicHomeDto>('/home');
+export async function getHome(locale: Locale): Promise<PublicHomeDto> {
+  const language = ARTICLE_LANGUAGE_BY_LOCALE[locale];
+  const home = await fetchPublic<PublicHomeDto>(`/home?language=${language}`);
   return {
     ...home,
     categorySections: list(home.categorySections),
@@ -169,10 +177,11 @@ export interface CategoryArticlesPage {
 /** Throws ApiClientError (404) for an unknown or deactivated category id. */
 export async function getCategoryArticles(
   id: string,
-  { page, limit }: { page: number; limit: number },
+  { page, limit, locale }: { page: number; limit: number; locale: Locale },
 ): Promise<CategoryArticlesPage> {
+  const language = ARTICLE_LANGUAGE_BY_LOCALE[locale];
   const { data, meta } = await fetchPublicList<PublicArticleCardDto>(
-    `/categories/${id}/articles?page=${page}&limit=${limit}`,
+    `/categories/${id}/articles?page=${page}&limit=${limit}&language=${language}`,
   );
   return { articles: data, meta };
 }
@@ -185,10 +194,10 @@ export interface SearchResultsPage {
   meta: PaginationMeta;
 }
 
-const SEARCH_LANGUAGE_PARAM: Record<Exclude<SearchLanguage, 'all'>, string> = {
-  en: 'ENGLISH',
-  kn: 'KANNADA',
-};
+const SEARCH_LANGUAGE_PARAM: Record<
+  Exclude<SearchLanguage, 'all'>,
+  string
+> = ARTICLE_LANGUAGE_BY_LOCALE;
 
 export async function getSearchResults(
   query: string,

@@ -7,6 +7,7 @@ import {
   CreateCategoryBodySchema,
   ListResponse,
   PublicArticleCardSchema,
+  PublicCategoryArticlesQuerySchema,
   PublicCategoryListQuerySchema,
   ReorderCategoriesBodySchema,
   SuccessResponse,
@@ -155,9 +156,10 @@ export const publicCategoryRoutes: FastifyPluginAsyncTypebox = async (app) => {
       schema: {
         tags: ['categories'],
         summary: "List a category's published articles",
-        description: 'Newest first. 404s for an inactive or missing category.',
+        description:
+          'Newest first. 404s for an inactive or missing category. `language` omitted means both languages, mixed together.',
         params: CategoryParamsSchema,
-        querystring: PublicCategoryListQuerySchema,
+        querystring: PublicCategoryArticlesQuerySchema,
         response: {
           200: ListResponse(PublicArticleCardSchema),
           ...commonErrorResponses,
