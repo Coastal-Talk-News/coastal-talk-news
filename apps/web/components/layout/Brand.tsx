@@ -59,7 +59,6 @@ export function Brand({
           className={`${nameColor} ${NAME_SIZE[size]} block truncate font-serif font-bold`}
         >
           {siteName}
-          <span className="text-brand">.</span>
         </span>
         {tagline && (
           // Two lines on a phone rather than moving out of the lockup.
