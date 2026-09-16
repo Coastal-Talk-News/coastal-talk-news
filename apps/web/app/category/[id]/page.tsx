@@ -77,6 +77,7 @@ export default async function CategoryPage({
   const { articles, meta } = await getCategoryArticles(id, {
     page,
     limit: ARTICLES_PER_PAGE,
+    locale,
   });
 
   // A page number past the end (a stale link, or someone editing the URL)

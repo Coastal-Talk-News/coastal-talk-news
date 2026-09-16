@@ -6,6 +6,7 @@ import {
   PublicArticleCardSchema,
   PublicArticleParamsSchema,
   PublicArticleSchema,
+  PublicHomeQuerySchema,
   PublicHomeSchema,
   PublicSearchQuerySchema,
   PublicSiteSchema,
@@ -38,7 +39,8 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
         tags: ['public'],
         summary: 'Everything the homepage renders, in one call',
         description:
-          'Published articles only. Breaking news and advertisements are filtered by their schedule in SQL.',
+          'Published articles only. Breaking news and advertisements are filtered by their schedule in SQL. `language` omitted means both languages, mixed together.',
+        querystring: PublicHomeQuerySchema,
         response: {
           200: SuccessResponse(PublicHomeSchema),
           ...commonErrorResponses,

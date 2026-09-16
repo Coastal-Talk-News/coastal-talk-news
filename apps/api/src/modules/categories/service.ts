@@ -1,4 +1,4 @@
-import type { Database } from '@coastal-talk-news/db';
+import type { Database, Language } from '@coastal-talk-news/db';
 import type { FastifyBaseLogger } from 'fastify';
 import {
   BadRequestError,
@@ -90,6 +90,7 @@ export async function getPublic({ db }: CategoryServiceDeps, id: string) {
 export async function listPublicArticles(
   deps: CategoryServiceDeps,
   categoryId: string,
+  filters: { language?: Language },
   pagination: PaginationParams,
 ) {
   // Reuses getPublic's own visibility rule: an inactive or missing category
@@ -98,8 +99,13 @@ export async function listPublicArticles(
 
   const { db } = deps;
   const [rows, total] = await Promise.all([
-    repository.findPublishedArticles(db, categoryId, toSkipTake(pagination)),
-    repository.countPublishedArticles(db, categoryId),
+    repository.findPublishedArticles(
+      db,
+      categoryId,
+      filters,
+      toSkipTake(pagination),
+    ),
+    repository.countPublishedArticles(db, categoryId, filters),
   ]);
   return { rows, total };
 }

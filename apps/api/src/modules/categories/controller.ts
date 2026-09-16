@@ -1,3 +1,4 @@
+import type { Language } from '@coastal-talk-news/db';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
 import { toArticleCard } from '../public/mapper.js';
@@ -111,12 +112,16 @@ export async function getPublic(request: FastifyRequest<{ Params: IdParams }>) {
 }
 
 export async function listPublicArticles(
-  request: FastifyRequest<{ Params: IdParams; Querystring: ListQuery }>,
+  request: FastifyRequest<{
+    Params: IdParams;
+    Querystring: ListQuery & { language?: Language };
+  }>,
 ) {
   const pagination = { page: request.query.page, limit: request.query.limit };
   const { rows, total } = await service.listPublicArticles(
     deps(request),
     request.params.id,
+    { language: request.query.language },
     pagination,
   );
   const toUrl = publicUrl(request);

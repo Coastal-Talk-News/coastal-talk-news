@@ -88,11 +88,11 @@ export async function getSite({
   };
 }
 
-export async function getHome({
-  db,
-  toPublicUrl,
-}: PublicServiceDeps): Promise<PublicHomeDto> {
-  const categories = await repository.findNavCategories(db);
+export async function getHome(
+  { db, toPublicUrl }: PublicServiceDeps,
+  language?: Language,
+): Promise<PublicHomeDto> {
+  const categories = await repository.findNavCategories(db, { language });
 
   const sectionCategories = categories
     .filter((category) => category._count.articles > 0)
@@ -102,6 +102,7 @@ export async function getHome({
     db,
     sectionCategories.map((category) => category.id),
     sectionCategories.length * HOME_SECTION_ARTICLES * 2,
+    { language },
   );
 
   const byCategory = new Map<string, typeof sectionArticles>();

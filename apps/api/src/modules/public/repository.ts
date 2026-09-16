@@ -1,4 +1,4 @@
-import type { TransactionClient } from '@coastal-talk-news/db';
+import type { Language, TransactionClient } from '@coastal-talk-news/db';
 import { activeWindowWhere } from '../../lib/schedule.js';
 
 const mediaSelect = {
@@ -76,7 +76,16 @@ export function findSettings(db: TransactionClient) {
   });
 }
 
-export function findNavCategories(db: TransactionClient) {
+/**
+ * `language` only narrows the published-article count each category carries
+ * (used by the homepage to decide which categories have content in the
+ * active language) — it never hides a category from navigation itself, since
+ * nav availability isn't tied to any one article language.
+ */
+export function findNavCategories(
+  db: TransactionClient,
+  { language }: { language?: Language } = {},
+) {
   return db.category.findMany({
     where: { isActive: true },
     orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
@@ -84,7 +93,13 @@ export function findNavCategories(db: TransactionClient) {
       id: true,
       name: true,
       media: mediaSelect,
-      _count: { select: { articles: { where: publishedWhere } } },
+      _count: {
+        select: {
+          articles: {
+            where: { ...publishedWhere, ...(language && { language }) },
+          },
+        },
+      },
     },
   });
 }
@@ -149,9 +164,14 @@ export function findRecentForCategories(
   db: TransactionClient,
   categoryIds: string[],
   take: number,
+  { language }: { language?: Language } = {},
 ) {
   return db.article.findMany({
-    where: { ...publishedWhere, categoryId: { in: categoryIds } },
+    where: {
+      ...publishedWhere,
+      categoryId: { in: categoryIds },
+      ...(language && { language }),
+    },
     orderBy: newestFirst,
     select: cardSelect,
     take,
