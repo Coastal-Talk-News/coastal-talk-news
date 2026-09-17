@@ -55,7 +55,10 @@ export function findRecentBreakingNews(db: TransactionClient, take: number) {
 
 export function findRecentAdvertisements(db: TransactionClient, take: number) {
   return db.advertisement.findMany({
-    orderBy: [{ priority: 'desc' }, { createdAt: 'desc' }],
+    // displayOrder is no longer comparable across placements - Top and
+    // Sidebar order independently now, and Masthead has no manual order at
+    // all - so a "recent" widget just wants genuine recency.
+    orderBy: { createdAt: 'desc' },
     take,
     select: {
       id: true,

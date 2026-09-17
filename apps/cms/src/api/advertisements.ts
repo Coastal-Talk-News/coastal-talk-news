@@ -1,4 +1,5 @@
 import type {
+  AdPlacement,
   AdvertisementDto,
   AdvertisementListParams,
   CreateAdvertisementRequest,
@@ -17,6 +18,11 @@ export const advertisementsApi = {
 
   update: (id: string, body: UpdateAdvertisementRequest) =>
     api.patch<AdvertisementDto>(`${BASE}/${id}`, body),
+
+  // Top and Right Side are reordered independently, so every call names
+  // which zone the ids belong to.
+  reorder: (placement: AdPlacement, ids: string[]) =>
+    api.send(`${BASE}/order`, 'PATCH', { placement, ids }),
 
   remove: (id: string) => api.send(`${BASE}/${id}`, 'DELETE'),
 };

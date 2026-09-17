@@ -24,7 +24,7 @@ export function findMany(
   page: { skip: number; take: number },
 ) {
   return db.advertisement.findMany({
-    orderBy: [{ priority: 'desc' }, { startAt: 'desc' }],
+    orderBy: [{ placement: 'asc' }, { displayOrder: 'asc' }],
     include: withMedia,
     ...page,
   });
@@ -56,6 +56,57 @@ export function countOverlappingInPlacement(
   });
 }
 
+/** How many ads currently sit in this zone, regardless of schedule. */
+export function countInPlacement(
+  db: TransactionClient,
+  placement: AdPlacement,
+) {
+  return db.advertisement.count({ where: { placement } });
+}
+
+/**
+ * The position to give a new ad in this zone, or one that just moved into it:
+ * one past whichever position is currently highest, so it lands at the end
+ * without disturbing anything already there.
+ */
+export async function nextDisplayOrder(
+  db: TransactionClient,
+  placement: AdPlacement,
+): Promise<number> {
+  const last = await db.advertisement.findFirst({
+    where: { placement },
+    orderBy: { displayOrder: 'desc' },
+    select: { displayOrder: true },
+  });
+  return last ? last.displayOrder + 1 : 0;
+}
+
+/** ids that exist and belong to this placement — the reorder call's inputs
+ * are checked against this, not a bare existence check, since an id from the
+ * wrong zone must fail the same way one that doesn't exist at all does. */
+export function findIdsInPlacement(
+  db: TransactionClient,
+  placement: AdPlacement,
+  ids: string[],
+) {
+  return db.advertisement.findMany({
+    where: { id: { in: ids }, placement },
+    select: { id: true },
+  });
+}
+
+export function setDisplayOrder(
+  db: TransactionClient,
+  id: string,
+  displayOrder: number,
+) {
+  return db.advertisement.update({
+    where: { id },
+    data: { displayOrder },
+    select: { id: true },
+  });
+}
+
 export interface AdvertisementWriteData {
   advertiserName: string;
   mediaId: string;
@@ -64,7 +115,7 @@ export interface AdvertisementWriteData {
   description: object | typeof Prisma.DbNull;
   descriptionText: string | null;
   destinationUrl: string | null;
-  priority: number;
+  displayOrder: number;
   placement: AdPlacement;
   startAt: Date;
   endAt: Date;

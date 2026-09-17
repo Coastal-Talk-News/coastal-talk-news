@@ -78,7 +78,7 @@ display, but it is never persisted — recompute it on every read.
 
 `id`, `media_id` (FK → Media Asset), `detail_media_id` (FK → Media Asset, nullable),
 `advertiser_name`, `destination_url` (nullable), `description` (Tiptap JSON, nullable),
-`description_text` (nullable), `priority`, `placement`, `start_at`, `end_at`,
+`description_text` (nullable), `display_order`, `placement`, `start_at`, `end_at`,
 `created_at`, `updated_at`
 
 There is **no `is_active` database field**, for the same reason as Breaking News. The
@@ -101,10 +101,22 @@ active advertisements from inactive/expired ones.
 Capacity counts the ads whose run **overlaps** the one being saved, not every row with
 that placement: a zone's cap is on how many run at once, so a finished booking frees its
 slot for the next advertiser. The API rejects an overflowing create/update with a 409
-Conflict. `priority` remains the only ordering control _within_ a zone; it no longer
-decides which zone an ad lands in, since `placement` does that directly now. This
-replaces an earlier "no placement field, confirmed" note recorded here — that decision
-has been reversed.
+Conflict. This replaces an earlier "no placement field, confirmed" note recorded here —
+that decision has been reversed.
+
+**Ordering is a per-placement position, not a number the admin sets.** `display_order`
+is ascending (0 is first) and is only ever written by `PATCH /cms/advertisements/order`,
+which the CMS calls when an admin drags a row in the Top or Right Side list — the same
+drag-to-reorder pattern Category already uses for `display_order`, and the same
+`PATCH .../order` shape. Top and Right Side keep entirely separate orderings: the
+reorder call takes a `placement` plus every id currently in that zone, so dragging one
+zone's list never touches the other's. A new ad, or one moved into a zone by changing
+its placement, is appended to the end of that zone's order automatically — nothing
+about the rest of the zone's order changes. Masthead is not manually ordered: its
+capacity of 1 means at most one ad is ever showing, so there is nothing to arrange.
+Public ordering is `display_order asc`, with `start_at desc` as a tie-break for a row
+that has never been dragged (ties are otherwise rare, since every append and every
+reorder assigns each ad in a zone a distinct position).
 
 **Every advertisement has its own reader-site page** at `/advertisement/{id}`, listed at
 `/advertisements`. `detail_media_id` is the larger creative shown there, `description` is

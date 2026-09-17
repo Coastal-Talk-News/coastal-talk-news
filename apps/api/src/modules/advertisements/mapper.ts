@@ -18,7 +18,7 @@ export interface AdvertisementEntity {
   advertiserName: string;
   destinationUrl: string | null;
   description: unknown;
-  priority: number;
+  displayOrder: number;
   placement: AdPlacement;
   startAt: Date;
   endAt: Date;
@@ -65,7 +65,7 @@ export function toAdvertisementDto(
       : null,
     description: toRichText(item.description),
     destinationUrl: item.destinationUrl,
-    priority: item.priority,
+    displayOrder: item.displayOrder,
     placement: item.placement,
     startAt: item.startAt.toISOString(),
     endAt: item.endAt.toISOString(),

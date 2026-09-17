@@ -126,10 +126,13 @@ const adCardSelect = {
   media: mediaSelect,
 } as const;
 
+// The CMS reorder call assigns every ad in a placement a distinct position,
+// so a tie only happens for a row nobody has dragged yet — startAt desc is
+// just the fallback for that case, not the primary sort.
 export function findActiveAdvertisements(db: TransactionClient, now: Date) {
   return db.advertisement.findMany({
     where: activeWindowWhere(now),
-    orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+    orderBy: [{ displayOrder: 'asc' }, { startAt: 'desc' }],
     select: adCardSelect,
   });
 }

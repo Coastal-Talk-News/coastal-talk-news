@@ -1,11 +1,13 @@
 import type { AdvertisementDto } from '@coastal-talk-news/types';
 import { Badge } from '@coastal-talk-news/ui/badge';
+import { cn } from '@coastal-talk-news/ui/cn';
 import { Toggle } from '@coastal-talk-news/ui/toggle';
 import { Tooltip } from '@coastal-talk-news/ui/tooltip';
 import { iconButtonClass } from '@coastal-talk-news/ui/icon-button';
-import { ExternalLink, Pencil, Trash2 } from 'lucide-react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { ExternalLink, GripVertical, Pencil, Trash2 } from 'lucide-react';
 import { formatDate, formatTime } from '../../lib/format.js';
-import { PLACEMENT_META } from './placement.js';
 import { advertisementStatus } from './status.js';
 
 interface AdvertisementRowProps {
@@ -14,6 +16,11 @@ interface AdvertisementRowProps {
   now: Date;
   onEdit: (item: AdvertisementDto) => void;
   onDelete: (item: AdvertisementDto) => void;
+  /** Absent hides the reorder column entirely — Masthead has nothing to drag. */
+  reorder?: {
+    disabled: boolean;
+    hint: string;
+  };
 }
 
 export function AdvertisementRow({
@@ -22,17 +29,64 @@ export function AdvertisementRow({
   now,
   onEdit,
   onDelete,
+  reorder,
 }: AdvertisementRowProps) {
   const status = advertisementStatus(item, now);
   const isLive = status.value === 'active';
 
-  return (
-    <tr className="group hover:bg-surface-sunken align-middle transition-colors">
-      <td className="text-ink-subtle w-9 py-3 pl-4 text-sm tabular-nums">
-        {position}
-      </td>
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id, disabled: !reorder || reorder.disabled });
 
-      <td className="py-3 pr-4">
+  return (
+    <tr
+      ref={reorder ? setNodeRef : undefined}
+      style={
+        reorder
+          ? { transform: CSS.Transform.toString(transform), transition }
+          : undefined
+      }
+      className={cn(
+        'group align-middle transition-colors',
+        isDragging
+          ? 'relative z-10 bg-accent-soft/60 shadow-lg ring-1 ring-accent/30'
+          : 'hover:bg-surface-sunken',
+      )}
+    >
+      {reorder && (
+        <td className="w-9 pl-4">
+          {reorder.disabled ? (
+            <Tooltip label={reorder.hint}>
+              <span className="text-ink-subtle inline-flex cursor-not-allowed p-1">
+                <GripVertical className="size-4" aria-hidden />
+              </span>
+            </Tooltip>
+          ) : (
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              aria-label={`Reorder ${item.advertiserName}`}
+              className="text-ink-subtle/60 hover:bg-surface hover:text-ink cursor-grab rounded p-1 transition-colors group-hover:text-ink-subtle active:cursor-grabbing"
+            >
+              <GripVertical className="size-4" aria-hidden />
+            </button>
+          )}
+        </td>
+      )}
+
+      {reorder && (
+        <td className="text-ink-subtle w-9 py-3 pl-2 text-sm tabular-nums">
+          {position}
+        </td>
+      )}
+
+      <td className={cn('py-3 pr-4', !reorder && 'pl-4')}>
         <img
           src={item.image.url}
           alt=""
@@ -57,12 +111,6 @@ export function AdvertisementRow({
             </a>
           )}
         </div>
-      </td>
-
-      <td className="py-3 pr-4">
-        <Badge tone={PLACEMENT_META[item.placement].tone}>
-          {PLACEMENT_META[item.placement].label}
-        </Badge>
       </td>
 
       <td className="py-3 pr-4 text-sm">

@@ -28,7 +28,6 @@ interface FormValues {
   detailImage: MediaSummaryDto | null;
   description: RichTextContent | null;
   destinationUrl: string;
-  priority: string;
   placement: AdPlacement;
   startDate: string;
   startTime: string;
@@ -57,17 +56,20 @@ function combineToIso(date: string, time: string): string | null {
   return Number.isNaN(local.getTime()) ? null : local.toISOString();
 }
 
+/** The actual current time - every minute is a selectable option in the
+ * picker now, so there is no rounding to line up with. */
 function defaultStart(): { date: string; time: string } {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() + (5 - (now.getMinutes() % 5 || 5)));
-  return splitIso(now.toISOString());
+  return splitIso(new Date().toISOString());
 }
 
 function isEmptyDoc(doc: RichTextContent | null): boolean {
   return !doc || doc.content.length === 0;
 }
 
-function toValues(item: AdvertisementDto | null): FormValues {
+function toValues(
+  item: AdvertisementDto | null,
+  defaultPlacement: AdPlacement,
+): FormValues {
   if (!item) {
     const start = defaultStart();
     return {
@@ -76,8 +78,7 @@ function toValues(item: AdvertisementDto | null): FormValues {
       detailImage: null,
       description: null,
       destinationUrl: '',
-      priority: '0',
-      placement: 'SIDEBAR',
+      placement: defaultPlacement,
       startDate: start.date,
       startTime: start.time,
       endDate: '',
@@ -92,7 +93,6 @@ function toValues(item: AdvertisementDto | null): FormValues {
     detailImage: item.detailImage,
     description: item.description,
     destinationUrl: item.destinationUrl ?? '',
-    priority: String(item.priority),
     placement: item.placement,
     startDate: start.date,
     startTime: start.time,
@@ -106,6 +106,8 @@ interface AdvertisementSheetProps {
   editing: AdvertisementDto | null;
   /** The whole list, so zone capacity is judged against every booking. */
   advertisements: AdvertisementDto[];
+  /** Pre-selects the zone for a new ad - the placement tab the admin was on. */
+  defaultPlacement: AdPlacement;
   saving: boolean;
   serverError: string | null;
   onOpenChange: (open: boolean) => void;
@@ -116,25 +118,31 @@ export function AdvertisementSheet({
   open,
   editing,
   advertisements,
+  defaultPlacement,
   saving,
   serverError,
   onOpenChange,
   onSubmit,
 }: AdvertisementSheetProps) {
-  const [values, setValues] = useState<FormValues>(() => toValues(null));
+  const [values, setValues] = useState<FormValues>(() =>
+    toValues(null, defaultPlacement),
+  );
   const [touched, setTouched] = useState(false);
   const [picker, setPicker] = useState<PickerTarget>(null);
   const titleRef = useRef<HTMLInputElement>(null);
-  const initial = useRef<FormValues>(toValues(null));
+  const initial = useRef<FormValues>(toValues(null, defaultPlacement));
 
   useEffect(() => {
     if (!open) return;
-    const next = toValues(editing);
+    const next = toValues(editing, defaultPlacement);
     setValues(next);
     initial.current = next;
     setTouched(false);
     const timer = setTimeout(() => titleRef.current?.focus(), 80);
     return () => clearTimeout(timer);
+    // defaultPlacement intentionally excluded: it only matters at the moment
+    // the sheet opens for a new ad, not on every re-render while it's open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing]);
 
   const trimmedTitle = values.advertiserName.trim();
@@ -144,8 +152,6 @@ export function AdvertisementSheet({
   const windowValid = Boolean(
     startIso && endIso && new Date(endIso) > new Date(startIso),
   );
-  const priorityValid = values.priority === '' || /^\d+$/.test(values.priority);
-
   const isDirty =
     trimmedTitle !== initial.current.advertiserName.trim() ||
     (values.image?.id ?? null) !== (initial.current.image?.id ?? null) ||
@@ -154,7 +160,6 @@ export function AdvertisementSheet({
     JSON.stringify(values.description) !==
       JSON.stringify(initial.current.description) ||
     trimmedUrl !== initial.current.destinationUrl.trim() ||
-    values.priority !== initial.current.priority ||
     values.placement !== initial.current.placement ||
     values.startDate !== initial.current.startDate ||
     values.startTime !== initial.current.startTime ||
@@ -183,19 +188,24 @@ export function AdvertisementSheet({
   const imageError = touched && !values.image ? 'Choose an image.' : undefined;
   const startError =
     touched && !startIso ? 'Start date and time are required.' : undefined;
-  const endError = touched
-    ? !endIso
+  // The "required" message waits for touched, like every other field's -
+  // flashing it before the admin has picked anything would be noise. But
+  // once both ends are actually filled, an invalid window is real feedback,
+  // not noise, and needs to show right away: the submit button is already
+  // disabled at that point, so a click can never reach handleSubmit to set
+  // touched, and the message would otherwise never appear at all.
+  const endError = !endIso
+    ? touched
       ? 'End date and time are required.'
-      : !windowValid
-        ? 'End must be after start.'
-        : undefined
-    : undefined;
+      : undefined
+    : !windowValid
+      ? 'End must be after start.'
+      : undefined;
 
   const canSubmit =
     Boolean(trimmedTitle) &&
     Boolean(values.image) &&
     windowValid &&
-    priorityValid &&
     !chosenIsFull &&
     (isDirty || !editing);
 
@@ -209,7 +219,6 @@ export function AdvertisementSheet({
       detailMediaId: values.detailImage?.id ?? null,
       description: isEmptyDoc(values.description) ? null : values.description,
       destinationUrl: trimmedUrl,
-      priority: values.priority === '' ? 0 : Number(values.priority),
       placement: values.placement,
       startAt: startIso,
       endAt: endIso,
@@ -462,37 +471,6 @@ export function AdvertisementSheet({
           />
         </Field>
 
-        {values.placement === 'TOP' && (
-          <Field
-            label="Priority"
-            htmlFor="advertisement-priority"
-            optional
-            error={
-              touched && !priorityValid
-                ? 'Priority must be a whole number.'
-                : undefined
-            }
-            hint="Orders the three Top slots - the highest number shows first. Leave at 0 for no preference."
-          >
-            <Input
-              id="advertisement-priority"
-              type="number"
-              min={0}
-              step={1}
-              inputMode="numeric"
-              value={values.priority}
-              invalid={touched && !priorityValid}
-              onBlur={() => setTouched(true)}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  priority: event.target.value,
-                }))
-              }
-            />
-          </Field>
-        )}
-
         <Field
           label="Start Date & Time"
           htmlFor="advertisement-start-date"
@@ -525,6 +503,8 @@ export function AdvertisementSheet({
             id="advertisement-end-date"
             date={values.endDate}
             time={values.endTime}
+            minDate={values.startDate}
+            minTime={values.startTime}
             invalid={Boolean(endError)}
             dateLabel="End date"
             timeLabel="End time"

@@ -174,7 +174,8 @@ active Breaking News.
 ### Advertisements
 
 Fields: advertiser name, banner image, detail image (optional), description (optional
-rich text), destination URL (optional), priority, placement, start/end datetime.
+rich text), destination URL (optional), placement, start/end datetime. Order within a
+placement is not a field the admin fills in — see below.
 
 **Every advertisement has its own page** on the reader site at `/advertisement/{id}`,
 with all of them listed at `/advertisements`. A banner in any zone links to that page
@@ -188,10 +189,21 @@ slot beside the site name, capped at 1. Top is a 320.57×73.88 band capped at 3.
 Side is a 250×300 rail with no cap. Each zone is priced separately, which is why
 placement is a stored field rather than a rendering detail. Caps count only bookings
 whose run **overlaps** the one being saved, enforced server-side (409 Conflict), so a
-finished booking frees its slot. `priority` still orders ads within whichever zone
-they're in — it no longer selects the zone itself. This reverses the earlier "no
-placement field, confirmed" decision recorded here and in DATA-MODEL.md; the reversal is
-final.
+finished booking frees its slot. This reverses the earlier "no placement field,
+confirmed" decision recorded here and in DATA-MODEL.md; the reversal is final.
+
+**Order within Top and Right Side is set by dragging, not by typing a number.** The
+Advertisements page is organised as one tab per placement; within the Top and Right Side
+tabs the admin drags a row to reorder it, and that order is what the reader site shows,
+top to bottom — the same drag-to-reorder the Categories page already uses. Top and Right
+Side are ordered independently of each other, per the client's explicit direction: they
+are "not prioritized collectively." A tie (an ad nobody has manually positioned yet)
+falls back to the most recently started campaign. Masthead has no manual order — its
+capacity of 1 means only one ad is ever live regardless. An earlier version of this field
+was a plain "priority" number the admin typed in, sorted highest-first across every zone
+together; it was dropped because the admin had no way to see the resulting order without
+comparing numbers row by row, and a shared number line for zones with different capacities
+invited exactly that confusion.
 
 Advertisements are scheduled using `start_at` and `end_at`. The advertisement does not have
 a stored `is_active` field — its active state is derived by the backend from the schedule,

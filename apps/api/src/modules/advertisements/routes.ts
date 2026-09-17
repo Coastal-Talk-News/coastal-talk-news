@@ -5,6 +5,7 @@ import {
   CmsAdvertisementListQuerySchema,
   CreateAdvertisementBodySchema,
   ListResponse,
+  ReorderAdvertisementsBodySchema,
   SuccessResponse,
   UpdateAdvertisementBodySchema,
   commonErrorResponses,
@@ -63,6 +64,22 @@ export const cmsAdvertisementRoutes: FastifyPluginAsyncTypebox = async (
       },
     },
     controller.create,
+  );
+
+  // Declared before /:id so "order" is not captured as an id.
+  app.patch(
+    '/order',
+    {
+      schema: {
+        tags: ['advertisements'],
+        summary: 'Reorder advertisements within one placement',
+        description:
+          'Takes every advertisement id in that placement, in display order. Top and Sidebar are ordered independently of one another. Applied in one transaction.',
+        body: ReorderAdvertisementsBodySchema,
+        response: { 204: Type.Null(), ...commonErrorResponses },
+      },
+    },
+    controller.reorder,
   );
 
   app.patch(
