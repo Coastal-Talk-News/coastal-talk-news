@@ -19,7 +19,7 @@ const advertisementFields = {
   detailImage: Type.Union([MediaSummarySchema, Type.Null()]),
   description: Type.Union([ArticleContentSchema, Type.Null()]),
   destinationUrl: Type.Union([Type.String(), Type.Null()]),
-  priority: Type.Integer(),
+  displayOrder: Type.Integer(),
   placement: AdPlacementSchema,
   startAt: IsoDateTime,
   endAt: IsoDateTime,
@@ -42,7 +42,7 @@ const writableAdvertisementFields = {
     Type.Literal(''),
     Type.Null(),
   ]),
-  priority: Type.Integer({ minimum: 0 }),
+  displayOrder: Type.Integer({ minimum: 0 }),
   placement: AdPlacementSchema,
   startAt: IsoDateTime,
   endAt: IsoDateTime,
@@ -55,7 +55,7 @@ export const CreateAdvertisementBodySchema = Type.Object(
     detailMediaId: Type.Optional(writableAdvertisementFields.detailMediaId),
     description: Type.Optional(writableAdvertisementFields.description),
     destinationUrl: Type.Optional(writableAdvertisementFields.destinationUrl),
-    priority: Type.Optional(writableAdvertisementFields.priority),
+    displayOrder: Type.Optional(writableAdvertisementFields.displayOrder),
     placement: Type.Optional(writableAdvertisementFields.placement),
     startAt: writableAdvertisementFields.startAt,
     endAt: writableAdvertisementFields.endAt,
@@ -78,3 +78,11 @@ export const AdvertisementParamsSchema = Type.Object({
 export const CmsAdvertisementListQuerySchema = Type.Object({
   ...paginationQueryFields,
 });
+
+export const ReorderAdvertisementsBodySchema = Type.Object(
+  {
+    placement: AdPlacementSchema,
+    ids: Type.Array(Type.String({ format: 'uuid' }), { minItems: 1 }),
+  },
+  { additionalProperties: false },
+);

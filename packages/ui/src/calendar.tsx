@@ -40,13 +40,23 @@ function isSameDay(a: Date, b: Date): boolean {
 interface CalendarProps {
   value: string;
   onSelect: (value: string) => void;
+  /** Earlier days render greyed out and unclickable rather than being
+   * hidden - the same "visible but off the table" treatment a disabled
+   * option in a dropdown gets, so it reads as a rule rather than a missing
+   * day. */
+  minDate?: string;
 }
 
-export function Calendar({ value, onSelect }: CalendarProps) {
+export function Calendar({ value, onSelect, minDate }: CalendarProps) {
   const selected = value ? fromDateValue(value) : null;
   const [visibleMonth, setVisibleMonth] = useState(() =>
-    startOfMonth(selected ?? new Date()),
+    startOfMonth(
+      selected ??
+        (minDate ? (fromDateValue(minDate) ?? new Date()) : new Date()),
+    ),
   );
+  const todayValue = toDateValue(new Date());
+  const todayDisabled = Boolean(minDate && todayValue < minDate);
 
   const today = new Date();
   const firstDay = startOfMonth(visibleMonth);
@@ -112,16 +122,21 @@ export function Calendar({ value, onSelect }: CalendarProps) {
       </div>
 
       <div className="grid grid-cols-7 gap-y-0.5">
-        {cells.map((date, index) =>
-          date ? (
+        {cells.map((date, index) => {
+          if (!date) return <span key={index} />;
+          const dateValue = toDateValue(date);
+          const isDisabled = Boolean(minDate && dateValue < minDate);
+          return (
             <button
               key={index}
               type="button"
-              onClick={() => onSelect(toDateValue(date))}
+              disabled={isDisabled}
+              onClick={() => onSelect(dateValue)}
               aria-label={fullDateFormatter.format(date)}
               aria-current={isSameDay(date, today) ? 'date' : undefined}
               className={cn(
                 'grid size-8 place-items-center justify-self-center rounded-md text-sm transition-colors',
+                'disabled:pointer-events-none disabled:opacity-35',
                 selected && isSameDay(date, selected)
                   ? 'bg-accent text-accent-fg font-medium'
                   : 'text-ink-muted hover:bg-surface-sunken hover:text-ink',
@@ -132,16 +147,15 @@ export function Calendar({ value, onSelect }: CalendarProps) {
             >
               {date.getDate()}
             </button>
-          ) : (
-            <span key={index} />
-          ),
-        )}
+          );
+        })}
       </div>
 
       <button
         type="button"
-        onClick={() => onSelect(toDateValue(new Date()))}
-        className="text-accent-text hover:bg-accent-soft mt-2 w-full rounded-md py-1.5 text-xs font-medium transition-colors"
+        disabled={todayDisabled}
+        onClick={() => onSelect(todayValue)}
+        className="text-accent-text hover:bg-accent-soft disabled:pointer-events-none disabled:opacity-35 mt-2 w-full rounded-md py-1.5 text-xs font-medium transition-colors"
       >
         Today
       </button>

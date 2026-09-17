@@ -20,7 +20,9 @@ export function adHref(id: string): string {
 /**
  * Every advertisement lands in exactly one zone, driven by its CMS-assigned
  * placement. Masthead holds 1 and Top 3, both capped server-side (apps/api);
- * Sidebar is uncapped.
+ * Sidebar is uncapped. Within a zone, ads arrive from the API already in
+ * their CMS-assigned order - Top and Sidebar are ordered independently of
+ * each other, by dragging in the CMS, not by anything computed here.
  */
 export function adsForZone(
   advertisements: PublicAdvertisementDto[],
@@ -63,6 +65,51 @@ interface GalleryOptions {
  * themselves while squarer ones sit side by side. Nothing is sized in advance —
  * the grouping falls out of the creatives' own resolutions.
  */
+/**
+ * Splits ads into N vertical columns of equal width, each stacking its own
+ * items independently rather than as shared rows. A shared-row grid (every
+ * ad in "row 2" starting at the same y, say) looks right until two adjacent
+ * ads differ in height: the shorter one's row is stretched to match its
+ * taller neighbour, leaving a visible gap under it - measured at 180px for
+ * one pairing here. Assigning each ad to whichever column is currently
+ * shortest keeps the columns level instead, the way a Pinterest-style board
+ * does, with the same fixed width every column shares.
+ *
+ * The trade-off is ordering: the CMS's drag order is followed as closely as
+ * levelling the columns allows, not to the pixel. The first N ads still open
+ * the first N columns left to right - it is only from there that a later ad
+ * can land out of strict sequence, when doing so is what keeps the layout
+ * gapless.
+ */
+export function splitColumns(
+  advertisements: PublicAdvertisementDto[],
+  columnCount: number,
+): PublicAdvertisementDto[][] {
+  const columns: PublicAdvertisementDto[][] = Array.from(
+    { length: columnCount },
+    () => [],
+  );
+  const heights = new Array<number>(columnCount).fill(0);
+
+  for (const ad of advertisements) {
+    let shortest = 0;
+    let shortestHeight = heights[0] ?? 0;
+    for (let i = 1; i < columnCount; i += 1) {
+      const height = heights[i] ?? 0;
+      if (height < shortestHeight) {
+        shortest = i;
+        shortestHeight = height;
+      }
+    }
+    columns[shortest]?.push(ad);
+    // Height per unit of (shared) width, so columns compare on the same
+    // scale a real render would - the actual pixel width cancels out.
+    heights[shortest] = shortestHeight + 1 / adAspectRatio(ad.image);
+  }
+
+  return columns;
+}
+
 export function galleryRows(
   advertisements: PublicAdvertisementDto[],
   { maxPerRow, ratioBudget, maxShapeSpread = Infinity }: GalleryOptions,
@@ -116,26 +163,4 @@ export function rowMaxWidth(
   gap: number,
 ): number {
   return Math.round(maxHeight * row.ratioSum + gap * (row.ads.length - 1));
-}
-
-/**
- * Sidebar advertisers all buy the same zone, so no one of them owns the top of
- * it. Shuffling per request shares that position out: over a run, every ad
- * spends time at the top instead of the same one holding it for weeks.
- *
- * The Top band is deliberately not shuffled - those three slots are sold by
- * position, and the API already returns them in their CMS-assigned order.
- */
-export function rotated(
-  advertisements: PublicAdvertisementDto[],
-): PublicAdvertisementDto[] {
-  const order = [...advertisements];
-  for (let i = order.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [order[i], order[j]] = [order[j], order[i]] as [
-      PublicAdvertisementDto,
-      PublicAdvertisementDto,
-    ];
-  }
-  return order;
 }

@@ -1,4 +1,5 @@
 import type {
+  AdPlacement,
   AdvertisementDto,
   CreateAdvertisementRequest,
   UpdateAdvertisementRequest,
@@ -54,5 +55,23 @@ export function useAdvertisementMutations() {
       toast.error(messageFor(error, 'Could not delete this advertisement.')),
   });
 
-  return { create, update, remove };
+  const reorder = useMutation({
+    mutationFn: ({
+      placement,
+      ids,
+    }: {
+      placement: AdPlacement;
+      ids: string[];
+    }) => advertisementsApi.reorder(placement, ids),
+    onSuccess: () => {
+      invalidate();
+      toast.success('Order saved.');
+    },
+    onError: (error) => {
+      invalidate();
+      toast.error(messageFor(error, 'Could not save the new order.'));
+    },
+  });
+
+  return { create, update, remove, reorder };
 }

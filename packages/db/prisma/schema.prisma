@@ -166,7 +166,11 @@ model Advertisement {
   /// Plain-text mirror of description, so listings and meta tags never have to
   /// load and walk the document.
   descriptionText String?     @map("description_text")
-  priority        Int         @default(0)
+  /// Position within its own placement zone, ascending - set only by the CMS
+  /// drag-to-reorder action (PATCH .../order), never by hand. Top and Sidebar
+  /// are ordered independently: this column is compared only against other
+  /// rows sharing the same placement, never across zones.
+  displayOrder    Int         @default(0) @map("display_order")
   placement       AdPlacement @default(SIDEBAR)
   startAt         DateTime    @map("start_at")
   endAt           DateTime    @map("end_at")
@@ -177,8 +181,9 @@ model Advertisement {
   detailMedia MediaAsset? @relation("AdvertisementDetailImage", fields: [detailMediaId], references: [id], onDelete: Restrict)
 
   @@index([startAt, endAt])
-  @@index([priority(sort: Desc), createdAt])
-  @@index([placement])
+  // Covers a plain placement lookup too (leftmost prefix), so the separate
+  // single-column index this replaced is redundant.
+  @@index([placement, displayOrder])
   @@map("advertisements")
 }
 

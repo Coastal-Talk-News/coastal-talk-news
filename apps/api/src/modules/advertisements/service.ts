@@ -27,7 +27,7 @@ export interface CreateAdvertisementInput {
   detailMediaId?: string | null;
   description?: RichTextContent | null;
   destinationUrl?: string | null;
-  priority?: number;
+  displayOrder?: number;
   placement?: AdPlacement;
   startAt: string;
   endAt: string;
@@ -147,7 +147,10 @@ export async function create(
     mediaId: input.mediaId,
     detailMediaId: input.detailMediaId ?? null,
     destinationUrl: normalizeUrl(input.destinationUrl),
-    priority: input.priority ?? 0,
+    // Appended to the end of the zone unless a position was given explicitly
+    // - the CMS form never sends one, only the drag-to-reorder call does.
+    displayOrder:
+      input.displayOrder ?? (await repository.nextDisplayOrder(db, placement)),
     placement,
     startAt,
     endAt,
@@ -192,6 +195,16 @@ export async function update(
     await assertPlacementCapacity(db, placement, { startAt, endAt }, id);
   }
 
+  // Moving zones drops the ad at the end of the new one, same as a fresh ad,
+  // unless the caller also gave an explicit position to land on instead.
+  const movingZones =
+    input.placement !== undefined && input.placement !== existing.placement;
+  const displayOrder =
+    input.displayOrder ??
+    (movingZones
+      ? await repository.nextDisplayOrder(db, placement)
+      : undefined);
+
   const detailMediaId =
     input.detailMediaId === undefined
       ? undefined
@@ -219,7 +232,7 @@ export async function update(
       ...(input.destinationUrl !== undefined
         ? { destinationUrl: normalizeUrl(input.destinationUrl) }
         : {}),
-      ...(input.priority !== undefined ? { priority: input.priority } : {}),
+      ...(displayOrder !== undefined ? { displayOrder } : {}),
       ...(input.placement !== undefined ? { placement: input.placement } : {}),
       ...(input.startAt !== undefined ? { startAt } : {}),
       ...(input.endAt !== undefined ? { endAt } : {}),
@@ -232,6 +245,44 @@ export async function update(
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
   return advertisement;
+}
+
+/**
+ * Applied as one transaction of individual updates rather than a bulk
+ * statement: Postgres has no portable "set from this array, in this order"
+ * form, and the list tops out in the tens of rows, so the round trips cost
+ * nothing that matters.
+ */
+export async function reorder(
+  { db }: AdvertisementServiceDeps,
+  placement: AdPlacement,
+  ids: string[],
+): Promise<void> {
+  const unique = new Set(ids);
+  if (unique.size !== ids.length) {
+    throw new BadRequestError('ids contains duplicate entries.');
+  }
+
+  await db.$transaction(async (tx) => {
+    const total = await repository.countInPlacement(tx, placement);
+    if (ids.length !== total) {
+      throw new ConflictError(
+        `Reorder must include every advertisement in ${PLACEMENT_LABEL[placement]}. Received ${ids.length} of ${total}.`,
+        { received: ids.length, expected: total },
+      );
+    }
+
+    const found = await repository.findIdsInPlacement(tx, placement, ids);
+    if (found.length !== ids.length) {
+      throw new BadRequestError(
+        `ids contains an advertisement that does not exist, or is not in ${PLACEMENT_LABEL[placement]}.`,
+      );
+    }
+
+    for (const [index, id] of ids.entries()) {
+      await repository.setDisplayOrder(tx, id, index);
+    }
+  });
 }
 
 export async function remove(

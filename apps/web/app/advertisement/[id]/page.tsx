@@ -56,7 +56,7 @@ export default async function AdvertisementPage({
   const image = advertisement.detailImage ?? advertisement.image;
 
   return (
-    <article className="max-w-[44rem] xl:max-w-[52rem] py-6 pb-24 sm:py-8 sm:pb-8">
+    <article className="max-w-[44rem] min-[1120px]:max-w-[52rem] py-6 pb-24 sm:py-8 sm:pb-8">
       <nav
         aria-label="Breadcrumb"
         className="text-ink-subtle mb-4 flex items-center gap-1.5 text-sm"

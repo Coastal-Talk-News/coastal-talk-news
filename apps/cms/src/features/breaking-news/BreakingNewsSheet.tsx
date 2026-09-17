@@ -40,10 +40,10 @@ function combineToIso(date: string, time: string): string | null {
   return Number.isNaN(local.getTime()) ? null : local.toISOString();
 }
 
+/** The actual current time - every minute is a selectable option in the
+ * picker now, so there is no rounding to line up with. */
 function defaultStart(): { date: string; time: string } {
-  const now = new Date();
-  now.setMinutes(now.getMinutes() + (5 - (now.getMinutes() % 5 || 5)));
-  return splitIso(now.toISOString());
+  return splitIso(new Date().toISOString());
 }
 
 function toValues(item: BreakingNewsDto | null): FormValues {
@@ -127,14 +127,21 @@ export function BreakingNewsSheet({
     touched && !trimmedHeadline ? 'Headline is required.' : undefined;
   const startError =
     touched && !startIso ? 'Start date and time are required.' : undefined;
-  const endError =
-    touched && values.hasEnd
-      ? !endIso
+  // The "required" message waits for touched, like every other field's -
+  // flashing it before the admin has picked anything would be noise. But
+  // once both ends are actually filled, an invalid window is real feedback,
+  // not noise, and needs to show right away: the submit button is already
+  // disabled at that point, so a click can never reach handleSubmit to set
+  // touched, and the message would otherwise never appear at all.
+  const endError = values.hasEnd
+    ? !endIso
+      ? touched
         ? 'End date and time are required, or turn this off.'
-        : startIso && new Date(endIso) <= new Date(startIso)
-          ? 'End must be after start.'
-          : undefined
-      : undefined;
+        : undefined
+      : startIso && new Date(endIso) <= new Date(startIso)
+        ? 'End must be after start.'
+        : undefined
+    : undefined;
 
   const canSubmit =
     Boolean(trimmedHeadline) && windowValid && (isDirty || !editing);
@@ -307,6 +314,8 @@ export function BreakingNewsSheet({
               id="breaking-news-end-date"
               date={values.endDate}
               time={values.endTime}
+              minDate={values.startDate}
+              minTime={values.startTime}
               invalid={Boolean(endError)}
               dateLabel="End date"
               timeLabel="End time"

@@ -1,3 +1,4 @@
+import type { AdPlacement } from '@coastal-talk-news/db';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
 import { toAdvertisementDto } from './mapper.js';
@@ -67,6 +68,18 @@ export async function update(
     request.body,
   );
   return dataEnvelope(toAdvertisementDto(item, publicUrl(request)));
+}
+
+export async function reorder(
+  request: FastifyRequest<{ Body: { placement: AdPlacement; ids: string[] } }>,
+  reply: FastifyReply,
+) {
+  await service.reorder(
+    deps(request),
+    request.body.placement,
+    request.body.ids,
+  );
+  return reply.status(204).send(null);
 }
 
 export async function remove(

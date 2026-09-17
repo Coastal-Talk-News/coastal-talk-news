@@ -12,7 +12,7 @@ import { AdColumn } from '../components/news/AdColumn';
 import { StickyRail } from '../components/news/StickyRail';
 import { SiteFooter } from '../components/layout/SiteFooter';
 import { SiteHeader } from '../components/layout/SiteHeader';
-import { adsForZone, rotated } from '../lib/ads';
+import { adsForZone } from '../lib/ads';
 import { getSite } from '../lib/api';
 import { getLocale } from '../lib/i18n/server';
 import { buildMetadata } from '../lib/seo';
@@ -81,9 +81,6 @@ export default async function RootLayout({
 }) {
   const [site, locale] = await Promise.all([getSite(), getLocale()]);
   const { advertisements } = site;
-  // Shuffled once per render, so the rail and the narrow-screen block below it
-  // agree on the order rather than drawing two different ones.
-  const sidebarAds = rotated(adsForZone(advertisements, 'sidebar'));
 
   return (
     <html
@@ -101,8 +98,11 @@ export default async function RootLayout({
         <main className="flex-1">
           <div className="mx-auto flex w-full max-w-7xl gap-6 px-4">
             <div className="min-w-0 flex-1">{children}</div>
-            <StickyRail className="hidden w-[clamp(240px,calc(100vw-760px),320px)] shrink-0 py-5 min-[800px]:block">
-              <AdColumn advertisements={sidebarAds} locale={locale} />
+            <StickyRail className="hidden w-[clamp(240px,calc(100vw-760px),360px)] shrink-0 py-5 min-[800px]:block">
+              <AdColumn
+                advertisements={adsForZone(advertisements, 'sidebar')}
+                locale={locale}
+              />
             </StickyRail>
           </div>
         </main>
@@ -110,7 +110,7 @@ export default async function RootLayout({
         {/* Narrow screens have no side column, so the roster runs here instead —
             after the news, never before it. */}
         <AdColumn
-          advertisements={sidebarAds}
+          advertisements={adsForZone(advertisements, 'sidebar')}
           variant="block"
           className="mx-auto w-full max-w-6xl px-4 pb-8 min-[800px]:hidden"
           locale={locale}
