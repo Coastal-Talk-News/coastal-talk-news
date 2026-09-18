@@ -19,7 +19,7 @@ export function HeroStory({
         alt=""
         priority
         sizes="(min-width: 1024px) 60vw, 100vw"
-        className="aspect-[4/3] w-full object-cover sm:aspect-[16/10] lg:aspect-[16/11]"
+        className="bg-night aspect-[4/3] w-full object-contain sm:aspect-[16/10] lg:aspect-[16/11]"
       />
 
       <div

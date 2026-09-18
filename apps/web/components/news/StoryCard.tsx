@@ -66,7 +66,7 @@ export function StoryCard({
               image={article.image}
               alt=""
               sizes="(min-width: 640px) 288px, 90vw"
-              className="aspect-[16/10] w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              className="bg-paper-sunken aspect-[16/10] w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
             />
           </Link>
         )}
@@ -111,7 +111,7 @@ export function StoryCard({
               image={article.image}
               alt=""
               sizes={roomy ? '144px' : '96px'}
-              className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
+              className={`bg-paper-sunken object-contain transition-transform duration-300 group-hover:scale-105 ${
                 roomy ? 'h-24 w-36' : 'h-16 w-24'
               }`}
             />
@@ -162,7 +162,7 @@ export function StoryCard({
             image={article.image}
             alt=""
             sizes={sizes}
-            className="aspect-[16/10] max-h-64 w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            className="bg-paper-sunken aspect-[16/10] max-h-64 w-full object-contain transition-transform duration-300 group-hover:scale-[1.03]"
           />
         </Link>
       )}
