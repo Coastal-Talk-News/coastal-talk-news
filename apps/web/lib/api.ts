@@ -117,7 +117,11 @@ export async function getHome(locale: Locale): Promise<PublicHomeDto> {
   const language = ARTICLE_LANGUAGE_BY_LOCALE[locale];
   const home = await fetchPublic<PublicHomeDto>(`/home?language=${language}`);
   return {
-    ...home,
+    leadStories: list(home.leadStories),
+    featured: list(home.featured),
+    topStories: list(home.topStories),
+    hasMoreLeadStories: home.hasMoreLeadStories ?? false,
+    hasMoreFeatured: home.hasMoreFeatured ?? false,
     categorySections: list(home.categorySections),
   };
 }
@@ -182,6 +186,22 @@ export async function getCategoryArticles(
   const language = ARTICLE_LANGUAGE_BY_LOCALE[locale];
   const { data, meta } = await fetchPublicList<PublicArticleCardDto>(
     `/categories/${id}/articles?page=${page}&limit=${limit}&language=${language}`,
+  );
+  return { articles: data, meta };
+}
+
+export interface ArticlesByPriorityPage {
+  articles: PublicArticleCardDto[];
+  meta: PaginationMeta;
+}
+
+export async function getArticlesByPriority(
+  priority: 'LEAD_STORY' | 'FEATURED',
+  { page, limit, locale }: { page: number; limit: number; locale: Locale },
+): Promise<ArticlesByPriorityPage> {
+  const language = ARTICLE_LANGUAGE_BY_LOCALE[locale];
+  const { data, meta } = await fetchPublicList<PublicArticleCardDto>(
+    `/articles?priority=${priority}&page=${page}&limit=${limit}&language=${language}`,
   );
   return { articles: data, meta };
 }

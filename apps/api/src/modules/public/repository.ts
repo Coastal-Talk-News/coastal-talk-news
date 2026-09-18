@@ -1,4 +1,8 @@
-import type { Language, TransactionClient } from '@coastal-talk-news/db';
+import type {
+  ArticlePriority,
+  Language,
+  TransactionClient,
+} from '@coastal-talk-news/db';
 import { activeWindowWhere } from '../../lib/schedule.js';
 
 const mediaSelect = {
@@ -178,5 +182,65 @@ export function findRecentForCategories(
     orderBy: newestFirst,
     select: cardSelect,
     take,
+  });
+}
+
+export function findRecentByPriority(
+  db: TransactionClient,
+  priority: ArticlePriority,
+  take: number,
+  { language }: { language?: Language } = {},
+) {
+  return db.article.findMany({
+    where: {
+      ...publishedWhere,
+      priority,
+      ...(language && { language }),
+    },
+    orderBy: newestFirst,
+    select: cardSelect,
+    take,
+  });
+}
+
+export function findPublishedSince(
+  db: TransactionClient,
+  since: Date,
+  take: number,
+  { language }: { language?: Language } = {},
+) {
+  return db.article.findMany({
+    where: {
+      ...publishedWhere,
+      publicationDate: { gte: since },
+      ...(language && { language }),
+    },
+    orderBy: newestFirst,
+    select: cardSelect,
+    take,
+  });
+}
+
+export function findPublishedByPriority(
+  db: TransactionClient,
+  priority: ArticlePriority,
+  { language }: { language?: Language },
+  page: { skip: number; take: number },
+) {
+  return db.article.findMany({
+    where: { ...publishedWhere, priority, ...(language && { language }) },
+    orderBy: newestFirst,
+    select: cardSelect,
+    ...page,
+  });
+}
+
+export function countPublishedByPriority(
+  db: TransactionClient,
+  priority: ArticlePriority,
+  { language }: { language?: Language } = {},
+) {
+  return db.article.count({
+    where: { ...publishedWhere, priority, ...(language && { language }) },
   });
 }

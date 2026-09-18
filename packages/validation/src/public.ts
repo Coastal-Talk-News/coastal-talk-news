@@ -98,6 +98,11 @@ export const PublicSiteSchema = Type.Object({
 });
 
 export const PublicHomeSchema = Type.Object({
+  leadStories: Type.Array(PublicArticleCardSchema),
+  featured: Type.Array(PublicArticleCardSchema),
+  topStories: Type.Array(PublicArticleCardSchema),
+  hasMoreLeadStories: Type.Boolean(),
+  hasMoreFeatured: Type.Boolean(),
   categorySections: Type.Array(
     Type.Object({
       category: PublicNavCategorySchema,
@@ -116,4 +121,16 @@ export const PublicSearchQuerySchema = Type.Object({
 export const PublicHomeQuerySchema = Type.Object({
   // Omitted entirely means both languages, mixed together.
   language: Type.Optional(LanguageSchema),
+});
+
+// Narrower than the CMS's ArticlePrioritySchema: there is no public NORMAL page.
+export const PublicArticlePrioritySchema = Type.Union([
+  Type.Literal('LEAD_STORY'),
+  Type.Literal('FEATURED'),
+]);
+
+export const PublicArticlesQuerySchema = Type.Object({
+  priority: PublicArticlePrioritySchema,
+  language: Type.Optional(LanguageSchema),
+  ...paginationQueryFields,
 });
