@@ -50,6 +50,8 @@ export const SiteSettingsSchema = Type.Object({
   instagramUrl: Type.Union([Type.String(), Type.Null()]),
   youtubeUrl: Type.Union([Type.String(), Type.Null()]),
   xUrl: Type.Union([Type.String(), Type.Null()]),
+  whatsappEnglishUrl: Type.Union([Type.String(), Type.Null()]),
+  whatsappKannadaUrl: Type.Union([Type.String(), Type.Null()]),
   defaultSeoTitle: Type.Union([Type.String(), Type.Null()]),
   defaultMetaDescription: Type.Union([Type.String(), Type.Null()]),
   defaultOgImage: NullableMedia,
@@ -79,6 +81,12 @@ export const UpdateSiteSettingsBodySchema = Type.Object(
       nullableFormatted('uri', SETTINGS_SOCIAL_URL_MAX),
     ),
     xUrl: Type.Optional(nullableFormatted('uri', SETTINGS_SOCIAL_URL_MAX)),
+    whatsappEnglishUrl: Type.Optional(
+      nullableFormatted('uri', SETTINGS_SOCIAL_URL_MAX),
+    ),
+    whatsappKannadaUrl: Type.Optional(
+      nullableFormatted('uri', SETTINGS_SOCIAL_URL_MAX),
+    ),
     defaultSeoTitle: Type.Optional(nullableString(SETTINGS_SEO_TITLE_MAX)),
     defaultMetaDescription: Type.Optional(
       nullableString(SETTINGS_META_DESCRIPTION_MAX),

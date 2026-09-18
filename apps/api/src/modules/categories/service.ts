@@ -1,4 +1,8 @@
-import type { Database, Language } from '@coastal-talk-news/db';
+import type {
+  Database,
+  Language,
+  TransactionClient,
+} from '@coastal-talk-news/db';
 import type { FastifyBaseLogger } from 'fastify';
 import {
   BadRequestError,
@@ -23,6 +27,7 @@ export interface CreateCategoryInput {
   description?: string | null;
   isActive?: boolean;
   displayOrder?: number;
+  parentId?: string | null;
   coverImageId?: string | null;
 }
 
@@ -43,6 +48,46 @@ async function assertMediaExists(db: Database, mediaId: string): Promise<void> {
   if (!(await repository.mediaExists(db, mediaId))) {
     throw new BadRequestError(
       'coverImageId does not refer to an existing media asset.',
+    );
+  }
+}
+
+/**
+ * A parent must exist and must itself be top-level — a category whose own
+ * parentId is set can never be chosen as someone else's parent, which is what
+ * caps the hierarchy at two levels.
+ */
+async function assertValidParent(
+  db: TransactionClient,
+  parentId: string,
+  excludingId?: string,
+): Promise<void> {
+  if (parentId === excludingId) {
+    throw new BadRequestError('A category cannot be its own parent.');
+  }
+  const parent = await repository.findParentCandidate(db, parentId);
+  if (!parent) {
+    throw new BadRequestError(
+      'parentId does not refer to an existing category.',
+    );
+  }
+  if (parent.parentId !== null) {
+    throw new BadRequestError(
+      'parentId refers to a category that is itself a subcategory. Only a top-level category can be a parent.',
+    );
+  }
+}
+
+async function assertNoChildren(
+  db: TransactionClient,
+  id: string,
+  action: string,
+): Promise<void> {
+  const childCount = await repository.countChildren(db, id);
+  if (childCount > 0) {
+    throw new ConflictError(
+      `Cannot ${action} while ${childCount} subcategor${childCount === 1 ? 'y' : 'ies'} still belong to it. Reassign or remove them first.`,
+      { childCount },
     );
   }
 }
@@ -116,17 +161,23 @@ export async function create(
 ) {
   const { db } = deps;
   const name = input.name.trim();
+  const parentId = input.parentId ?? null;
 
   await assertNameAvailable(db, name);
   if (input.coverImageId) {
     await assertMediaExists(db, input.coverImageId);
+  }
+  if (parentId) {
+    await assertValidParent(db, parentId);
   }
 
   return repository.create(db, {
     name,
     description: input.description?.trim() || null,
     isActive: input.isActive ?? true,
-    displayOrder: input.displayOrder ?? (await repository.nextDisplayOrder(db)),
+    displayOrder:
+      input.displayOrder ?? (await repository.nextDisplayOrder(db, parentId)),
+    parentId,
     mediaId: input.coverImageId ?? null,
   });
 }
@@ -151,6 +202,16 @@ export async function update(
     await assertMediaExists(db, input.coverImageId);
   }
 
+  const parentChanged =
+    input.parentId !== undefined && input.parentId !== existing.parentId;
+  if (parentChanged && input.parentId !== null) {
+    await assertValidParent(db, input.parentId as string, id);
+    // A category with its own children can't become someone else's child —
+    // that would make a third level. This is the real guard behind the CMS's
+    // disabled Parent Category dropdown, not just a UI nicety.
+    await assertNoChildren(db, id, 'move this category under a parent');
+  }
+
   const coverImageChanged =
     input.coverImageId !== undefined && input.coverImageId !== existing.mediaId;
 
@@ -161,9 +222,17 @@ export async function update(
         ? { description: input.description?.trim() || null }
         : {}),
       ...(input.isActive !== undefined ? { isActive: input.isActive } : {}),
+      ...(input.parentId !== undefined ? { parentId: input.parentId } : {}),
       ...(input.displayOrder !== undefined
         ? { displayOrder: input.displayOrder }
-        : {}),
+        : parentChanged
+          ? {
+              displayOrder: await repository.nextDisplayOrder(
+                tx,
+                input.parentId ?? null,
+              ),
+            }
+          : {}),
       ...(input.coverImageId !== undefined
         ? { mediaId: input.coverImageId }
         : {}),
@@ -182,6 +251,7 @@ export async function update(
 
 export async function reorder(
   { db }: CategoryServiceDeps,
+  parentId: string | null,
   ids: string[],
 ): Promise<void> {
   const unique = new Set(ids);
@@ -189,18 +259,22 @@ export async function reorder(
     throw new BadRequestError('ids contains duplicate entries.');
   }
 
+  const groupLabel = parentId === null ? 'the top level' : 'this parent';
+
   await db.$transaction(async (tx) => {
-    const total = await repository.count(tx, {});
+    const total = await repository.countInParent(tx, parentId);
     if (ids.length !== total) {
       throw new ConflictError(
-        `Reorder must include every category. Received ${ids.length} of ${total}.`,
+        `Reorder must include every category in ${groupLabel}. Received ${ids.length} of ${total}.`,
         { received: ids.length, expected: total },
       );
     }
 
-    const found = await repository.findIds(tx, ids);
+    const found = await repository.findIdsInParent(tx, parentId, ids);
     if (found.length !== ids.length) {
-      throw new BadRequestError('ids contains a category that does not exist.');
+      throw new BadRequestError(
+        `ids contains a category that does not exist, or is not in ${groupLabel}.`,
+      );
     }
 
     for (const [index, id] of ids.entries()) {
@@ -228,6 +302,7 @@ export async function remove(
         { articleCount },
       );
     }
+    await assertNoChildren(tx, id, 'delete this category');
 
     await repository.remove(tx, id);
     return releaseMedia(tx, [existing.mediaId]);

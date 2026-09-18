@@ -9,7 +9,7 @@ import type { Locale } from './types';
 const en = {
   common: {
     home: 'Home',
-    about: 'About',
+    about: 'About Us',
     contact: 'Contact',
     advertise: 'Advertise',
     advertisement: 'Advertisement',
@@ -27,7 +27,7 @@ const en = {
     moreSections: 'More sections',
   },
   breakingNews: {
-    label: 'Breaking',
+    label: 'Latest',
   },
   footer: {
     quickLinks: 'Quick Links',
@@ -83,15 +83,20 @@ const en = {
     tryAgain: 'Try again',
   },
   about: {
-    title: 'About',
+    title: 'About Us',
     heading: (siteName: string) => `About ${siteName}`,
     noDescriptionTitle: 'About text not added yet',
     noDescriptionDescription:
       'The newsroom hasn’t written an About description in Settings yet.',
+    getInTouch: 'Stay in touch',
+    getInTouchDescription:
+      'Have a tip, question or feedback? We would love to hear from you.',
   },
   contact: {
     title: 'Contact',
-    heading: 'Contact us',
+    heading: 'Contact',
+    intro:
+      'We’d love to hear from you — reach out through any of the details below.',
     addressLabel: 'Address',
     emailLabel: 'Email',
     phoneLabel: 'Phone',
@@ -147,7 +152,7 @@ const kn: typeof en = {
     moreSections: 'ಇನ್ನಷ್ಟು ವಿಭಾಗಗಳು',
   },
   breakingNews: {
-    label: 'ತುರ್ತು ಸುದ್ದಿ',
+    label: 'ಹೊಸ ಸುದ್ದಿ',
   },
   footer: {
     quickLinks: 'ತ್ವರಿತ ಲಿಂಕ್‌ಗಳು',
@@ -208,10 +213,15 @@ const kn: typeof en = {
     noDescriptionTitle: 'ಬಗ್ಗೆ ಪಠ್ಯ ಇನ್ನೂ ಸೇರಿಸಿಲ್ಲ',
     noDescriptionDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಇನ್ನೂ ವಿವರಣೆಯನ್ನು ಬರೆದಿಲ್ಲ.',
+    getInTouch: 'ಸಂಪರ್ಕದಲ್ಲಿರಿ',
+    getInTouchDescription:
+      'ಸಲಹೆ, ಪ್ರಶ್ನೆ ಅಥವಾ ಪ್ರತಿಕ್ರಿಯೆ ಇದೆಯೇ? ನಿಮ್ಮಿಂದ ಕೇಳಲು ನಾವು ಇಷ್ಟಪಡುತ್ತೇವೆ.',
   },
   contact: {
     title: 'ಸಂಪರ್ಕಿಸಿ',
     heading: 'ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ',
+    intro:
+      'ನಿಮ್ಮಿಂದ ಕೇಳಲು ನಾವು ಇಷ್ಟಪಡುತ್ತೇವೆ — ಕೆಳಗಿನ ಯಾವುದೇ ವಿವರಗಳ ಮೂಲಕ ಸಂಪರ್ಕಿಸಿ.',
     addressLabel: 'ವಿಳಾಸ',
     emailLabel: 'ಇಮೇಲ್',
     phoneLabel: 'ಫೋನ್',

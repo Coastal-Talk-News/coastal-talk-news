@@ -24,6 +24,23 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
   const dictionary = getDictionary(locale);
   const pathname = usePathname();
 
+  // Same links as the desktop utility bar (hidden below lg) — with nowhere
+  // else to live on mobile, they belong in this drawer instead.
+  const utilityLinks = [
+    { href: '/about', label: dictionary.common.about },
+    { href: '/contact', label: dictionary.common.contact },
+    { href: '/advertise', label: dictionary.common.advertise },
+  ];
+
+  const hasSocials = Boolean(
+    settings.facebookUrl ||
+    settings.instagramUrl ||
+    settings.youtubeUrl ||
+    settings.xUrl ||
+    settings.whatsappEnglishUrl ||
+    settings.whatsappKannadaUrl,
+  );
+
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
     return () => {
@@ -167,10 +184,39 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
                 );
               })}
             </ul>
+
+            <ul className="border-rule mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t px-2 pt-3">
+              {utilityLinks.map((link) => {
+                const active = pathname === link.href;
+                return (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      aria-current={active ? 'page' : undefined}
+                      className={`text-sm font-medium transition-colors ${
+                        active
+                          ? 'text-brand'
+                          : 'text-ink-muted hover:text-brand'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           </nav>
 
-          <div className="border-rule flex items-center justify-between gap-3 border-t px-5 py-4">
-            <SocialLinks settings={settings} />
+          {hasSocials && (
+            <div className="border-rule border-t px-5 py-4">
+              <p className="text-ink-subtle mb-3 text-[10px] font-semibold tracking-[0.14em] uppercase">
+                {dictionary.contact.followUs}
+              </p>
+              <SocialLinks settings={settings} locale={locale} />
+            </div>
+          )}
+
+          <div className="border-rule border-t px-5 py-4">
             <LanguageToggle locale={locale} />
           </div>
         </div>

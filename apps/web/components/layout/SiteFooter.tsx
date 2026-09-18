@@ -33,7 +33,12 @@ export function SiteFooter({
             logo={settings.logo}
             tone="inverse"
           />
-          <SocialLinks settings={settings} tone="inverse" className="mt-4" />
+          <SocialLinks
+            settings={settings}
+            locale={locale}
+            tone="inverse"
+            className="mt-4"
+          />
         </div>
 
         {categories.length > 0 && (

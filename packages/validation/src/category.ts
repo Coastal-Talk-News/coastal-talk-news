@@ -12,6 +12,7 @@ const categoryFields = {
   description: Type.Union([Type.String(), Type.Null()]),
   isActive: Type.Boolean(),
   displayOrder: Type.Integer(),
+  parentId: Type.Union([Type.String(), Type.Null()]),
   coverImage: Type.Union([MediaSummarySchema, Type.Null()]),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
@@ -37,6 +38,7 @@ export const CreateCategoryBodySchema = Type.Object(
     ),
     isActive: Type.Optional(Type.Boolean()),
     displayOrder: Type.Optional(Type.Integer({ minimum: 0 })),
+    parentId: Type.Optional(NullableId),
     coverImageId: Type.Optional(NullableId),
   },
   { additionalProperties: false },
@@ -68,6 +70,7 @@ export const PublicCategoryArticlesQuerySchema = Type.Object({
 
 export const ReorderCategoriesBodySchema = Type.Object(
   {
+    parentId: NullableId,
     ids: Type.Array(Type.String({ format: 'uuid' }), { minItems: 1 }),
   },
   { additionalProperties: false },

@@ -13,6 +13,7 @@ export interface CategoryEntity {
   description: string | null;
   isActive: boolean;
   displayOrder: number;
+  parentId: string | null;
   media: MediaRow | null;
   createdAt: Date;
   updatedAt: Date;
@@ -30,6 +31,7 @@ export function toCategoryDto(
     description: category.description,
     isActive: category.isActive,
     displayOrder: category.displayOrder,
+    parentId: category.parentId,
     coverImage: category.media
       ? {
           id: category.media.id,

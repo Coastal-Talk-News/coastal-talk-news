@@ -54,10 +54,19 @@ up UI or filters.
 ### Category
 
 `id`, `media_id` (FK → Media Asset), `name`, `description`, `is_active`, `display_order`,
-`created_at`, `updated_at`
+`parent_id` (FK → Category, nullable, self-relation), `created_at`, `updated_at`
 
-**Deletion rule (backend-enforced, no schema change needed):** reject deleting a Category
-while any `Article.category_id` still references it.
+CMS-only subcategories: `parent_id` is null for a top-level category. The hierarchy is
+capped at two levels — a category whose own `parent_id` is set can never itself be chosen
+as a parent — enforced in the API's service layer, not by the database. `display_order`
+is scoped per parent (top-level categories order among themselves; each parent's children
+order among themselves, independently).
+
+**Deletion rules (backend-enforced, no schema change needed):**
+
+- reject deleting a Category while any `Article.category_id` still references it.
+- reject deleting a Category while any other Category's `parent_id` still references it
+  (i.e. a parent with subcategories can't be deleted until they're reassigned or removed).
 
 ### Breaking News
 

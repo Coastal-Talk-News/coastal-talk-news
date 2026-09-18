@@ -6,11 +6,22 @@ import { Tooltip } from '@coastal-talk-news/ui/tooltip';
 import { iconButtonClass } from '@coastal-talk-news/ui/icon-button';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import {
+  ChevronRight,
+  GripVertical,
+  ImageIcon,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 
 interface CategoryRowProps {
   category: CmsCategoryDto;
-  position: number;
+  /** A pre-formatted hierarchical label — "1" for a parent, "1.2" for its 2nd child. */
+  position: string;
+  isChild: boolean;
+  hasChildren: boolean;
+  expanded: boolean;
+  onToggleExpand: () => void;
   onEdit: (category: CmsCategoryDto) => void;
   onDelete: (category: CmsCategoryDto) => void;
   onToggleActive: (category: CmsCategoryDto, isActive: boolean) => void;
@@ -21,6 +32,10 @@ interface CategoryRowProps {
 export function CategoryRow({
   category,
   position,
+  isChild,
+  hasChildren,
+  expanded,
+  onToggleExpand,
   onEdit,
   onDelete,
   onToggleActive,
@@ -36,7 +51,10 @@ export function CategoryRow({
     isDragging,
   } = useSortable({ id: category.id, disabled: reorderDisabled });
 
-  const canDelete = category.articleCount === 0;
+  const canDelete = category.articleCount === 0 && !hasChildren;
+  const deleteBlockedReason = hasChildren
+    ? `Move or delete its subcategories first`
+    : `Move or delete ${category.articleCount} article${category.articleCount === 1 ? '' : 's'} first`;
 
   return (
     <tr
@@ -69,8 +87,31 @@ export function CategoryRow({
         )}
       </td>
 
-      <td className="text-ink-subtle w-9 py-3 text-sm tabular-nums">
-        {position}
+      <td className="w-14 py-3">
+        <div className="flex items-center gap-1">
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={onToggleExpand}
+              aria-label={`${expanded ? 'Collapse' : 'Expand'} ${category.name}`}
+              aria-expanded={expanded}
+              className="text-ink-subtle hover:bg-surface hover:text-ink grid size-5 shrink-0 place-items-center rounded transition-colors"
+            >
+              <ChevronRight
+                className={cn(
+                  'size-3.5 transition-transform',
+                  expanded && 'rotate-90',
+                )}
+                aria-hidden
+              />
+            </button>
+          ) : (
+            <span className="size-5 shrink-0" aria-hidden />
+          )}
+          <span className="text-ink-subtle text-sm tabular-nums">
+            {position}
+          </span>
+        </div>
       </td>
 
       <td className="py-3">
@@ -89,7 +130,7 @@ export function CategoryRow({
         )}
       </td>
 
-      <td className="py-3 pr-4">
+      <td className={cn('py-3 pr-4', isChild && 'pl-6')}>
         <p className="text-ink font-medium">{category.name}</p>
         {category.description && (
           <p className="text-ink-muted mt-0.5 line-clamp-1 max-w-md text-xs">
@@ -137,13 +178,7 @@ export function CategoryRow({
             </button>
           </Tooltip>
 
-          <Tooltip
-            label={
-              canDelete
-                ? 'Delete'
-                : `Move or delete ${category.articleCount} article${category.articleCount === 1 ? '' : 's'} first`
-            }
-          >
+          <Tooltip label={canDelete ? 'Delete' : deleteBlockedReason}>
             <span className="inline-flex">
               <button
                 type="button"

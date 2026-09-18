@@ -84,7 +84,13 @@ export function useCategoryMutations(listKey: QueryKey) {
   });
 
   const reorder = useMutation({
-    mutationFn: (ids: string[]) => categoriesApi.reorder(ids),
+    mutationFn: ({
+      parentId,
+      ids,
+    }: {
+      parentId: string | null;
+      ids: string[];
+    }) => categoriesApi.reorder(parentId, ids),
     onSuccess: () => {
       invalidate();
       toast.success('Order saved.');

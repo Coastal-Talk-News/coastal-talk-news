@@ -62,6 +62,7 @@ export function create(
     description: string | null;
     isActive: boolean;
     displayOrder: number;
+    parentId: string | null;
     mediaId: string | null;
   },
 ) {
@@ -76,6 +77,7 @@ export function update(
     description?: string | null;
     isActive?: boolean;
     displayOrder?: number;
+    parentId?: string | null;
     mediaId?: string | null;
   },
 ) {
@@ -113,12 +115,44 @@ export function countArticles(db: TransactionClient, categoryId: string) {
   return db.article.count({ where: { categoryId } });
 }
 
-export async function nextDisplayOrder(db: TransactionClient): Promise<number> {
+/** Siblings sharing one parent (or the top-level group, when parentId is null). */
+export function countInParent(db: TransactionClient, parentId: string | null) {
+  return db.category.count({ where: { parentId } });
+}
+
+export function findIdsInParent(
+  db: TransactionClient,
+  parentId: string | null,
+  ids: string[],
+) {
+  return db.category.findMany({
+    where: { id: { in: ids }, parentId },
+    select: { id: true },
+  });
+}
+
+export async function nextDisplayOrder(
+  db: TransactionClient,
+  parentId: string | null,
+): Promise<number> {
   const last = await db.category.findFirst({
+    where: { parentId },
     orderBy: { displayOrder: 'desc' },
     select: { displayOrder: true },
   });
   return last ? last.displayOrder + 1 : 0;
+}
+
+export function countChildren(db: TransactionClient, id: string) {
+  return db.category.count({ where: { parentId: id } });
+}
+
+/** Just enough to validate a proposed parent: does it exist, and is it itself top-level? */
+export function findParentCandidate(db: TransactionClient, id: string) {
+  return db.category.findUnique({
+    where: { id },
+    select: { id: true, parentId: true },
+  });
 }
 
 export function mediaExists(db: TransactionClient, mediaId: string) {

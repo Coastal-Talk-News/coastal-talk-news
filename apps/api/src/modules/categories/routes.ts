@@ -74,9 +74,9 @@ export const cmsCategoryRoutes: FastifyPluginAsyncTypebox = async (app) => {
     {
       schema: {
         tags: ['categories'],
-        summary: 'Reorder categories',
+        summary: 'Reorder categories within one group',
         description:
-          'Takes every category id in display order. Applied in one transaction.',
+          'Takes every category id in that group, in display order. A group is either every top-level category or every child of one parent — pass parentId to say which. Applied in one transaction.',
         body: ReorderCategoriesBodySchema,
         response: { 204: Type.Null(), ...commonErrorResponses },
       },

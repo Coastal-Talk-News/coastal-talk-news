@@ -22,7 +22,8 @@ export const categoriesApi = {
   update: (id: string, body: UpdateCategoryRequest) =>
     api.patch<CmsCategoryDto>(`${BASE}/${id}`, body),
 
-  reorder: (ids: string[]) => api.send(`${BASE}/order`, 'PATCH', { ids }),
+  reorder: (parentId: string | null, ids: string[]) =>
+    api.send(`${BASE}/order`, 'PATCH', { parentId, ids }),
 
   remove: (id: string) => api.send(`${BASE}/${id}`, 'DELETE'),
 };

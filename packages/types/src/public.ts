@@ -75,11 +75,18 @@ export interface PublicSiteSettingsDto {
   instagramUrl: string | null;
   youtubeUrl: string | null;
   xUrl: string | null;
+  /** The reader site picks whichever matches its current UI-language toggle. */
+  whatsappEnglishUrl: string | null;
+  whatsappKannadaUrl: string | null;
 }
 
 export interface PublicNavCategoryDto extends PublicCategoryRefDto {
   articleCount: number;
   image: MediaSummaryDto | null;
+  /** Null means top-level. Capped at two levels, mirroring the CMS hierarchy. */
+  parentId: Id | null;
+  /** Populated on a top-level entry only; always empty on a child. */
+  children: PublicNavCategoryDto[];
 }
 
 /** The site shell: everything the header, ticker and footer need. */
