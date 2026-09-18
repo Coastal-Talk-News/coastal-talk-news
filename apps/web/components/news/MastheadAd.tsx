@@ -21,6 +21,13 @@ interface MastheadAdProps {
 const UNIT_WIDTH = 400;
 const UNIT_HEIGHT = 92;
 
+/**
+ * The band sits under the header below lg, where the unit's height cap would
+ * leave a phone-width slot mostly empty. It fills the row instead, up to a
+ * width past which a banner would just be stretched on a tablet.
+ */
+const BAND_MAX_WIDTH = 640;
+
 export function MastheadAd({
   advertisements,
   variant,
@@ -32,11 +39,11 @@ export function MastheadAd({
   const { advertisement } = getDictionary(locale).common;
   const isInline = variant === 'inline';
 
-  // The cap goes on the link, which has a width to measure against, rather
-  // than on the image, whose own width is what is being constrained. Below
-  // that width the slot simply scales down with the screen.
+  // Inline: the cap goes on the link, which has a width to measure against,
+  // rather than on the image, whose own width is what is being constrained.
+  // Below that width the slot simply scales down with the screen.
   const ratio = ad.image.width / ad.image.height;
-  const maxWidth = Math.min(
+  const inlineMaxWidth = Math.min(
     UNIT_WIDTH,
     UNIT_HEIGHT * ratio,
     // Never drawn larger than the file supplied, so a small creative in a
@@ -59,7 +66,7 @@ export function MastheadAd({
         prefetch={false}
         aria-label={`${advertisement}: ${ad.advertiserName}`}
         className="block w-full min-w-0 transition-opacity hover:opacity-90"
-        style={{ maxWidth }}
+        style={{ maxWidth: isInline ? inlineMaxWidth : BAND_MAX_WIDTH }}
       >
         <Image
           src={ad.image.url}
@@ -67,7 +74,11 @@ export function MastheadAd({
           width={ad.image.width}
           height={ad.image.height}
           priority
-          sizes={`${UNIT_WIDTH}px`}
+          sizes={
+            isInline
+              ? `${UNIT_WIDTH}px`
+              : `(min-width: ${BAND_MAX_WIDTH}px) ${BAND_MAX_WIDTH}px, 100vw`
+          }
           className="h-auto w-full"
         />
       </Link>
