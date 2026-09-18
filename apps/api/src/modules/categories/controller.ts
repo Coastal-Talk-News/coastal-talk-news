@@ -78,10 +78,12 @@ export async function update(
 }
 
 export async function reorder(
-  request: FastifyRequest<{ Body: { ids: string[] } }>,
+  request: FastifyRequest<{
+    Body: { parentId: string | null; ids: string[] };
+  }>,
   reply: FastifyReply,
 ) {
-  await service.reorder(deps(request), request.body.ids);
+  await service.reorder(deps(request), request.body.parentId, request.body.ids);
   return reply.status(204).send(null);
 }
 

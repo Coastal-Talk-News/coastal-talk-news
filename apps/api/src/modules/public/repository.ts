@@ -70,6 +70,8 @@ export function findSettings(db: TransactionClient) {
       instagramUrl: true,
       youtubeUrl: true,
       xUrl: true,
+      whatsappEnglishUrl: true,
+      whatsappKannadaUrl: true,
       defaultUiLanguage: true,
       defaultSeoTitle: true,
       defaultMetaDescription: true,
@@ -96,6 +98,7 @@ export function findNavCategories(
     select: {
       id: true,
       name: true,
+      parentId: true,
       media: mediaSelect,
       _count: {
         select: {

@@ -33,6 +33,8 @@ interface GeneralValues {
   instagramUrl: string;
   youtubeUrl: string;
   xUrl: string;
+  whatsappEnglishUrl: string;
+  whatsappKannadaUrl: string;
 }
 
 function toValues(settings: SiteSettingsDto): GeneralValues {
@@ -49,6 +51,8 @@ function toValues(settings: SiteSettingsDto): GeneralValues {
     instagramUrl: settings.instagramUrl ?? '',
     youtubeUrl: settings.youtubeUrl ?? '',
     xUrl: settings.xUrl ?? '',
+    whatsappEnglishUrl: settings.whatsappEnglishUrl ?? '',
+    whatsappKannadaUrl: settings.whatsappKannadaUrl ?? '',
   };
 }
 
@@ -90,7 +94,11 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
     values.facebookUrl.trim() !== initial.current.facebookUrl.trim() ||
     values.instagramUrl.trim() !== initial.current.instagramUrl.trim() ||
     values.youtubeUrl.trim() !== initial.current.youtubeUrl.trim() ||
-    values.xUrl.trim() !== initial.current.xUrl.trim();
+    values.xUrl.trim() !== initial.current.xUrl.trim() ||
+    values.whatsappEnglishUrl.trim() !==
+      initial.current.whatsappEnglishUrl.trim() ||
+    values.whatsappKannadaUrl.trim() !==
+      initial.current.whatsappKannadaUrl.trim();
 
   const nameError =
     touched && !trimmedName ? 'Website name is required.' : undefined;
@@ -128,6 +136,8 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
       instagramUrl: orNull(values.instagramUrl),
       youtubeUrl: orNull(values.youtubeUrl),
       xUrl: orNull(values.xUrl),
+      whatsappEnglishUrl: orNull(values.whatsappEnglishUrl),
+      whatsappKannadaUrl: orNull(values.whatsappKannadaUrl),
     };
     mutation.mutate(body, {
       onSuccess: () => toast.success('General settings saved.'),
@@ -345,6 +355,46 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
                 setValues((current) => ({
                   ...current,
                   xUrl: event.target.value,
+                }))
+              }
+            />
+          </Field>
+          <Field
+            label="WhatsApp (English)"
+            htmlFor="settings-whatsapp-en"
+            optional
+            hint="Shown to readers browsing the site in English."
+          >
+            <Input
+              id="settings-whatsapp-en"
+              type="url"
+              value={values.whatsappEnglishUrl}
+              placeholder="https://chat.whatsapp.com/your-english-channel"
+              icon={<Link2 className="size-4" aria-hidden />}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  whatsappEnglishUrl: event.target.value,
+                }))
+              }
+            />
+          </Field>
+          <Field
+            label="WhatsApp (Kannada)"
+            htmlFor="settings-whatsapp-kn"
+            optional
+            hint="Shown to readers browsing the site in Kannada."
+          >
+            <Input
+              id="settings-whatsapp-kn"
+              type="url"
+              value={values.whatsappKannadaUrl}
+              placeholder="https://chat.whatsapp.com/your-kannada-channel"
+              icon={<Link2 className="size-4" aria-hidden />}
+              onChange={(event) =>
+                setValues((current) => ({
+                  ...current,
+                  whatsappKannadaUrl: event.target.value,
                 }))
               }
             />

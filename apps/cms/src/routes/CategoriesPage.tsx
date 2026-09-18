@@ -20,8 +20,15 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useQuery } from '@tanstack/react-query';
-import { LayoutGrid, Plus, Search, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import {
+  ChevronsDownUp,
+  ChevronsUpDown,
+  LayoutGrid,
+  Plus,
+  Search,
+  X,
+} from 'lucide-react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { categoriesApi } from '../api/categories.js';
 import { ApiError } from '../api/client.js';
 import { queryKeys } from '../api/queryKeys.js';
@@ -45,6 +52,12 @@ const STATUS_PARAM: Record<StatusFilter, boolean | undefined> = {
   active: true,
   hidden: false,
 };
+
+function sortByDisplayOrder(categories: CmsCategoryDto[]): CmsCategoryDto[] {
+  return [...categories].sort(
+    (a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name),
+  );
+}
 
 export function CategoriesPage() {
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -87,6 +100,74 @@ export function CategoriesPage() {
     ? 'Clear the search and filter to reorder'
     : 'Drag to reorder';
 
+  // Once displayOrder is scoped per parent, the flat array from the API is no
+  // longer naturally in tree order — a child and a top-level category can
+  // both sit at position 0. Each group is sorted independently instead of
+  // trusting the list's raw sequence.
+  const topLevel = useMemo(
+    () => sortByDisplayOrder(order.filter((category) => !category.parentId)),
+    [order],
+  );
+
+  const childrenByParent = useMemo(() => {
+    const map = new Map<string, CmsCategoryDto[]>();
+    for (const category of order) {
+      if (!category.parentId) continue;
+      map.set(category.parentId, [
+        ...(map.get(category.parentId) ?? []),
+        category,
+      ]);
+    }
+    for (const [parentId, children] of map) {
+      map.set(parentId, sortByDisplayOrder(children));
+    }
+    return map;
+  }, [order]);
+
+  const parentsWithChildren = useMemo(
+    () => topLevel.filter((category) => childrenByParent.has(category.id)),
+    [topLevel, childrenByParent],
+  );
+
+  // Defaults to every parent expanded; preserves a manual collapse across
+  // refetches by only ever adding newly-seen parents, never removing one the
+  // admin already toggled shut.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setExpanded((current) => {
+      const next = new Set(current);
+      let changed = false;
+      for (const parent of parentsWithChildren) {
+        if (!next.has(parent.id)) {
+          next.add(parent.id);
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [parentsWithChildren]);
+
+  function toggleExpanded(id: string) {
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const allExpanded =
+    parentsWithChildren.length > 0 &&
+    parentsWithChildren.every((category) => expanded.has(category.id));
+
+  function toggleExpandAll() {
+    setExpanded(
+      allExpanded
+        ? new Set()
+        : new Set(parentsWithChildren.map((category) => category.id)),
+    );
+  }
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -94,15 +175,38 @@ export function CategoriesPage() {
     }),
   );
 
+  function groupOf(id: string): string | null {
+    return order.find((category) => category.id === id)?.parentId ?? null;
+  }
+
+  // Cross-group drops (a row picked up from one parent's children and hovered
+  // over a different parent's, or over the top-level group) are a no-op —
+  // dnd-kit's collision detection doesn't know about the group boundary on
+  // its own, and re-parenting only happens through the Parent Category
+  // dropdown, not by dragging a row into a different group.
   function handleDragEnd({ active, over }: DragEndEvent) {
     if (!over || active.id === over.id) return;
-    const from = order.findIndex((category) => category.id === active.id);
-    const to = order.findIndex((category) => category.id === over.id);
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    const group = groupOf(activeId);
+    if (group !== groupOf(overId)) return;
+
+    const groupItems = order.filter(
+      (category) => (category.parentId ?? null) === group,
+    );
+    const from = groupItems.findIndex((category) => category.id === activeId);
+    const to = groupItems.findIndex((category) => category.id === overId);
     if (from === -1 || to === -1) return;
 
-    const next = arrayMove(order, from, to);
-    setOrder(next);
-    mutations.reorder.mutate(next.map((category) => category.id));
+    const reordered = arrayMove(groupItems, from, to);
+    const others = order.filter(
+      (category) => (category.parentId ?? null) !== group,
+    );
+    setOrder([...others, ...reordered]);
+    mutations.reorder.mutate({
+      parentId: group,
+      ids: reordered.map((category) => category.id),
+    });
   }
 
   function openCreate() {
@@ -125,10 +229,22 @@ export function CategoriesPage() {
         title="Categories"
         description="Organise your news. Active categories appear in the website navigation."
         actions={
-          <Button onClick={openCreate}>
-            <Plus className="size-4" aria-hidden />
-            Add category
-          </Button>
+          <div className="flex gap-2">
+            {parentsWithChildren.length > 0 && !isFiltered && (
+              <Button variant="secondary" onClick={toggleExpandAll}>
+                {allExpanded ? (
+                  <ChevronsDownUp className="size-4" aria-hidden />
+                ) : (
+                  <ChevronsUpDown className="size-4" aria-hidden />
+                )}
+                {allExpanded ? 'Collapse All' : 'Expand All'}
+              </Button>
+            )}
+            <Button onClick={openCreate}>
+              <Plus className="size-4" aria-hidden />
+              Add category
+            </Button>
+          </div>
         }
       />
 
@@ -231,7 +347,7 @@ export function CategoriesPage() {
                       <th className="w-9 pl-4">
                         <span className="sr-only">Reorder</span>
                       </th>
-                      <th className="w-9 py-3">#</th>
+                      <th className="w-14 py-3">#</th>
                       <th className="py-3">Image</th>
                       <th className="py-3 pr-4">Name</th>
                       <th className="py-3 pr-4">Articles</th>
@@ -240,28 +356,96 @@ export function CategoriesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-hairline divide-y">
-                    <SortableContext
-                      items={visible.map((category) => category.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      {visible.map((category, index) => (
-                        <CategoryRow
-                          key={category.id}
-                          category={category}
-                          position={index + 1}
-                          onEdit={openEdit}
-                          onDelete={setPendingDelete}
-                          onToggleActive={(target, isActive) =>
-                            mutations.setActive.mutate({
-                              id: target.id,
-                              isActive,
-                            })
-                          }
-                          reorderDisabled={isFiltered}
-                          reorderHint={reorderHint}
-                        />
-                      ))}
-                    </SortableContext>
+                    {isFiltered ? (
+                      <SortableContext
+                        items={visible.map((category) => category.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {visible.map((category, index) => (
+                          <CategoryRow
+                            key={category.id}
+                            category={category}
+                            position={String(index + 1)}
+                            isChild={category.parentId !== null}
+                            hasChildren={false}
+                            expanded={false}
+                            onToggleExpand={() => {}}
+                            onEdit={openEdit}
+                            onDelete={setPendingDelete}
+                            onToggleActive={(target, isActive) =>
+                              mutations.setActive.mutate({
+                                id: target.id,
+                                isActive,
+                              })
+                            }
+                            reorderDisabled
+                            reorderHint={reorderHint}
+                          />
+                        ))}
+                      </SortableContext>
+                    ) : (
+                      <SortableContext
+                        items={topLevel.map((category) => category.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {topLevel.map((parent, parentIndex) => {
+                          const children = childrenByParent.get(parent.id);
+                          const isExpanded = expanded.has(parent.id);
+                          return (
+                            <Fragment key={parent.id}>
+                              <CategoryRow
+                                category={parent}
+                                position={String(parentIndex + 1)}
+                                isChild={false}
+                                hasChildren={Boolean(children)}
+                                expanded={isExpanded}
+                                onToggleExpand={() => toggleExpanded(parent.id)}
+                                onEdit={openEdit}
+                                onDelete={setPendingDelete}
+                                onToggleActive={(target, isActive) =>
+                                  mutations.setActive.mutate({
+                                    id: target.id,
+                                    isActive,
+                                  })
+                                }
+                                reorderDisabled={false}
+                                reorderHint={reorderHint}
+                              />
+                              {isExpanded && children && (
+                                <SortableContext
+                                  items={children.map(
+                                    (category) => category.id,
+                                  )}
+                                  strategy={verticalListSortingStrategy}
+                                >
+                                  {children.map((child, childIndex) => (
+                                    <CategoryRow
+                                      key={child.id}
+                                      category={child}
+                                      position={`${parentIndex + 1}.${childIndex + 1}`}
+                                      isChild
+                                      hasChildren={false}
+                                      expanded={false}
+                                      onToggleExpand={() => {}}
+                                      onEdit={openEdit}
+                                      onDelete={setPendingDelete}
+                                      onToggleActive={(target, isActive) =>
+                                        mutations.setActive.mutate({
+                                          id: target.id,
+                                          isActive,
+                                        })
+                                      }
+                                      reorderDisabled={false}
+                                      reorderHint={reorderHint}
+                                    />
+                                  ))}
+                                </SortableContext>
+                              )}
+                            </Fragment>
+                          );
+                        })}
+                      </SortableContext>
+                    )}
                   </tbody>
                 </table>
               </DndContext>
@@ -298,6 +482,7 @@ export function CategoriesPage() {
               : null
         }
         existingNames={order.map((category) => category.name)}
+        categories={order}
         onOpenChange={setSheetOpen}
         onSubmit={(values) => {
           const done = { onSuccess: () => setSheetOpen(false) };

@@ -76,7 +76,33 @@ export function toNavCategory(
     name: category.name,
     articleCount: category._count.articles,
     image: toMedia(category.media, toPublicUrl),
+    parentId: category.parentId,
+    // Attached by the service layer, which sees the full flat list and can
+    // group children under their parent — a single row has no view of its
+    // siblings here.
+    children: [],
   };
+}
+
+/**
+ * Nests each child under its parent's `children` array for the desktop nav's
+ * dropdown, without removing children from the flat array itself — the
+ * homepage grid and mobile drawer still read the same list flat.
+ */
+export function withNavChildren(
+  categories: PublicNavCategoryDto[],
+): PublicNavCategoryDto[] {
+  const childrenByParent = new Map<string, PublicNavCategoryDto[]>();
+  for (const category of categories) {
+    if (!category.parentId) continue;
+    const siblings = childrenByParent.get(category.parentId) ?? [];
+    siblings.push(category);
+    childrenByParent.set(category.parentId, siblings);
+  }
+  return categories.map((category) => ({
+    ...category,
+    children: childrenByParent.get(category.id) ?? [],
+  }));
 }
 
 interface AdvertisementRow {
@@ -138,6 +164,8 @@ interface SettingsRow {
   instagramUrl: string | null;
   youtubeUrl: string | null;
   xUrl: string | null;
+  whatsappEnglishUrl: string | null;
+  whatsappKannadaUrl: string | null;
   defaultUiLanguage: Language;
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;

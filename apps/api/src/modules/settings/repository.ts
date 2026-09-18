@@ -29,6 +29,8 @@ export interface SiteSettingsWriteData {
   instagramUrl?: string | null;
   youtubeUrl?: string | null;
   xUrl?: string | null;
+  whatsappEnglishUrl?: string | null;
+  whatsappKannadaUrl?: string | null;
   defaultSeoTitle?: string | null;
   defaultMetaDescription?: string | null;
   defaultOgImageId?: string | null;

@@ -19,6 +19,8 @@ export interface SiteSettingsEntity {
   instagramUrl: string | null;
   youtubeUrl: string | null;
   xUrl: string | null;
+  whatsappEnglishUrl: string | null;
+  whatsappKannadaUrl: string | null;
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;
   createdAt: Date;
@@ -59,6 +61,8 @@ export function toSiteSettingsDto(
     instagramUrl: settings.instagramUrl,
     youtubeUrl: settings.youtubeUrl,
     xUrl: settings.xUrl,
+    whatsappEnglishUrl: settings.whatsappEnglishUrl,
+    whatsappKannadaUrl: settings.whatsappKannadaUrl,
     defaultSeoTitle: settings.defaultSeoTitle,
     defaultMetaDescription: settings.defaultMetaDescription,
     defaultOgImage: toMediaSummary(settings.defaultOgImage, toPublicUrl),

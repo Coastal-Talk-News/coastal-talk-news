@@ -6,6 +6,7 @@ import type {
 import { Button } from '@coastal-talk-news/ui/button';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
+import { Select, type SelectOption } from '@coastal-talk-news/ui/select';
 import { Sheet } from '@coastal-talk-news/ui/sheet';
 import { Textarea } from '@coastal-talk-news/ui/textarea';
 import { Toggle } from '@coastal-talk-news/ui/toggle';
@@ -21,6 +22,7 @@ interface FormValues {
   name: string;
   description: string;
   isActive: boolean;
+  parentId: string | null;
   coverImage: MediaSummaryDto | null;
 }
 
@@ -29,6 +31,7 @@ function toValues(category: CmsCategoryDto | null): FormValues {
     name: category?.name ?? '',
     description: category?.description ?? '',
     isActive: category?.isActive ?? true,
+    parentId: category?.parentId ?? null,
     coverImage: category?.coverImage ?? null,
   };
 }
@@ -39,6 +42,8 @@ interface CategorySheetProps {
   saving: boolean;
   serverError: string | null;
   existingNames: string[];
+  /** The full flat list — used to build Parent Category options and check for children. */
+  categories: CmsCategoryDto[];
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: CreateCategoryRequest) => void;
 }
@@ -49,6 +54,7 @@ export function CategorySheet({
   saving,
   serverError,
   existingNames,
+  categories,
   onOpenChange,
   onSubmit,
 }: CategorySheetProps) {
@@ -57,6 +63,21 @@ export function CategorySheet({
   const [pickerOpen, setPickerOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
   const initial = useRef<FormValues>(toValues(editing));
+
+  // A category with its own subcategories can't become a child itself — that
+  // would make a third level, and the hierarchy is capped at two.
+  const hasChildren = editing
+    ? categories.some((category) => category.parentId === editing.id)
+    : false;
+
+  const parentOptions: Array<SelectOption<string>> = [
+    { value: '', label: 'None (top level)' },
+    ...categories
+      .filter(
+        (category) => category.parentId === null && category.id !== editing?.id,
+      )
+      .map((category) => ({ value: category.id, label: category.name })),
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -73,6 +94,7 @@ export function CategorySheet({
     trimmedName !== initial.current.name.trim() ||
     values.description.trim() !== initial.current.description.trim() ||
     values.isActive !== initial.current.isActive ||
+    values.parentId !== initial.current.parentId ||
     (values.coverImage?.id ?? null) !==
       (initial.current.coverImage?.id ?? null);
 
@@ -102,6 +124,7 @@ export function CategorySheet({
       name: trimmedName,
       description: values.description.trim() || null,
       isActive: values.isActive,
+      parentId: hasChildren ? null : values.parentId,
       coverImageId: values.coverImage?.id ?? null,
     });
   }
@@ -189,6 +212,29 @@ export function CategorySheet({
             onChange={(event) =>
               setValues((current) => ({ ...current, name: event.target.value }))
             }
+          />
+        </Field>
+
+        <Field
+          label="Parent Category"
+          htmlFor="category-parent"
+          hint={
+            hasChildren
+              ? 'This category has subcategories, so it can’t become one itself. Move or remove them first.'
+              : 'Choose a parent to make this a subcategory, or leave it as a top-level category.'
+          }
+        >
+          <Select
+            id="category-parent"
+            value={values.parentId ?? ''}
+            onValueChange={(parentId) =>
+              setValues((current) => ({
+                ...current,
+                parentId: parentId || null,
+              }))
+            }
+            options={parentOptions}
+            disabled={hasChildren}
           />
         </Field>
 

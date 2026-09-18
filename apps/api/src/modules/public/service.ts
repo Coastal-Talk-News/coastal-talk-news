@@ -16,6 +16,7 @@ import {
   toArticleDetail,
   toNavCategory,
   toSettings,
+  withNavChildren,
   type ToPublicUrl,
 } from './mapper.js';
 import * as repository from './repository.js';
@@ -78,8 +79,8 @@ export async function getSite({
 
   return {
     settings: toSettings(settings, toPublicUrl),
-    categories: categories.map((category) =>
-      toNavCategory(category, toPublicUrl),
+    categories: withNavChildren(
+      categories.map((category) => toNavCategory(category, toPublicUrl)),
     ),
     breakingNews,
     advertisements: advertisements.map((advertisement) =>

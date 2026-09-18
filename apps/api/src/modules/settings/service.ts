@@ -25,6 +25,8 @@ export interface UpdateSiteSettingsInput {
   instagramUrl?: string | null;
   youtubeUrl?: string | null;
   xUrl?: string | null;
+  whatsappEnglishUrl?: string | null;
+  whatsappKannadaUrl?: string | null;
   defaultSeoTitle?: string | null;
   defaultMetaDescription?: string | null;
   defaultOgImageId?: string | null;
@@ -117,6 +119,12 @@ export async function update(
         ? { youtubeUrl: input.youtubeUrl?.trim() || null }
         : {}),
       ...(input.xUrl !== undefined ? { xUrl: input.xUrl?.trim() || null } : {}),
+      ...(input.whatsappEnglishUrl !== undefined
+        ? { whatsappEnglishUrl: input.whatsappEnglishUrl?.trim() || null }
+        : {}),
+      ...(input.whatsappKannadaUrl !== undefined
+        ? { whatsappKannadaUrl: input.whatsappKannadaUrl?.trim() || null }
+        : {}),
       ...(input.defaultSeoTitle !== undefined
         ? { defaultSeoTitle: input.defaultSeoTitle?.trim() || null }
         : {}),

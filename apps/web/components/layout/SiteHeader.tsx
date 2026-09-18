@@ -45,7 +45,7 @@ export function SiteHeader({
                 {link.label}
               </Link>
             ))}
-            <SocialLinks settings={settings} />
+            <SocialLinks settings={settings} locale={locale} />
             <LanguageToggle locale={locale} />
           </div>
         </div>

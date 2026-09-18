@@ -70,13 +70,28 @@ export const PublicSiteSettingsSchema = Type.Object({
   instagramUrl: Nullable(Type.String()),
   youtubeUrl: Nullable(Type.String()),
   xUrl: Nullable(Type.String()),
+  whatsappEnglishUrl: Nullable(Type.String()),
+  whatsappKannadaUrl: Nullable(Type.String()),
 });
 
-export const PublicNavCategorySchema = Type.Object({
+const publicNavCategoryFields = {
   id: Type.String(),
   name: Type.String(),
   articleCount: Type.Integer(),
   image: Type.Union([MediaSummarySchema, Type.Null()]),
+  parentId: Type.Union([Type.String(), Type.Null()]),
+};
+
+// The hierarchy is capped at two levels, so a child's own `children` is
+// always empty — no need for a recursive schema.
+const PublicNavCategoryChildSchema = Type.Object({
+  ...publicNavCategoryFields,
+  children: Type.Array(Type.Never()),
+});
+
+export const PublicNavCategorySchema = Type.Object({
+  ...publicNavCategoryFields,
+  children: Type.Array(PublicNavCategoryChildSchema),
 });
 
 export const PublicArticleSchema = Type.Composite([
