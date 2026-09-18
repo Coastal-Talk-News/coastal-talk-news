@@ -151,6 +151,14 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* For a card with no picture, where the words take the space instead. */
+  .clamp-5 {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

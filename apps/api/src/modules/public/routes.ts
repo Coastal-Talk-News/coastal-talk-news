@@ -6,6 +6,7 @@ import {
   PublicArticleCardSchema,
   PublicArticleParamsSchema,
   PublicArticleSchema,
+  PublicArticlesQuerySchema,
   PublicHomeQuerySchema,
   PublicHomeSchema,
   PublicSearchQuerySchema,
@@ -70,6 +71,24 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
 };
 
 export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  app.get(
+    '',
+    {
+      schema: {
+        tags: ['public'],
+        summary: 'List published articles by editorial priority',
+        description:
+          'Backs the Lead Stories and Featured pages. `language` omitted means both languages, mixed together.',
+        querystring: PublicArticlesQuerySchema,
+        response: {
+          200: ListResponse(PublicArticleCardSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.listArticlesByPriority,
+  );
+
   app.get(
     '/:id',
     {

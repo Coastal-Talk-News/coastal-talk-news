@@ -39,7 +39,12 @@ const en = {
     noStoriesTitle: 'No stories published yet',
     noStoriesDescription:
       'Once the newsroom publishes its first article it will appear right here.',
+    leadStories: 'Lead Stories',
+    viewAllLeadStories: 'View all Lead Stories',
     topStories: 'Top Stories',
+    featured: 'Featured',
+    viewAllFeatured: 'View all Featured',
+    viewAllIn: (categoryName: string) => `View all in ${categoryName}`,
   },
   advertisement: {
     allTitle: 'Advertisements',
@@ -62,7 +67,20 @@ const en = {
     noStoriesTitle: 'No stories here yet',
     noStoriesDescription: (categoryName: string) =>
       `Once the newsroom publishes an article in ${categoryName}, it will appear on this page.`,
-    browseByCategory: 'Browse by category',
+  },
+  leadStories: {
+    title: 'Lead Stories',
+    description: 'The newsroom’s top picks, in order.',
+    noStoriesTitle: 'No lead stories yet',
+    noStoriesDescription:
+      'Once the newsroom marks an article as a lead story, it will appear on this page.',
+  },
+  featured: {
+    title: 'Featured',
+    description: 'In-depth and highlighted coverage from the newsroom.',
+    noStoriesTitle: 'No featured stories yet',
+    noStoriesDescription:
+      'Once the newsroom marks an article as featured, it will appear on this page.',
   },
   pagination: {
     navLabel: 'Pagination',
@@ -159,7 +177,12 @@ const kn: typeof en = {
     noStoriesTitle: 'ಇನ್ನೂ ಯಾವುದೇ ಸುದ್ದಿ ಪ್ರಕಟವಾಗಿಲ್ಲ',
     noStoriesDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ತನ್ನ ಮೊದಲ ಲೇಖನವನ್ನು ಪ್ರಕಟಿಸಿದ ತಕ್ಷಣ ಅದು ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.',
-    topStories: 'ಪ್ರಮುಖ ಸುದ್ದಿಗಳು',
+    leadStories: 'ಪ್ರಮುಖ ಸುದ್ದಿಗಳು',
+    viewAllLeadStories: 'ಎಲ್ಲಾ ಪ್ರಮುಖ ಸುದ್ದಿಗಳನ್ನು ನೋಡಿ',
+    topStories: 'ಇತ್ತೀಚಿನ ಸುದ್ದಿಗಳು',
+    featured: 'ವಿಶೇಷ ಲೇಖನಗಳು',
+    viewAllFeatured: 'ಎಲ್ಲಾ ವಿಶೇಷ ಲೇಖನಗಳನ್ನು ನೋಡಿ',
+    viewAllIn: (categoryName: string) => `${categoryName} ನಲ್ಲಿ ಎಲ್ಲವನ್ನೂ ನೋಡಿ`,
   },
   advertisement: {
     allTitle: 'ಜಾಹೀರಾತುಗಳು',
@@ -182,7 +205,20 @@ const kn: typeof en = {
     noStoriesTitle: 'ಇಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಸುದ್ದಿ ಇಲ್ಲ',
     noStoriesDescription: (categoryName: string) =>
       `${categoryName} ವಿಭಾಗದಲ್ಲಿ ಒಂದು ಲೇಖನ ಪ್ರಕಟವಾದ ತಕ್ಷಣ ಅದು ಈ ಪುಟದಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.`,
-    browseByCategory: 'ವಿಭಾಗದ ಮೂಲಕ ವೀಕ್ಷಿಸಿ',
+  },
+  leadStories: {
+    title: 'ಪ್ರಮುಖ ಸುದ್ದಿಗಳು',
+    description: 'ಸುದ್ದಿ ವಿಭಾಗದ ಅಗ್ರ ಆಯ್ಕೆಗಳು, ಕ್ರಮವಾಗಿ.',
+    noStoriesTitle: 'ಇನ್ನೂ ಯಾವುದೇ ಪ್ರಮುಖ ಸುದ್ದಿ ಇಲ್ಲ',
+    noStoriesDescription:
+      'ಸುದ್ದಿ ವಿಭಾಗವು ಒಂದು ಲೇಖನವನ್ನು ಪ್ರಮುಖ ಸುದ್ದಿ ಎಂದು ಗುರುತಿಸಿದ ತಕ್ಷಣ ಅದು ಈ ಪುಟದಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.',
+  },
+  featured: {
+    title: 'ವಿಶೇಷ ಲೇಖನಗಳು',
+    description: 'ಸುದ್ದಿ ವಿಭಾಗದ ಆಳವಾದ ಮತ್ತು ವಿಶೇಷ ವರದಿಗಳು.',
+    noStoriesTitle: 'ಇನ್ನೂ ಯಾವುದೇ ವಿಶೇಷ ಲೇಖನ ಇಲ್ಲ',
+    noStoriesDescription:
+      'ಸುದ್ದಿ ವಿಭಾಗವು ಒಂದು ಲೇಖನವನ್ನು ವಿಶೇಷ ಎಂದು ಗುರುತಿಸಿದ ತಕ್ಷಣ ಅದು ಈ ಪುಟದಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.',
   },
   pagination: {
     navLabel: 'ಪುಟ ಸಂಖ್ಯೆ',

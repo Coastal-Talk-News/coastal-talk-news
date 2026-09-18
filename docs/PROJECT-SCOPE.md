@@ -40,22 +40,45 @@ navigation immediately.
 
 ### Homepage
 
-**Revision note (2026-09-11):** the homepage feed is category-driven, not
-priority-driven. `Article.priority` (Lead Story / Featured) remains a CMS field editors can
-set, but the public homepage no longer reads it — this supersedes the priority-based
-Lead Story / Featured / Latest News layout described in earlier revisions of this file.
+**Revision note (2026-09-17):** the homepage feed is priority- and date-driven again,
+superseding the 2026-09-11 note below it. `Article.priority` (Lead Story / Featured / Normal,
+set per-article in the CMS) now drives the top of the page directly, and category browsing
+moves out of the homepage entirely — the header nav already covers it, so repeating it mid-page
+was redundant.
+
+<details>
+<summary>2026-09-11 note (superseded)</summary>
+
+the homepage feed is category-driven, not priority-driven. `Article.priority`
+(Lead Story / Featured) remains a CMS field editors can set, but the public homepage no
+longer reads it — this supersedes the priority-based Lead Story / Featured / Latest News
+layout described in earlier revisions of this file.
+
+</details>
 
 - **Breaking News** — prominent strip, only items currently within their `start_at`/`end_at`
   window, scrolling continuously; each item links out via its own `article_url`
 - **Advertisements** — a horizontal band of predefined placements, responsive, proportions
   preserved
-- **Featured categories** — the first `N` active categories that have a published article (in
-  the CMS-configured category order), each contributing its single most recent article: the
-  first category's is the lead banner, the next few run alongside it as a list
-- **Category menu** — a quick-jump grid to every active category
-- **Top Stories** — the _next_-most-recent article (i.e. one position further back) from each
-  of the first `N` active categories with enough articles to have one — deliberately distinct
-  from the featured-categories headlines above so nothing repeats
+- **Lead Stories** — the hero banner is the single most recent `LEAD_STORY` article; a compact
+  strip beside/below it carries the next few. A "View all Lead Stories" link opens the
+  dedicated `/lead-stories` page (same lead-card-plus-grid layout as a category page,
+  paginated). If no article has been marked a lead story yet, the hero falls back to whatever
+  article is most recent overall, so the homepage is never empty on day one.
+- **Featured** — a grid of the most recent `FEATURED` articles, with its own "View all
+  Featured" link to a dedicated `/featured` page (same layout as Lead Stories').
+- **Category preview rows** — one row per active category that has a published article (every
+  one, not a chosen few), each showing a handful of its own most recent articles and a "View
+  all in {Category}" link to that category's existing page. An article already shown in Lead
+  Stories or Featured doesn't repeat in its own category's row.
+
+There is no category-browsing block on the homepage itself — categories live only in the
+header nav.
+
+Every "View all" link is conditional: it appears only when the page behind it actually holds
+more than the homepage already shows, so a link never leads to a page the reader has just
+finished looking at. Section grids size their columns to the number of cards in them (three
+cards in a three-column row, not four columns with a hole at the end).
 
 Articles are filtered to the reader's active UI-language (the header EN/Kannada toggle) —
 switching languages switches which language's articles populate every section above.
@@ -75,6 +98,13 @@ ads in article-specific placements. Clean typography, responsive.
 One page per active category: name, optional cover image, optional description, its
 published articles (newest first, filtered to the active UI-language same as the homepage),
 ads in defined locations.
+
+### Lead Stories & Featured pages
+
+Two dedicated pages, `/lead-stories` and `/featured`, reached from their "View all" link on
+the homepage — a static heading/description instead of a category's own, otherwise identical
+in layout and behaviour to a category page: lead card plus grid, paginated, filtered to the
+active UI-language.
 
 ### Search
 
@@ -116,21 +146,21 @@ Published / Archived — `Scheduled` no longer exists), and category.
 
 ### Create/Edit News
 
-| Field                                     | Required | Notes                                                                     |
-| ----------------------------------------- | -------- | ------------------------------------------------------------------------- |
-| Field                                     | Required | Notes                                                                     |
-| ----------------------------------------- | -------- | ---------------------------------------------------                       |
-| Language                                  | Yes      | English or Kannada                                                        |
-| Category                                  | Yes      | one category per article                                                  |
-| Headline                                  | Yes      |                                                                           |
-| Summary                                   | Yes      | shown in listings and social previews; distinct from SEO meta description |
-| Content                                   | Yes      |                                                                           |
-| Featured image                            | No       | from Media Library or new upload                                          |
-| YouTube URL                               | No       | renders inline on the article page if set                                 |
-| Tags                                      | No       | free text, author-entered; no controlled taxonomy, no filtering in V1     |
-| Editorial priority                        | —        | Lead Story / Featured / Normal                                            |
-| Status                                    | —        | Draft or Published — no Scheduled option                                  |
-| SEO title / meta description / OG image   | No       | set alongside the article, no separate screen                             |
+| Field                                     | Required | Notes                                                                            |
+| ----------------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| Field                                     | Required | Notes                                                                            |
+| ----------------------------------------- | -------- | ---------------------------------------------------                              |
+| Language                                  | Yes      | English or Kannada                                                               |
+| Category                                  | Yes      | one category per article                                                         |
+| Headline                                  | Yes      |                                                                                  |
+| Summary                                   | Yes      | shown in listings and social previews; distinct from SEO meta description        |
+| Content                                   | Yes      |                                                                                  |
+| Featured image                            | No       | from Media Library or new upload                                                 |
+| YouTube URL                               | No       | renders inline on the article page if set                                        |
+| Tags                                      | No       | free text, author-entered; no controlled taxonomy, no filtering in V1            |
+| Editorial priority                        | —        | Lead Story / Featured / Normal — drives homepage placement, see Homepage section |
+| Status                                    | —        | Draft or Published — no Scheduled option                                         |
+| SEO title / meta description / OG image   | No       | set alongside the article, no separate screen                                    |
 
 No URL slug field — public article URLs aren't scoped yet. No other fields beyond this
 table.
@@ -261,18 +291,19 @@ pre-existing, still-open cleanup item, not something this revision resolves.
 
 Every editorial piece of content on the public site must be traceable to a CMS control.
 
-| Public website                                | Managed from CMS                               |
-| --------------------------------------------- | ---------------------------------------------- |
-| Website name, logo                            | Settings → General                             |
-| Navigation categories                         | Categories                                     |
-| Homepage featured categories / Top Stories    | Categories order + News (automatic by recency) |
-| Category sections                             | Categories + News                              |
-| Breaking News                                 | Breaking News                                  |
-| Article content / image / YouTube video / SEO | News + Media Library                           |
-| Category name / cover image                   | Categories + Media Library                     |
-| Search results                                | Published News                                 |
-| About / Contact / Social                      | Settings → General                             |
-| Advertisements + images                       | Advertisements + Media Library                 |
+| Public website                                | Managed from CMS                                  |
+| --------------------------------------------- | ------------------------------------------------- |
+| Website name, logo                            | Settings → General                                |
+| Navigation categories                         | Categories                                        |
+| Homepage Lead Stories / Featured              | News → Editorial priority (Lead Story / Featured) |
+| Homepage category preview rows                | Categories order + News (automatic by recency)    |
+| Category sections                             | Categories + News                                 |
+| Breaking News                                 | Breaking News                                     |
+| Article content / image / YouTube video / SEO | News + Media Library                              |
+| Category name / cover image                   | Categories + Media Library                        |
+| Search results                                | Published News                                    |
+| About / Contact / Social                      | Settings → General                                |
+| Advertisements + images                       | Advertisements + Media Library                    |
 
 Pure website behavior needing no CMS control: responsive layout, loading states, 404,
 search no-results, mobile menu behavior, image responsiveness.

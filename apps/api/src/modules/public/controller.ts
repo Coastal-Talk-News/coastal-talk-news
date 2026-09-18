@@ -59,3 +59,24 @@ export async function search(
   );
   return listEnvelope(rows, pagination, total);
 }
+
+interface ArticlesByPriorityQuery {
+  priority: 'LEAD_STORY' | 'FEATURED';
+  language?: Language;
+  page: number;
+  limit: number;
+}
+
+export async function listArticlesByPriority(
+  request: FastifyRequest<{ Querystring: ArticlesByPriorityQuery }>,
+) {
+  const { priority, language, page, limit } = request.query;
+  const pagination = { page, limit };
+  const { rows, total } = await service.getArticlesByPriority(
+    deps(request),
+    priority,
+    { language },
+    pagination,
+  );
+  return listEnvelope(rows, pagination, total);
+}

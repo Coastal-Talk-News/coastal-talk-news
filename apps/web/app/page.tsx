@@ -1,34 +1,32 @@
-import type { PublicArticleCardDto } from '@coastal-talk-news/types';
-import { CategoryMenu } from '../components/news/CategoryMenu';
+import Link from 'next/link';
+import { CategoryPreviewRow } from '../components/news/CategoryPreviewRow';
 import { HeroStory } from '../components/news/HeroStory';
 import { StoryCard } from '../components/news/StoryCard';
+import { TopStoriesPanel } from '../components/news/TopStoriesPanel';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SectionHeading } from '../components/ui/SectionHeading';
-import { getHome, getSite } from '../lib/api';
+import { getHome } from '../lib/api';
 import { getDictionary } from '../lib/i18n/dictionaries';
 import { getLocale } from '../lib/i18n/server';
+import { gridColumnsFor } from '../lib/layout';
 
-// The hero banner is one category's lead article plus a sidebar of the next
-// few categories' lead articles — HERO_CATEGORIES picks how many of those.
-const HERO_CATEGORIES = 4;
-// Top Stories then reuses the same section list at a second depth: the
-// *second*-most-recent article from each of the first TOP_STORY_CATEGORIES,
-// so it never repeats a headline the hero banner already showed.
-const TOP_STORY_CATEGORIES = 6;
-
-function isArticle(
-  article: PublicArticleCardDto | undefined,
-): article is PublicArticleCardDto {
-  return Boolean(article);
-}
+// Below this, a sidebar column would run out of stories long before the hero
+// beside it runs out of height, so the few there are go under it at full
+// width instead of leaving a tall empty gutter.
+const MIN_SIDEBAR_STORIES = 3;
 
 export default async function HomePage() {
   const locale = await getLocale();
-  const [home, site] = await Promise.all([getHome(locale), getSite()]);
-  const { categorySections } = home;
+  const home = await getHome(locale);
+  const { leadStories, featured, topStories, categorySections } = home;
   const dictionary = getDictionary(locale);
 
-  if (categorySections.length === 0) {
+  if (
+    leadStories.length === 0 &&
+    featured.length === 0 &&
+    topStories.length === 0 &&
+    categorySections.length === 0
+  ) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-12">
         <EmptyState
@@ -40,61 +38,92 @@ export default async function HomePage() {
     );
   }
 
-  const [heroSection, ...sideSections] = categorySections.slice(
-    0,
-    HERO_CATEGORIES,
-  );
-  const hero = heroSection?.articles[0] ?? null;
-  const sideStories = sideSections
-    .map((section) => section.articles[0])
-    .filter(isArticle);
-
-  const topStories = categorySections
-    .slice(0, TOP_STORY_CATEGORIES)
-    .map((section) => section.articles[1])
-    .filter(isArticle);
+  const [hero, ...strip] = leadStories;
+  const asSidebar = strip.length >= MIN_SIDEBAR_STORIES;
 
   return (
-    <div className="py-5 sm:py-6">
-      <section
-        aria-label="Featured categories"
-        className="grid gap-5 lg:grid-cols-12 lg:gap-6"
-      >
-        <div className={sideStories.length > 0 ? 'lg:col-span-8' : ''}>
-          {hero && <HeroStory article={hero} locale={locale} />}
-        </div>
+    <div className="flex flex-col gap-10 py-5 sm:gap-12 sm:py-6">
+      {hero && (
+        <section aria-label={dictionary.home.leadStories}>
+          <div
+            className={
+              asSidebar ? 'grid items-start gap-5 lg:grid-cols-12 lg:gap-6' : ''
+            }
+          >
+            <div className={asSidebar ? 'lg:col-span-8' : ''}>
+              <HeroStory article={hero} locale={locale} />
+            </div>
 
-        {sideStories.length > 0 && (
-          <ul className="divide-rule flex flex-col divide-y lg:col-span-4">
-            {sideStories.map((article) => (
-              <li key={article.id} className="py-3 first:pt-0 last:pb-0">
-                <StoryCard
-                  article={article}
-                  layout="row"
-                  showCategory
-                  locale={locale}
-                />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+            {strip.length > 0 &&
+              (asSidebar ? (
+                <ul className="divide-rule flex flex-col divide-y lg:col-span-4">
+                  {strip.map((article) => (
+                    <li key={article.id} className="py-3 first:pt-0 last:pb-0">
+                      <StoryCard
+                        article={article}
+                        layout="row"
+                        showCategory
+                        locale={locale}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <ul
+                  className={`mt-6 grid gap-x-5 gap-y-5 ${gridColumnsFor(strip.length)}`}
+                >
+                  {strip.map((article) => (
+                    <li key={article.id}>
+                      <StoryCard
+                        article={article}
+                        layout={strip.length === 1 ? 'wide' : 'row'}
+                        showSummary={strip.length === 1}
+                        showCategory
+                        locale={locale}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              ))}
+          </div>
 
-      {site.categories.length > 0 && (
-        <section aria-label="Browse by category" className="mt-8 sm:mt-10">
-          <CategoryMenu categories={site.categories} locale={locale} />
+          {home.hasMoreLeadStories && (
+            <div className="mt-4 flex justify-end">
+              <Link
+                href="/lead-stories"
+                className="text-brand hover:text-brand-hover text-sm font-semibold transition-colors"
+              >
+                {dictionary.home.viewAllLeadStories} <span aria-hidden>→</span>
+              </Link>
+            </div>
+          )}
         </section>
       )}
 
       {topStories.length > 0 && (
-        <section aria-label="Top stories" className="mt-10">
+        <section aria-label={dictionary.home.topStories}>
           <SectionHeading title={dictionary.home.topStories} />
-          <div className="grid gap-x-5 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
-            {topStories.map((article) => (
+          <TopStoriesPanel articles={topStories} locale={locale} />
+        </section>
+      )}
+
+      {featured.length > 0 && (
+        <section aria-label={dictionary.home.featured}>
+          <SectionHeading
+            title={dictionary.home.featured}
+            href={home.hasMoreFeatured ? '/featured' : undefined}
+            linkLabel={dictionary.home.viewAllFeatured}
+          />
+          <div
+            className={`grid gap-x-5 gap-y-7 ${gridColumnsFor(featured.length)}`}
+          >
+            {featured.map((article) => (
               <StoryCard
                 key={article.id}
                 article={article}
+                layout={featured.length === 1 ? 'wide' : 'stacked'}
                 showSummary
+                showCategory={featured.length === 1}
                 sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
                 locale={locale}
               />
@@ -102,6 +131,15 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {categorySections.map((section, index) => (
+        <CategoryPreviewRow
+          key={section.category.id}
+          section={section}
+          locale={locale}
+          flip={index % 2 === 1}
+        />
+      ))}
     </div>
   );
 }
