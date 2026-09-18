@@ -62,6 +62,8 @@ const en = {
     linkCopied: 'Link copied',
     shareHeading: 'Share this story',
     shareDescription: 'Pass it on to someone who should read it.',
+    /** Prefixes the article link in the WhatsApp share text, e.g. "To read: <url>". */
+    readLine: 'To read 👉 :',
   },
   category: {
     noStoriesTitle: 'No stories here yet',
@@ -205,6 +207,7 @@ const kn: typeof en = {
     linkCopied: 'ಲಿಂಕ್ ನಕಲಾಗಿದೆ',
     shareHeading: 'ಈ ಸುದ್ದಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ',
     shareDescription: 'ಓದಬೇಕಾದವರಿಗೆ ಇದನ್ನು ತಲುಪಿಸಿ.',
+    readLine: 'ಓದಲು',
   },
   category: {
     noStoriesTitle: 'ಇಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಸುದ್ದಿ ಇಲ್ಲ',
