@@ -8,7 +8,17 @@ interface ShareLinksProps {
   locale?: Locale;
   /** `compact` is the icon row beside the dateline; `panel` ends the story. */
   variant?: 'compact' | 'panel';
+  /** When set, the WhatsApp share text also invites the reader to the
+   * channel matching this locale — English and Kannada each get their own
+   * channel, same as the header/footer social links. */
+  whatsappEnglishUrl?: string | null;
+  whatsappKannadaUrl?: string | null;
 }
+
+// Always in Kannada regardless of UI locale — the newsroom's own standing
+// invite line for the WhatsApp channel, not a translated UI string.
+const WHATSAPP_CHANNEL_INVITE =
+  'Coastal Talk News Whatsapp ಚಾನೆಲ್ ಸೇರಲು ಕೆಳಗಿನ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ 👉 :';
 
 const ICON = 'size-4';
 
@@ -31,16 +41,38 @@ export function ShareLinks({
   headline,
   locale = 'en',
   variant = 'compact',
+  whatsappEnglishUrl,
+  whatsappKannadaUrl,
 }: ShareLinksProps) {
   const dictionary = getDictionary(locale).article;
   const encodedUrl = encodeURIComponent(url);
   const encodedText = encodeURIComponent(headline);
   const isPanel = variant === 'panel';
 
+  // Both channels are always offered, regardless of which UI locale the
+  // reader is currently on — a Kannada reader sharing a story may well have
+  // English-reading contacts, and vice versa.
+  const channelLines = [
+    whatsappEnglishUrl && `English\n${whatsappEnglishUrl}`,
+    whatsappKannadaUrl && `Kannada\n${whatsappKannadaUrl}`,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  // Each URL sits on its own line, not appended after a label — WhatsApp's
+  // link detector doesn't reliably linkify one that trails inline text.
+  const whatsappMessage = [
+    headline,
+    `${dictionary.readLine}\n${url}`,
+    channelLines && `${WHATSAPP_CHANNEL_INVITE}\n${channelLines}`,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+
   const targets = [
     {
       label: 'WhatsApp',
-      href: `https://api.whatsapp.com/send?text=${encodedText}%20${encodedUrl}`,
+      href: `https://api.whatsapp.com/send?text=${encodeURIComponent(whatsappMessage)}`,
       hover:
         'hover:border-[#1da851] hover:bg-[#1da851] hover:text-white focus-visible:border-[#1da851]',
       icon: (

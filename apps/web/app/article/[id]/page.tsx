@@ -45,7 +45,11 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { id } = await params;
-  const [article, locale] = await Promise.all([getArticle(id), getLocale()]);
+  const [article, { settings }, locale] = await Promise.all([
+    getArticle(id),
+    getSite(),
+    getLocale(),
+  ]);
   if (!article) notFound();
 
   const dictionary = getDictionary(locale);
@@ -80,6 +84,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             url={shareUrl}
             headline={article.headline}
             locale={locale}
+            whatsappEnglishUrl={settings.whatsappEnglishUrl}
+            whatsappKannadaUrl={settings.whatsappKannadaUrl}
           />
         </div>
       </header>
@@ -117,6 +123,8 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             headline={article.headline}
             locale={locale}
             variant="panel"
+            whatsappEnglishUrl={settings.whatsappEnglishUrl}
+            whatsappKannadaUrl={settings.whatsappKannadaUrl}
           />
         </div>
       </footer>
