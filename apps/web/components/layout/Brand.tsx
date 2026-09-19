@@ -56,14 +56,14 @@ export function Brand({
       <span className="min-w-0 leading-none">
         {/* One phrase: truncate rather than break the name across lines. */}
         <span
-          className={`${nameColor} ${NAME_SIZE[size]} block truncate font-serif font-bold`}
+          className={`${nameColor} ${NAME_SIZE[size]} block truncate font-brand-name`}
         >
           {siteName}
         </span>
         {tagline && (
           // Two lines on a phone rather than moving out of the lockup.
           <span
-            className={`${taglineColor} mt-1 line-clamp-2 text-[11px] sm:line-clamp-1`}
+            className={`${taglineColor} font-brand-tagline mt-1 line-clamp-2 text-[11px] sm:line-clamp-1`}
           >
             {tagline}
           </span>
