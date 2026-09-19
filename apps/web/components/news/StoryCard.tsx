@@ -13,8 +13,6 @@ interface StoryCardProps {
    * that far becomes a banner, and a sidebar row leaves half the width
    * empty. */
   layout?: 'stacked' | 'row' | 'wide';
-  /** 'wide' only: puts the picture on the right instead of the left. */
-  reverse?: boolean;
   /** 'row' only: a roomier thumbnail and headline, for a list carrying a
    * column on its own rather than sitting in a sidebar. */
   roomy?: boolean;
@@ -29,7 +27,6 @@ interface StoryCardProps {
 export function StoryCard({
   article,
   layout = 'stacked',
-  reverse = false,
   roomy = false,
   showSummary = false,
   showCategory = false,
@@ -50,11 +47,7 @@ export function StoryCard({
 
   if (layout === 'wide') {
     return (
-      <article
-        className={`group border-rule bg-paper rounded-card flex flex-col overflow-hidden border transition-shadow hover:shadow-lg ${
-          reverse ? 'sm:flex-row-reverse' : 'sm:flex-row'
-        }`}
-      >
+      <article className="group border-rule bg-paper rounded-card flex flex-col overflow-hidden border transition-shadow hover:shadow-lg sm:flex-row">
         {hasImage && (
           <Link
             href={href}

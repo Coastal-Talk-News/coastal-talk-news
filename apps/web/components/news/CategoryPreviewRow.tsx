@@ -38,7 +38,6 @@ export function CategoryPreviewRow({
         <StoryCard
           article={articles[0]!}
           layout="wide"
-          reverse={flip}
           showSummary
           locale={locale}
         />
