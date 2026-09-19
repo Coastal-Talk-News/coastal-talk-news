@@ -64,23 +64,23 @@ export function CopyLinkButton({
       aria-label={iconOnly ? label : undefined}
       className={`${className} ${copied ? copiedClassName : ''}`}
     >
-      <svg viewBox="0 0 24 24" fill="none" aria-hidden className="size-4">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+        className="size-4"
+      >
         {copied ? (
-          <path
-            d="m5 12.5 4.5 4.5L19 7.5"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <path d="m5 12.5 4.5 4.5L19 7.5" />
         ) : (
-          <path
-            d="M10.5 13.5a3.5 3.5 0 0 0 5 0l3-3a3.54 3.54 0 0 0-5-5l-1 1m-2 6a3.5 3.5 0 0 1-5 0 3.54 3.54 0 0 1 0-5l3-3a3.5 3.5 0 0 1 5 0"
-            stroke="currentColor"
-            strokeWidth="1.7"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <>
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+          </>
         )}
       </svg>
       {iconOnly ? (

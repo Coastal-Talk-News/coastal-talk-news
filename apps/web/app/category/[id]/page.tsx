@@ -1,6 +1,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
+import {
+  SiblingLinks,
+  SubcategoryGrid,
+} from '../../../components/news/CategoryLinks';
 import { HeroStory } from '../../../components/news/HeroStory';
 import { StoryCard } from '../../../components/news/StoryCard';
 import { StoryImage } from '../../../components/news/StoryImage';
@@ -30,6 +35,23 @@ interface CategoryPageProps {
 function parsePage(value: string | undefined): number {
   const parsed = Number.parseInt(value ?? '1', 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+/** The groups this category sits under, outermost first. */
+function ancestorsOf(
+  id: string,
+  categories: PublicNavCategoryDto[],
+): PublicNavCategoryDto[] {
+  const byId = new Map(categories.map((category) => [category.id, category]));
+  const trail: PublicNavCategoryDto[] = [];
+  let parentId = byId.get(id)?.parentId ?? null;
+  while (parentId) {
+    const parent = byId.get(parentId);
+    if (!parent) break;
+    trail.unshift(parent);
+    parentId = parent.parentId;
+  }
+  return trail;
 }
 
 export async function generateMetadata({
@@ -75,11 +97,25 @@ export default async function CategoryPage({
     throw error;
   }
 
-  const { articles, meta } = await getCategoryArticles(id, {
-    page,
-    limit: ARTICLES_PER_PAGE,
-    locale,
-  });
+  const { categories: navCategories } = await getSite();
+  const self = navCategories.find((entry) => entry.id === id);
+  const subcategories = self?.children ?? [];
+  const isGroup = subcategories.length > 0;
+  const ancestors = ancestorsOf(id, navCategories);
+  const parent = ancestors.at(-1);
+  const siblings = (parent?.children ?? []).filter(
+    (sibling) => sibling.id !== id,
+  );
+
+  // A group never holds articles of its own, so its page lists its sections
+  // instead and the archive query is skipped rather than fetched empty.
+  const { articles, meta } = isGroup
+    ? { articles: [], meta: { page: 1, totalPages: 1 } }
+    : await getCategoryArticles(id, {
+        page,
+        limit: ARTICLES_PER_PAGE,
+        locale,
+      });
 
   // A page number past the end (a stale link, or someone editing the URL)
   // is a real 404, not an empty grid sitting under working pagination.
@@ -98,11 +134,22 @@ export default async function CategoryPage({
     <div className="py-5 sm:py-6">
       <nav
         aria-label="Breadcrumb"
-        className="text-ink-subtle mb-4 flex items-center gap-1.5 text-sm"
+        className="text-ink-subtle mb-4 flex flex-wrap items-center gap-1.5 text-sm"
       >
         <Link href="/" className="hover:text-brand transition-colors">
           {dictionary.common.home}
         </Link>
+        {ancestors.map((ancestor) => (
+          <span key={ancestor.id} className="flex items-center gap-1.5">
+            <span aria-hidden>/</span>
+            <Link
+              href={`/category/${ancestor.id}`}
+              className="hover:text-brand transition-colors"
+            >
+              {ancestor.name}
+            </Link>
+          </span>
+        ))}
         <span aria-hidden>/</span>
         <span className="text-ink font-medium">{category.name}</span>
       </nav>
@@ -110,10 +157,18 @@ export default async function CategoryPage({
       <header className="border-ink mb-6 flex flex-col gap-5 border-b-2 pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
         <div className="min-w-0">
           <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
-          {category.description && (
+          {category.description ? (
             <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
               {category.description}
             </p>
+          ) : (
+            // A group has no archive of its own, so without a description of
+            // its own it says what it is instead of sitting under a bare name.
+            isGroup && (
+              <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
+                {dictionary.category.sectionsDescription(category.name)}
+              </p>
+            )
           )}
         </div>
 
@@ -131,7 +186,9 @@ export default async function CategoryPage({
         )}
       </header>
 
-      {articles.length === 0 ? (
+      {isGroup ? (
+        <SubcategoryGrid categories={subcategories} locale={locale} />
+      ) : articles.length === 0 ? (
         <EmptyState
           variant="page"
           title={dictionary.category.noStoriesTitle}
@@ -168,6 +225,13 @@ export default async function CategoryPage({
             locale={locale}
           />
         </>
+      )}
+
+      {parent && (
+        <SiblingLinks
+          label={dictionary.category.moreIn(parent.name)}
+          categories={siblings}
+        />
       )}
     </div>
   );

@@ -24,6 +24,10 @@ import { categoriesApi } from '../api/categories.js';
 import { ApiError } from '../api/client.js';
 import { queryKeys } from '../api/queryKeys.js';
 import { ArticleBasicFields } from '../features/articles/ArticleBasicFields.js';
+import {
+  categoryPathLabel,
+  leafCategories,
+} from '../features/categories/tree.js';
 import { ArticleMediaFields } from '../features/articles/ArticleMediaFields.js';
 import { ArticleSeoFields } from '../features/articles/ArticleSeoFields.js';
 import { toValues, type FormValues } from '../features/articles/formValues.js';
@@ -65,9 +69,15 @@ export function ArticleFormPage() {
   const initialized = useRef(false);
   const savedSnapshot = useRef(JSON.stringify(toValues(null)));
 
-  const categoryOptions: SelectOption[] = (
-    categoriesQuery.data?.data ?? []
-  ).map((category) => ({ value: category.id, label: category.name }));
+  // Only leaf categories are assignable — a category with subcategories is a
+  // group, and the API rejects assigning an article to it directly.
+  const allCategories = categoriesQuery.data?.data ?? [];
+  const categoryOptions: SelectOption[] = leafCategories(allCategories).map(
+    (category) => ({
+      value: category.id,
+      label: categoryPathLabel(category, allCategories),
+    }),
+  );
 
   useEffect(() => {
     if (editing && !article) return;
@@ -192,6 +202,28 @@ export function ArticleFormPage() {
     mutations.unpublish.isPending ||
     mutations.restore.isPending;
   const canSave = canSubmit && isDirty;
+
+  // Ctrl/Cmd+S saves the draft, and is swallowed even when there is nothing
+  // to save — otherwise the browser's own "save this page" dialog opens over
+  // the editor, which is never what an author reaching for it wants.
+  // Deliberately re-registered each render: `submit` closes over the current
+  // form values, and a listener pinned to the first render would save the
+  // article as it looked when the page opened.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        !(event.ctrlKey || event.metaKey) ||
+        event.key.toLowerCase() !== 's'
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (!canSave || busy) return;
+      submit(status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT', 'save');
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
 
   if (editing && articleQuery.isPending) {
     return <LoadingState label="Loading article…" />;
@@ -334,6 +366,7 @@ export function ArticleFormPage() {
                 <Button
                   type="submit"
                   className="w-full"
+                  title="Save changes (Ctrl+S)"
                   loading={pending === 'save'}
                   disabled={!canSave || busy}
                 >
@@ -355,6 +388,7 @@ export function ArticleFormPage() {
                     type="submit"
                     variant="secondary"
                     className="w-full"
+                    title={`${editing ? 'Save changes' : 'Save as draft'} (Ctrl+S)`}
                     loading={pending === 'save'}
                     disabled={!canSave || busy}
                   >

@@ -34,16 +34,20 @@ export const dynamic = 'force-dynamic';
  * whatever the reader's OS supplies and a bilingual headline renders as two
  * unrelated typefaces — different on Windows, iOS and Android.
  */
+/* 400 is what article bodies are set in. Without it the browser has only the
+ * heavier faces to pick from and renders ordinary paragraphs at 600, which
+ * reads as bold and leaves genuinely bold words indistinguishable from the
+ * text around them. */
 const headline = Noto_Serif({
   subsets: ['latin'],
-  weight: ['600', '700'],
+  weight: ['400', '600', '700'],
   variable: '--font-headline',
   display: 'swap',
 });
 
 const headlineKannada = Noto_Serif_Kannada({
   subsets: ['kannada'],
-  weight: ['600', '700'],
+  weight: ['400', '600', '700'],
   variable: '--font-headline-kannada',
   display: 'swap',
 });

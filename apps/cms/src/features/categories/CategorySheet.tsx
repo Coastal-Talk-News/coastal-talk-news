@@ -17,6 +17,7 @@ import {
 import { ImagePlus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
+import { categoryPathLabel, descendantIds } from './tree.js';
 
 interface FormValues {
   name: string;
@@ -64,19 +65,25 @@ export function CategorySheet({
   const nameRef = useRef<HTMLInputElement>(null);
   const initial = useRef<FormValues>(toValues(editing));
 
-  // A category with its own subcategories can't become a child itself — that
-  // would make a third level, and the hierarchy is capped at two.
-  const hasChildren = editing
-    ? categories.some((category) => category.parentId === editing.id)
-    : false;
-
+  // Choosing this category as a parent would make it its own descendant, so
+  // it and everything already under it are excluded — grouping can nest to
+  // any depth otherwise. A category that already holds articles directly
+  // can't become a parent, either — it would keep those articles invisible
+  // next to its own subcategories.
+  const excludedIds = editing
+    ? new Set([editing.id, ...descendantIds(categories, editing.id)])
+    : new Set<string>();
   const parentOptions: Array<SelectOption<string>> = [
     { value: '', label: 'None (top level)' },
     ...categories
       .filter(
-        (category) => category.parentId === null && category.id !== editing?.id,
+        (category) =>
+          !excludedIds.has(category.id) && category.articleCount === 0,
       )
-      .map((category) => ({ value: category.id, label: category.name })),
+      .map((category) => ({
+        value: category.id,
+        label: categoryPathLabel(category, categories),
+      })),
   ];
 
   useEffect(() => {
@@ -124,7 +131,7 @@ export function CategorySheet({
       name: trimmedName,
       description: values.description.trim() || null,
       isActive: values.isActive,
-      parentId: hasChildren ? null : values.parentId,
+      parentId: values.parentId,
       coverImageId: values.coverImage?.id ?? null,
     });
   }
@@ -218,11 +225,7 @@ export function CategorySheet({
         <Field
           label="Parent Category"
           htmlFor="category-parent"
-          hint={
-            hasChildren
-              ? 'This category has subcategories, so it can’t become one itself. Move or remove them first.'
-              : 'Choose a parent to make this a subcategory, or leave it as a top-level category.'
-          }
+          hint="Choose a parent to group this under another category, at any depth, or leave it as a top-level category. Only a category with no articles of its own can be a parent."
         >
           <Select
             id="category-parent"
@@ -234,7 +237,6 @@ export function CategorySheet({
               }))
             }
             options={parentOptions}
-            disabled={hasChildren}
           />
         </Field>
 

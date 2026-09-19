@@ -57,6 +57,56 @@
   :focus-visible {
     @apply outline-brand outline-2 outline-offset-2;
   }
+
+  /* The platform scrollbar draws a wide grey track that reads as browser
+     chrome sitting on the page, which is louder than anything else on a
+     sheet this plain — most obvious in the nav drawer, where a full-height
+     bar runs beside a short list of links. Sized and coloured from the
+     theme instead, and kept visible rather than hidden: on a long drawer
+     the thumb is the only cue for how much more there is. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(
+        in srgb,
+        var(--color-ink-subtle) 45%,
+        transparent
+      )
+      transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  /* Transparent border plus background-clip gives the thumb breathing room
+     without painting a track behind it. */
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(
+      in srgb,
+      var(--color-ink-subtle) 45%,
+      transparent
+    );
+    border: 3px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--color-ink-subtle) 70%,
+      transparent
+    );
+  }
+
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
 }
 
 @layer components {
@@ -73,8 +123,11 @@
   /* The body arrives as Tiptap JSON rendered into bare elements, so its
      typography lives here rather than on every node. Set like a newspaper
      column: serif, a little larger, with the leading opened up. */
+  /* The body carries its own gap from whatever sits above it — the lead
+     image when there is one, the share row when there isn't. Neither has a
+     bottom margin, so without this the first paragraph butts against it. */
   .article-body {
-    @apply font-serif text-[1.125rem] leading-[1.8];
+    @apply mt-6 font-serif text-[1.125rem] leading-[1.8];
   }
 
   .article-body > * + * {

@@ -75,9 +75,11 @@ model Category {
   isActive     Boolean  @default(true) @map("is_active")
   displayOrder Int      @map("display_order")
   mediaId      String?  @map("media_id")
-  /// Nullable — null means top-level. A category whose own parentId is set
-  /// can never itself be chosen as a parent, so the hierarchy is capped at
-  /// two levels; enforced in the service layer, not by the DB.
+  /// Nullable — null means top-level. Grouping can nest to any depth, but a
+  /// category can only hold articles directly (via Article.categoryId) or
+  /// have children, never both — enforced in the service layer, not by the
+  /// DB. Cycle prevention (a category can't become its own ancestor) is also
+  /// service-layer only.
   parentId     String?  @map("parent_id")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

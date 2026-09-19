@@ -41,13 +41,19 @@ export type UpdateArticleInput = Partial<Omit<CreateArticleInput, 'status'>> & {
   status?: ArticleStatus;
 };
 
-async function assertCategoryExists(
+async function assertCategoryAssignable(
   db: Database,
   categoryId: string,
 ): Promise<void> {
-  if (!(await repository.categoryExists(db, categoryId))) {
+  const category = await repository.findCategoryForAssignment(db, categoryId);
+  if (!category) {
     throw new BadRequestError(
       'categoryId does not refer to an existing category.',
+    );
+  }
+  if (category._count.children > 0) {
+    throw new BadRequestError(
+      'This category groups subcategories and cannot have articles assigned directly. Choose one of its subcategories instead.',
     );
   }
 }
@@ -98,7 +104,7 @@ export async function create(
   { db }: ArticleServiceDeps,
   input: CreateArticleInput,
 ) {
-  await assertCategoryExists(db, input.categoryId);
+  await assertCategoryAssignable(db, input.categoryId);
   if (input.featuredImageId) {
     await assertMediaExists(db, input.featuredImageId, 'featuredImageId');
   }
@@ -141,7 +147,7 @@ export async function update(
   }
 
   if (input.categoryId) {
-    await assertCategoryExists(db, input.categoryId);
+    await assertCategoryAssignable(db, input.categoryId);
   }
   if (input.featuredImageId) {
     await assertMediaExists(db, input.featuredImageId, 'featuredImageId');

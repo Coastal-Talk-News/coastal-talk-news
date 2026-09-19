@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
+import { CategoryFlyoutList, containsActive } from './CategoryFlyoutMenu';
 
 interface CategoryNavProps {
   categories: PublicNavCategoryDto[];
@@ -165,10 +166,50 @@ export function CategoryNav({
     (category) => pathname === categoryHref(category.id),
   )?.id;
   const isActiveGroup = (category: PublicNavCategoryDto) =>
-    category.id === activeCategoryId ||
-    category.children.some((child) => child.id === activeCategoryId);
+    containsActive(category, activeCategoryId);
   // Otherwise nothing is marked while reading an overflowed section.
   const activeIsHidden = overflow.some(isActiveGroup);
+
+  function renderOverflowCategory(
+    category: PublicNavCategoryDto,
+    depth: number,
+  ) {
+    const hasChildren = category.children.length > 0;
+    const active = category.id === activeCategoryId;
+    const highlighted = active || containsActive(category, activeCategoryId);
+    const padding = { paddingLeft: `${1 + depth * 0.75}rem` };
+
+    return (
+      <li key={category.id}>
+        {hasChildren ? (
+          <span
+            style={padding}
+            className="text-ink-subtle block py-1.5 pr-4 text-xs font-semibold tracking-wide uppercase"
+          >
+            {category.name}
+          </span>
+        ) : (
+          <Link
+            href={categoryHref(category.id)}
+            aria-current={active ? 'page' : undefined}
+            style={padding}
+            className={`hover:bg-paper-sunken block py-1.5 pr-4 text-sm font-medium transition-colors ${
+              highlighted ? 'bg-brand-soft text-brand' : 'hover:text-brand'
+            }`}
+          >
+            {category.name}
+          </Link>
+        )}
+        {hasChildren && (
+          <ul>
+            {category.children.map((child) =>
+              renderOverflowCategory(child, depth + 1),
+            )}
+          </ul>
+        )}
+      </li>
+    );
+  }
 
   return (
     <nav ref={navRef} aria-label={sectionsLabel} className="relative">
@@ -242,73 +283,27 @@ export function CategoryNav({
           const category = visible.find((c) => c.id === openCategoryId);
           if (!category) return null;
           return (
-            <ul
+            <div
               style={{ left: dropdownLeft }}
-              className="border-rule bg-paper grain absolute top-full z-40 mt-1 w-52 overflow-hidden rounded-sm border py-1 shadow-lg"
+              className="absolute top-full z-40 mt-1"
             >
-              {category.children.map((child) => (
-                <li key={child.id}>
-                  <Link
-                    href={categoryHref(child.id)}
-                    aria-current={
-                      child.id === activeCategoryId ? 'page' : undefined
-                    }
-                    className={`hover:bg-paper-sunken block px-4 py-2 text-sm font-semibold transition-colors ${
-                      child.id === activeCategoryId
-                        ? 'bg-brand-soft text-brand'
-                        : 'hover:text-brand'
-                    }`}
-                  >
-                    {child.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+              <CategoryFlyoutList
+                categories={category.children}
+                activeCategoryId={activeCategoryId}
+                categoryHref={categoryHref}
+              />
+            </div>
           );
         })()}
 
-      {/* Outside the row: nested inside, its clipping would hide this. */}
+      {/* Outside the row: nested inside, its clipping would hide this. An
+          always-expanded indented tree, not the hover flyout the visible row
+          uses — this is already a scrollable dropdown, not a horizontal row,
+          so nesting by indentation reads better than menus stacking sideways
+          off the right edge of the screen. */}
       {open && overflow.length > 0 && (
         <ul className="border-rule bg-paper grain absolute top-full right-0 z-40 mt-1 max-h-[70vh] w-56 overflow-y-auto rounded-sm border py-1 shadow-lg">
-          {overflow.map((category) => {
-            const active = isActiveGroup(category);
-            return (
-              <li key={category.id}>
-                <Link
-                  href={categoryHref(category.id)}
-                  aria-current={
-                    category.id === activeCategoryId ? 'page' : undefined
-                  }
-                  className={`hover:bg-paper-sunken block px-4 py-2 text-sm font-semibold transition-colors ${
-                    active ? 'bg-brand-soft text-brand' : 'hover:text-brand'
-                  }`}
-                >
-                  {category.name}
-                </Link>
-                {category.children.length > 0 && (
-                  <ul className="pb-1">
-                    {category.children.map((child) => (
-                      <li key={child.id}>
-                        <Link
-                          href={categoryHref(child.id)}
-                          aria-current={
-                            child.id === activeCategoryId ? 'page' : undefined
-                          }
-                          className={`hover:bg-paper-sunken block py-1.5 pr-4 pl-7 text-sm font-medium transition-colors ${
-                            child.id === activeCategoryId
-                              ? 'bg-brand-soft text-brand'
-                              : 'text-ink-muted hover:text-brand'
-                          }`}
-                        >
-                          {child.name}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            );
-          })}
+          {overflow.map((category) => renderOverflowCategory(category, 0))}
         </ul>
       )}
 

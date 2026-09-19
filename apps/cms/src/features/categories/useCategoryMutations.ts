@@ -83,23 +83,68 @@ export function useCategoryMutations(listKey: QueryKey) {
       toast.error(messageFor(error, 'Could not delete this category.')),
   });
 
-  const reorder = useMutation({
-    mutationFn: ({
+  /**
+   * One drag lands as at most two calls, in this order: the parent change
+   * first, because the reorder endpoint validates the ids against the group
+   * they now belong to and would reject them while the move is still
+   * uncommitted.
+   */
+  const move = useMutation({
+    mutationFn: async ({
+      id,
       parentId,
-      ids,
+      parentChanged,
+      siblingIds,
     }: {
+      id: string;
       parentId: string | null;
-      ids: string[];
-    }) => categoriesApi.reorder(parentId, ids),
-    onSuccess: () => {
-      invalidate();
-      toast.success('Order saved.');
+      parentChanged: boolean;
+      siblingIds: string[];
+    }) => {
+      if (parentChanged) await categoriesApi.update(id, { parentId });
+      if (siblingIds.length > 0) {
+        await categoriesApi.reorder(parentId, siblingIds);
+      }
     },
-    onError: (error) => {
-      invalidate();
-      toast.error(messageFor(error, 'Could not save the new order.'));
+    onMutate: async ({ id, parentId, siblingIds }) => {
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previous = queryClient.getQueryData<CategoryList>(listKey);
+
+      // The row is already where the drag left it — this makes parentId and
+      // displayOrder agree, or the tree, which is built from those two
+      // fields, would snap straight back until the request round-trips.
+      queryClient.setQueryData<CategoryList>(listKey, (current) => {
+        if (!current) return current;
+        const positionById = new Map(
+          siblingIds.map((siblingId, index) => [siblingId, index]),
+        );
+        return {
+          ...current,
+          data: current.data.map((category) => {
+            const position = positionById.get(category.id);
+            if (category.id === id) {
+              return {
+                ...category,
+                parentId,
+                displayOrder: position ?? category.displayOrder,
+              };
+            }
+            return position === undefined
+              ? category
+              : { ...category, displayOrder: position };
+          }),
+        };
+      });
+
+      return { previous };
     },
+    onError: (error, _variables, context) => {
+      if (context?.previous)
+        queryClient.setQueryData(listKey, context.previous);
+      toast.error(messageFor(error, 'Could not move this category.'));
+    },
+    onSettled: invalidate,
   });
 
-  return { create, update, setActive, remove, reorder };
+  return { create, update, setActive, remove, move };
 }

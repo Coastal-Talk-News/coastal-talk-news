@@ -69,6 +69,14 @@ const en = {
     noStoriesTitle: 'No stories here yet',
     noStoriesDescription: (categoryName: string) =>
       `Once the newsroom publishes an article in ${categoryName}, it will appear on this page.`,
+    sections: 'Sections',
+    sectionsDescription: (categoryName: string) =>
+      `${categoryName} is a group. Pick a section below to read its stories.`,
+    moreIn: (categoryName: string) => `More in ${categoryName}`,
+    storyCount: (count: number) =>
+      `${count} ${count === 1 ? 'story' : 'stories'}`,
+    sectionCount: (count: number) =>
+      `${count} ${count === 1 ? 'section' : 'sections'}`,
   },
   leadStories: {
     title: 'Lead Stories',
@@ -213,6 +221,12 @@ const kn: typeof en = {
     noStoriesTitle: 'ಇಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಸುದ್ದಿ ಇಲ್ಲ',
     noStoriesDescription: (categoryName: string) =>
       `${categoryName} ವಿಭಾಗದಲ್ಲಿ ಒಂದು ಲೇಖನ ಪ್ರಕಟವಾದ ತಕ್ಷಣ ಅದು ಈ ಪುಟದಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.`,
+    sections: 'ವಿಭಾಗಗಳು',
+    sectionsDescription: (categoryName: string) =>
+      `${categoryName} ಒಂದು ಗುಂಪು. ಸುದ್ದಿ ಓದಲು ಕೆಳಗಿನ ವಿಭಾಗವೊಂದನ್ನು ಆಯ್ಕೆಮಾಡಿ.`,
+    moreIn: (categoryName: string) => `${categoryName} ವಿಭಾಗದ ಇನ್ನಷ್ಟು`,
+    storyCount: (count: number) => `${count} ಸುದ್ದಿಗಳು`,
+    sectionCount: (count: number) => `${count} ವಿಭಾಗಗಳು`,
   },
   leadStories: {
     title: 'ಪ್ರಮುಖ ಸುದ್ದಿಗಳು',
