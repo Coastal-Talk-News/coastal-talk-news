@@ -74,6 +74,7 @@ export function toNavCategory(
   return {
     id: category.id,
     name: category.name,
+    description: category.description,
     articleCount: category._count.articles,
     image: toMedia(category.media, toPublicUrl),
     parentId: category.parentId,

@@ -81,6 +81,7 @@ export interface PublicSiteSettingsDto {
 }
 
 export interface PublicNavCategoryDto extends PublicCategoryRefDto {
+  description: string | null;
   articleCount: number;
   image: MediaSummaryDto | null;
   /** Null means top-level. Grouping can nest to any depth. */

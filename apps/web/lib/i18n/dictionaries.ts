@@ -31,7 +31,8 @@ const en = {
   },
   footer: {
     quickLinks: 'Quick Links',
-    categories: 'Categories',
+    categories: 'Sections',
+    otherSections: 'More',
     contact: 'Contact',
     rightsReserved: 'All rights reserved.',
   },
@@ -72,13 +73,15 @@ const en = {
     noStoriesDescription: (categoryName: string) =>
       `Once the newsroom publishes an article in ${categoryName}, it will appear on this page.`,
     sections: 'Sections',
-    sectionsDescription: (categoryName: string) =>
-      `${categoryName} is a group. Pick a section below to read its stories.`,
+    // "Group" is how the newsroom's own tooling labels these; a reader is
+    // only choosing where to read next.
+    sectionsDescription: 'Choose a section below to start reading.',
     moreIn: (categoryName: string) => `More in ${categoryName}`,
     storyCount: (count: number) =>
       `${count} ${count === 1 ? 'story' : 'stories'}`,
     sectionCount: (count: number) =>
       `${count} ${count === 1 ? 'section' : 'sections'}`,
+    noDescription: 'No description yet',
   },
   leadStories: {
     title: 'Lead Stories',
@@ -187,6 +190,7 @@ const kn: typeof en = {
   footer: {
     quickLinks: 'ತ್ವರಿತ ಲಿಂಕ್‌ಗಳು',
     categories: 'ವಿಭಾಗಗಳು',
+    otherSections: 'ಇತರೆ',
     contact: 'ಸಂಪರ್ಕಿಸಿ',
     rightsReserved: 'ಎಲ್ಲಾ ಹಕ್ಕುಗಳನ್ನು ಕಾಯ್ದಿರಿಸಲಾಗಿದೆ.',
   },
@@ -226,11 +230,11 @@ const kn: typeof en = {
     noStoriesDescription: (categoryName: string) =>
       `${categoryName} ವಿಭಾಗದಲ್ಲಿ ಒಂದು ಲೇಖನ ಪ್ರಕಟವಾದ ತಕ್ಷಣ ಅದು ಈ ಪುಟದಲ್ಲಿ ಕಾಣಿಸುತ್ತದೆ.`,
     sections: 'ವಿಭಾಗಗಳು',
-    sectionsDescription: (categoryName: string) =>
-      `${categoryName} ಒಂದು ಗುಂಪು. ಸುದ್ದಿ ಓದಲು ಕೆಳಗಿನ ವಿಭಾಗವೊಂದನ್ನು ಆಯ್ಕೆಮಾಡಿ.`,
+    sectionsDescription: 'ಓದಲು ಕೆಳಗಿನ ವಿಭಾಗವೊಂದನ್ನು ಆಯ್ಕೆಮಾಡಿ.',
     moreIn: (categoryName: string) => `${categoryName} ವಿಭಾಗದ ಇನ್ನಷ್ಟು`,
     storyCount: (count: number) => `${count} ಸುದ್ದಿಗಳು`,
     sectionCount: (count: number) => `${count} ವಿಭಾಗಗಳು`,
+    noDescription: 'ಇನ್ನೂ ವಿವರಣೆ ಸೇರಿಸಿಲ್ಲ',
   },
   leadStories: {
     title: 'ಪ್ರಮುಖ ಸುದ್ದಿಗಳು',

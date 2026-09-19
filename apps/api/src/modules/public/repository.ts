@@ -98,6 +98,7 @@ export function findNavCategories(
     select: {
       id: true,
       name: true,
+      description: true,
       parentId: true,
       media: mediaSelect,
       _count: {
