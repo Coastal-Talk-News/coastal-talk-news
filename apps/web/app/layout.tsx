@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import {
+  Archivo_Black,
+  Iansui,
   Noto_Sans,
   Noto_Sans_Kannada,
   Noto_Serif,
@@ -60,6 +62,22 @@ const bodyKannada = Noto_Sans_Kannada({
   display: 'swap',
 });
 
+// Lockup only: the site name and tagline beside the logo. Neither face has
+// Kannada glyphs, so the Kannada faces above sit behind them in the stacks.
+const brandName = Archivo_Black({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-archivo',
+  display: 'swap',
+});
+
+const brandTagline = Iansui({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-iansui',
+  display: 'swap',
+});
+
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const [{ settings }, locale, origin] = await Promise.all([
@@ -85,7 +103,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable}`}
+      className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable} ${brandName.variable} ${brandTagline.variable}`}
     >
       <body className="grain flex min-h-screen flex-col">
         <SiteHeader site={site} locale={locale} />
