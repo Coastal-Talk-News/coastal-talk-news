@@ -106,12 +106,12 @@ export function BreakingNewsPage() {
     <>
       <PageHeader
         eyebrow="News"
-        title="Breaking News"
-        description="Manage live breaking news updates. These appear in the breaking news ticker on the website."
+        title="Latest News"
+        description="Manage live latest news updates. These appear in the latest news ticker on the website."
         actions={
           <Button onClick={openCreate}>
             <Plus className="size-4" aria-hidden />
-            Add Breaking News
+            Add Latest News
           </Button>
         }
       />
@@ -179,7 +179,7 @@ export function BreakingNewsPage() {
               tab === 'all' ? (
                 <Button size="sm" onClick={openCreate}>
                   <Plus className="size-4" aria-hidden />
-                  Add Breaking News
+                  Add Latest News
                 </Button>
               ) : undefined
             }
