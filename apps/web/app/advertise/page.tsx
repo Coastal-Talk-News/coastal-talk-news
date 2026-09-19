@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getSite } from '../../lib/api';
+import { ArticleBody } from '../../components/news/ArticleBody';
+import { getPage, getSite } from '../../lib/api';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import { getLocale } from '../../lib/i18n/server';
 import { buildMetadata } from '../../lib/seo';
@@ -22,39 +23,45 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AdvertisePage() {
-  const [{ settings }, locale] = await Promise.all([getSite(), getLocale()]);
+  const [{ settings }, page, locale] = await Promise.all([
+    getSite(),
+    getPage('advertise'),
+    getLocale(),
+  ]);
   const dictionary = getDictionary(locale);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:py-10">
       <header className="border-rule border-b pb-8 text-center">
         <h1 className="font-serif text-3xl font-bold sm:text-4xl">
-          {dictionary.advertise.title}
+          {page.title ?? dictionary.advertise.title}
         </h1>
         <p className="text-ink-muted mx-auto mt-3 max-w-xl leading-relaxed">
-          {dictionary.advertise.intro}
+          {page.intro ?? dictionary.advertise.intro}
         </p>
-        {(settings.contactEmail || settings.contactPhone) && (
+        {(page.email || page.phone) && (
           <p className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold">
-            {settings.contactEmail && (
+            {page.email && (
               <a
-                href={`mailto:${settings.contactEmail}`}
+                href={`mailto:${page.email}`}
                 className="text-brand hover:underline"
               >
-                {settings.contactEmail}
+                {page.email}
               </a>
             )}
-            {settings.contactPhone && (
+            {page.phone && (
               <a
-                href={`tel:${settings.contactPhone}`}
+                href={`tel:${page.phone}`}
                 className="text-brand hover:underline"
               >
-                {settings.contactPhone}
+                {page.phone}
               </a>
             )}
           </p>
         )}
       </header>
+
+      {page.content && <ArticleBody content={page.content} />}
 
       <p className="mt-8 text-center">
         <Link

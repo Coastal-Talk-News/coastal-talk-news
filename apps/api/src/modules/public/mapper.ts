@@ -25,6 +25,12 @@ interface MediaRow {
 
 export type ToPublicUrl = (storageKey: string) => string;
 
+/** Prisma widens a Json column to its own union; the response schema
+ * re-checks the document's shape on the way out. */
+export function toPageContent(value: unknown): ArticleContent | null {
+  return value ? (value as ArticleContent) : null;
+}
+
 function toMedia(media: MediaRow | null, toPublicUrl: ToPublicUrl) {
   return media
     ? {
@@ -164,7 +170,6 @@ export function toAdvertisementDetail(
 interface SettingsRow {
   siteName: string;
   tagline: string | null;
-  description: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   contactAddress: string | null;

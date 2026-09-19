@@ -159,10 +159,23 @@ No role/permission field — single-tier admin access, confirmed for V1.
 
 ### Site Settings
 
-`id`, `site_name`, `tagline`, `description`, `logo_media_id` (FK), `favicon_media_id` (FK),
-`contact_email`, `contact_phone`, `contact_address`, `facebook_url`, `instagram_url`,
-`youtube_url`, `x_url`, `default_ui_language`, `default_seo_title`,
-`default_meta_description`, `default_og_image_id` (FK), `created_at`, `updated_at`
+`id`, `site_name`, `tagline`, `logo_media_id` (FK), `favicon_media_id` (FK),
+`contact_email`, `contact_phone`, `contact_address`, `contact_title`, `contact_intro`,
+`contact_hours`, `about_title`, `about_intro`, `about_content`, `advertise_title`,
+`advertise_intro`, `advertise_content`, `facebook_url`, `instagram_url`, `youtube_url`,
+`x_url`, `default_ui_language`, `default_seo_title`, `default_meta_description`,
+`default_og_image_id` (FK), `created_at`, `updated_at`
+
+The `about_*`, `contact_*` and `advertise_*` columns are the copy for the three standalone
+pages, each editable under its own tab in Settings. `about_content` and `advertise_content`
+are Tiptap documents, the same shape as `Article.content`, rendered by the reader site's
+own node renderer rather than as HTML. Contact details are **not** duplicated per page —
+there is one set (`contact_email`, `contact_phone`, `contact_address`) that the Contact
+page, the About page, the Advertise page and the footer all read.
+
+These page bodies are deliberately **not** part of `GET /public/site`, which every page on
+the reader site fetches; they are served by `GET /public/pages/:page` so only the page that
+needs a document pays for it.
 
 Effectively a singleton — expect exactly one row.
 

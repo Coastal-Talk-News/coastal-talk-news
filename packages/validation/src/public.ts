@@ -56,7 +56,6 @@ const Nullable = (schema: ReturnType<typeof Type.String>) =>
 export const PublicSiteSettingsSchema = Type.Object({
   siteName: Type.String(),
   tagline: Nullable(Type.String()),
-  description: Nullable(Type.String()),
   logo: Type.Union([MediaSummarySchema, Type.Null()]),
   favicon: Type.Union([MediaSummarySchema, Type.Null()]),
   defaultUiLanguage: LanguageSchema,
@@ -122,6 +121,29 @@ export const PublicHomeSchema = Type.Object({
       articles: Type.Array(PublicArticleCardSchema),
     }),
   ),
+});
+
+/**
+ * One of the standalone pages. Kept off PublicSiteSchema on purpose: the site
+ * payload is fetched for every page on the site, and the bodies here are whole
+ * documents that only their own page needs.
+ */
+export const PublicPageSchema = Type.Object({
+  title: Nullable(Type.String()),
+  intro: Nullable(Type.String()),
+  content: Type.Union([ArticleContentSchema, Type.Null()]),
+  email: Nullable(Type.String()),
+  phone: Nullable(Type.String()),
+  address: Nullable(Type.String()),
+  hours: Nullable(Type.String()),
+});
+
+export const PublicPageParamsSchema = Type.Object({
+  page: Type.Union([
+    Type.Literal('about'),
+    Type.Literal('contact'),
+    Type.Literal('advertise'),
+  ]),
 });
 
 export const PublicSearchQuerySchema = Type.Object({

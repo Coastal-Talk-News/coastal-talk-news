@@ -16,6 +16,14 @@ export async function getSite(request: FastifyRequest) {
   return dataEnvelope(await service.getSite(deps(request)));
 }
 
+export async function getPage(
+  request: FastifyRequest<{ Params: { page: service.PublicPageKey } }>,
+) {
+  return dataEnvelope(
+    await service.getPage(deps(request), request.params.page),
+  );
+}
+
 export async function getHome(
   request: FastifyRequest<{ Querystring: { language?: Language } }>,
 ) {

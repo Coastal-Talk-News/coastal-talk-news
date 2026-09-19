@@ -7,6 +7,7 @@ import type {
   PublicArticleCardDto,
   PublicArticleDto,
   PublicHomeDto,
+  PublicPageDto,
   PublicSiteDto,
 } from '@coastal-talk-news/types';
 import type { Locale } from './i18n/types';
@@ -111,6 +112,14 @@ export async function getSite(): Promise<PublicSiteDto> {
     breakingNews: list(site.breakingNews),
     advertisements: list(site.advertisements),
   };
+}
+
+/** The newsroom's own copy for About, Contact or Advertise. Its own call
+ * rather than part of /site, because only this page needs the body. */
+export async function getPage(
+  page: 'about' | 'contact' | 'advertise',
+): Promise<PublicPageDto> {
+  return fetchPublic<PublicPageDto>(`/pages/${page}`);
 }
 
 export async function getHome(locale: Locale): Promise<PublicHomeDto> {

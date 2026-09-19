@@ -1,4 +1,5 @@
 import type { Database } from '@coastal-talk-news/db';
+import type { ArticleContent } from '@coastal-talk-news/types';
 import type { FastifyBaseLogger } from 'fastify';
 import { BadRequestError, NotFoundError } from '../../lib/errors.js';
 import { releaseMedia } from '../media/reference.js';
@@ -15,12 +16,20 @@ export interface SettingsServiceDeps {
 export interface UpdateSiteSettingsInput {
   siteName?: string;
   tagline?: string | null;
-  description?: string | null;
   logoMediaId?: string | null;
   faviconMediaId?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
   contactAddress?: string | null;
+  aboutTitle?: string | null;
+  aboutIntro?: string | null;
+  aboutContent?: ArticleContent | null;
+  contactTitle?: string | null;
+  contactIntro?: string | null;
+  contactHours?: string | null;
+  advertiseTitle?: string | null;
+  advertiseIntro?: string | null;
+  advertiseContent?: ArticleContent | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   youtubeUrl?: string | null;
@@ -91,9 +100,6 @@ export async function update(
       ...(input.tagline !== undefined
         ? { tagline: input.tagline?.trim() || null }
         : {}),
-      ...(input.description !== undefined
-        ? { description: input.description?.trim() || null }
-        : {}),
       ...(input.logoMediaId !== undefined
         ? { logoMediaId: input.logoMediaId }
         : {}),
@@ -108,6 +114,33 @@ export async function update(
         : {}),
       ...(input.contactAddress !== undefined
         ? { contactAddress: input.contactAddress?.trim() || null }
+        : {}),
+      ...(input.aboutTitle !== undefined
+        ? { aboutTitle: input.aboutTitle?.trim() || null }
+        : {}),
+      ...(input.aboutIntro !== undefined
+        ? { aboutIntro: input.aboutIntro?.trim() || null }
+        : {}),
+      ...(input.aboutContent !== undefined
+        ? { aboutContent: input.aboutContent }
+        : {}),
+      ...(input.contactTitle !== undefined
+        ? { contactTitle: input.contactTitle?.trim() || null }
+        : {}),
+      ...(input.contactIntro !== undefined
+        ? { contactIntro: input.contactIntro?.trim() || null }
+        : {}),
+      ...(input.contactHours !== undefined
+        ? { contactHours: input.contactHours?.trim() || null }
+        : {}),
+      ...(input.advertiseTitle !== undefined
+        ? { advertiseTitle: input.advertiseTitle?.trim() || null }
+        : {}),
+      ...(input.advertiseIntro !== undefined
+        ? { advertiseIntro: input.advertiseIntro?.trim() || null }
+        : {}),
+      ...(input.advertiseContent !== undefined
+        ? { advertiseContent: input.advertiseContent }
         : {}),
       ...(input.facebookUrl !== undefined
         ? { facebookUrl: input.facebookUrl?.trim() || null }

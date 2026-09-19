@@ -213,9 +213,8 @@ model CmsUser {
 /// Effectively a singleton — exactly one row, created by the seed.
 model SiteSettings {
   id          String  @id @default(uuid(7))
-  siteName    String  @map("site_name")
-  tagline     String?
-  description String?
+  siteName String  @map("site_name")
+  tagline  String?
 
   logoMediaId    String? @map("logo_media_id")
   faviconMediaId String? @map("favicon_media_id")
@@ -223,6 +222,24 @@ model SiteSettings {
   contactEmail   String? @map("contact_email")
   contactPhone   String? @map("contact_phone")
   contactAddress String? @map("contact_address")
+
+  /// Each standalone page owns its heading, intro and body. All optional:
+  /// an empty field falls back to a site-wide value, so the pages render
+  /// before anyone has filled them in. Contact details are not duplicated
+  /// here — every page reads the single set above.
+  aboutTitle   String? @map("about_title")
+  aboutIntro   String? @map("about_intro")
+  /// Tiptap document JSON, same shape as Article.content — rendered by the
+  /// reader site's own node renderer, never as HTML.
+  aboutContent Json?   @map("about_content")
+
+  contactTitle String? @map("contact_title")
+  contactIntro String? @map("contact_intro")
+  contactHours String? @map("contact_hours")
+
+  advertiseTitle   String? @map("advertise_title")
+  advertiseIntro   String? @map("advertise_intro")
+  advertiseContent Json?   @map("advertise_content")
 
   facebookUrl  String? @map("facebook_url")
   instagramUrl String? @map("instagram_url")
