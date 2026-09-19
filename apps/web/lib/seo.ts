@@ -41,8 +41,7 @@ export function buildMetadata({
   noIndex = false,
 }: PageMetadataInput): Metadata {
   const siteTitle = settings.defaultSeoTitle ?? defaultSiteTitle(settings);
-  const resolvedDescription =
-    description ?? settings.defaultMetaDescription ?? settings.description;
+  const resolvedDescription = description ?? settings.defaultMetaDescription;
   const resolvedImage = image ?? settings.defaultOgImage ?? settings.logo;
 
   return {

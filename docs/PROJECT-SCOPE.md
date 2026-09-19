@@ -113,11 +113,20 @@ category, publication date. Has a proper no-results state. Includes a content-la
 filter — All / English / Kannada. This filters _which language of article_ appears in
 results; it is not the same thing as a UI language switcher, and stays in scope.
 
-### About & Contact
+### About, Contact & Advertise
 
-One combined page: About text, Contact (email, phone, address — see the open schema flag
-in `docs/DATA-MODEL.md`), Social links — all sourced from Settings → General. No contact
-form in V1.
+Three separate pages, each with its own tab in Settings rather than sharing Settings →
+General (revised 2026-09-19 — they were previously one combined page).
+
+- **About Us** — heading, introduction and a rich-text body written in the same editor as
+  a news article, so the newsroom can use headings, lists and links without a deploy.
+- **Contact Us** — heading, introduction, and the single set of contact details (email,
+  phone, address, office hours) that the footer and the other pages also read.
+- **Advertise** — heading, introduction and a rich-text body, with the currently running
+  advertisements listed underneath.
+
+Every field is optional and falls back to a site-wide value, so the pages render before
+anyone has filled them in. No contact form in V1.
 
 ### Website states
 

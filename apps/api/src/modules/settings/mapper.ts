@@ -1,4 +1,4 @@
-import type { SiteSettingsDto } from '@coastal-talk-news/types';
+import type { ArticleContent, SiteSettingsDto } from '@coastal-talk-news/types';
 
 interface MediaRow {
   id: string;
@@ -11,10 +11,18 @@ export interface SiteSettingsEntity {
   id: string;
   siteName: string;
   tagline: string | null;
-  description: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   contactAddress: string | null;
+  aboutTitle: string | null;
+  aboutIntro: string | null;
+  aboutContent: unknown;
+  contactTitle: string | null;
+  contactIntro: string | null;
+  contactHours: string | null;
+  advertiseTitle: string | null;
+  advertiseIntro: string | null;
+  advertiseContent: unknown;
   facebookUrl: string | null;
   instagramUrl: string | null;
   youtubeUrl: string | null;
@@ -31,6 +39,12 @@ export interface SiteSettingsEntity {
 }
 
 export type ToPublicUrl = (storageKey: string) => string;
+
+/** Prisma widens a Json column to its own union; the response schema
+ * re-checks the document's shape on the way out. */
+export function toContent(value: unknown): ArticleContent | null {
+  return value ? (value as ArticleContent) : null;
+}
 
 function toMediaSummary(media: MediaRow | null, toPublicUrl: ToPublicUrl) {
   return media
@@ -51,12 +65,20 @@ export function toSiteSettingsDto(
     id: settings.id,
     siteName: settings.siteName,
     tagline: settings.tagline,
-    description: settings.description,
     logo: toMediaSummary(settings.logo, toPublicUrl),
     favicon: toMediaSummary(settings.favicon, toPublicUrl),
     contactEmail: settings.contactEmail,
     contactPhone: settings.contactPhone,
     contactAddress: settings.contactAddress,
+    aboutTitle: settings.aboutTitle,
+    aboutIntro: settings.aboutIntro,
+    aboutContent: toContent(settings.aboutContent),
+    contactTitle: settings.contactTitle,
+    contactIntro: settings.contactIntro,
+    contactHours: settings.contactHours,
+    advertiseTitle: settings.advertiseTitle,
+    advertiseIntro: settings.advertiseIntro,
+    advertiseContent: toContent(settings.advertiseContent),
     facebookUrl: settings.facebookUrl,
     instagramUrl: settings.instagramUrl,
     youtubeUrl: settings.youtubeUrl,

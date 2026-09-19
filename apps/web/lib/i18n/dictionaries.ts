@@ -118,12 +118,16 @@ const en = {
   about: {
     title: 'About Us',
     heading: (siteName: string) => `About ${siteName}`,
+    eyebrow: 'About us',
     noDescriptionTitle: 'About text not added yet',
     noDescriptionDescription:
       'The newsroom hasn’t written an About description in Settings yet.',
     getInTouch: 'Stay in touch',
     getInTouchDescription:
       'Have a tip, question or feedback? We would love to hear from you.',
+    writeToUs: 'Write to us',
+    callUs: 'Call us',
+    readNews: 'Read the latest news',
   },
   contact: {
     title: 'Contact',
@@ -155,7 +159,7 @@ const en = {
   advertise: {
     title: 'Advertise with us',
     intro:
-      'Reach readers across the coast. Send us your artwork at any size — it is placed at its own proportions, never stretched or cropped.',
+      'Reach readers across coastal Karnataka. Get in touch and we will help you find the right place for your business.',
     currentlyRunning: 'Currently running',
     noCampaignsTitle: 'No campaigns running right now',
     noCampaignsDescription:
@@ -169,7 +173,7 @@ const kn: typeof en = {
     home: 'ಮುಖಪುಟ',
     about: 'ನಮ್ಮ ಬಗ್ಗೆ',
     contact: 'ಸಂಪರ್ಕಿಸಿ',
-    advertise: 'ಜಾಹೀರಾತು',
+    advertise: 'ಜಾಹೀರಾತುಗಳಿಗಾಗಿ',
     advertisement: 'ಜಾಹೀರಾತು',
     backToHomepage: 'ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ',
     goToHomepage: 'ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ',
@@ -271,12 +275,16 @@ const kn: typeof en = {
   about: {
     title: 'ನಮ್ಮ ಬಗ್ಗೆ',
     heading: (siteName: string) => `${siteName} ಬಗ್ಗೆ`,
+    eyebrow: 'ನಮ್ಮ ಬಗ್ಗೆ',
     noDescriptionTitle: 'ಬಗ್ಗೆ ಪಠ್ಯ ಇನ್ನೂ ಸೇರಿಸಿಲ್ಲ',
     noDescriptionDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಇನ್ನೂ ವಿವರಣೆಯನ್ನು ಬರೆದಿಲ್ಲ.',
     getInTouch: 'ಸಂಪರ್ಕದಲ್ಲಿರಿ',
     getInTouchDescription:
       'ಸಲಹೆ, ಪ್ರಶ್ನೆ ಅಥವಾ ಪ್ರತಿಕ್ರಿಯೆ ಇದೆಯೇ? ನಿಮ್ಮಿಂದ ಕೇಳಲು ನಾವು ಇಷ್ಟಪಡುತ್ತೇವೆ.',
+    writeToUs: 'ನಮಗೆ ಬರೆಯಿರಿ',
+    callUs: 'ನಮಗೆ ಕರೆ ಮಾಡಿ',
+    readNews: 'ಇತ್ತೀಚಿನ ಸುದ್ದಿ ಓದಿ',
   },
   contact: {
     title: 'ಸಂಪರ್ಕಿಸಿ',
@@ -308,7 +316,7 @@ const kn: typeof en = {
   advertise: {
     title: 'ನಮ್ಮೊಂದಿಗೆ ಜಾಹೀರಾತು ನೀಡಿ',
     intro:
-      'ಕರಾವಳಿಯಾದ್ಯಂತ ಓದುಗರನ್ನು ತಲುಪಿ. ಯಾವುದೇ ಗಾತ್ರದ ನಿಮ್ಮ ಜಾಹೀರಾತನ್ನು ಕಳುಹಿಸಿ — ಅದನ್ನು ಅದರ ಸ್ವಂತ ಅನುಪಾತದಲ್ಲಿ ಇರಿಸಲಾಗುತ್ತದೆ, ಎಂದಿಗೂ ಎಳೆಯಲಾಗುವುದಿಲ್ಲ ಅಥವಾ ಕತ್ತರಿಸಲಾಗುವುದಿಲ್ಲ.',
+      'ಕರಾವಳಿ ಕರ್ನಾಟಕದಾದ್ಯಂತ ಓದುಗರನ್ನು ತಲುಪಿ. ನಿಮ್ಮ ವ್ಯವಹಾರಕ್ಕೆ ಸೂಕ್ತವಾದ ಸ್ಥಳವನ್ನು ಕಂಡುಕೊಳ್ಳಲು ನಮ್ಮನ್ನು ಸಂಪರ್ಕಿಸಿ.',
     currentlyRunning: 'ಪ್ರಸ್ತುತ ಪ್ರಸಾರವಾಗುತ್ತಿದೆ',
     noCampaignsTitle: 'ಸದ್ಯಕ್ಕೆ ಯಾವುದೇ ಪ್ರಚಾರ ನಡೆಯುತ್ತಿಲ್ಲ',
     noCampaignsDescription:

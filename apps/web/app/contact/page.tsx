@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { SocialLinks } from '../../components/layout/SocialLinks';
 import { EmptyState } from '../../components/ui/EmptyState';
-import { getSite } from '../../lib/api';
+import { getPage, getSite } from '../../lib/api';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import { getLocale } from '../../lib/i18n/server';
 import { buildMetadata } from '../../lib/seo';
@@ -99,11 +99,15 @@ function ContactCard({
 }
 
 export default async function ContactPage() {
-  const [{ settings }, locale] = await Promise.all([getSite(), getLocale()]);
+  const [{ settings }, page, locale] = await Promise.all([
+    getSite(),
+    getPage('contact'),
+    getLocale(),
+  ]);
   const dictionary = getDictionary(locale);
 
   const hasDetails = Boolean(
-    settings.contactAddress || settings.contactEmail || settings.contactPhone,
+    page.address || page.email || page.phone || page.hours,
   );
   const hasSocials = Boolean(
     settings.facebookUrl ||
@@ -116,47 +120,52 @@ export default async function ContactPage() {
     <div className="mx-auto max-w-3xl px-4 py-10 sm:py-14">
       <div className="text-center">
         <h1 className="font-serif text-3xl font-bold sm:text-4xl">
-          {dictionary.contact.heading}
+          {page.title ?? dictionary.contact.heading}
         </h1>
-        <p className="text-ink-muted mx-auto mt-3 max-w-md">
-          {dictionary.contact.intro}
+        <p className="text-ink-muted mx-auto mt-3 max-w-xl leading-relaxed">
+          {page.intro ?? dictionary.contact.intro}
         </p>
       </div>
 
       {hasDetails ? (
         <div className="mt-10 flex flex-wrap justify-center gap-4">
-          {settings.contactAddress && (
+          {page.address && (
             <ContactCard
               icon={<MapPinIcon />}
               label={dictionary.contact.addressLabel}
             >
-              {settings.contactAddress}
+              {page.address}
             </ContactCard>
           )}
-          {settings.contactEmail && (
+          {page.email && (
             <ContactCard
               icon={<MailIcon />}
               label={dictionary.contact.emailLabel}
             >
               <a
-                href={`mailto:${settings.contactEmail}`}
+                href={`mailto:${page.email}`}
                 className="text-brand font-medium break-all hover:underline"
               >
-                {settings.contactEmail}
+                {page.email}
               </a>
             </ContactCard>
           )}
-          {settings.contactPhone && (
+          {page.phone && (
             <ContactCard
               icon={<PhoneIcon />}
               label={dictionary.contact.phoneLabel}
             >
               <a
-                href={`tel:${settings.contactPhone}`}
+                href={`tel:${page.phone}`}
                 className="text-brand font-medium hover:underline"
               >
-                {settings.contactPhone}
+                {page.phone}
               </a>
+              {page.hours && (
+                <span className="text-ink-subtle mt-1 block text-xs">
+                  {page.hours}
+                </span>
+              )}
             </ContactCard>
           )}
         </div>

@@ -1,16 +1,24 @@
 import { ErrorState, LoadingState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
-import { Globe, Search } from 'lucide-react';
+import { Globe, Info, Mail, Megaphone, Search } from 'lucide-react';
 import { useState } from 'react';
 import { settingsApi } from '../api/settings.js';
 import { queryKeys } from '../api/queryKeys.js';
+import { SettingsContactForm } from '../features/settings/SettingsContactForm.js';
 import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js';
+import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
 import { SettingsSeoForm } from '../features/settings/SettingsSeoForm.js';
 
-type Tab = 'general' | 'seo';
+type Tab = 'general' | 'about' | 'contact' | 'advertise' | 'seo';
 
+// Each standalone page on the website gets its own tab, so an admin looking
+// for the About page's text finds it under About rather than buried in a
+// single catch-all form.
 const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'general', label: 'General', icon: Globe },
+  { value: 'about', label: 'About Us', icon: Info },
+  { value: 'contact', label: 'Contact Us', icon: Mail },
+  { value: 'advertise', label: 'Advertise', icon: Megaphone },
   { value: 'seo', label: 'SEO', icon: Search },
 ];
 
@@ -38,7 +46,8 @@ export function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-ink">Settings</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Manage how your website appears and identifies itself.
+          Manage how your website appears, and the text on its About Us, Contact
+          Us and Advertise pages.
         </p>
       </div>
 
@@ -70,6 +79,15 @@ export function SettingsPage() {
         <div className="border-hairline rounded-card min-w-0 flex-1 border bg-surface p-5 shadow-sm sm:p-6">
           <div hidden={tab !== 'general'}>
             <SettingsGeneralForm settings={data} />
+          </div>
+          <div hidden={tab !== 'about'}>
+            <SettingsPageForm settings={data} page="about" />
+          </div>
+          <div hidden={tab !== 'contact'}>
+            <SettingsContactForm settings={data} />
+          </div>
+          <div hidden={tab !== 'advertise'}>
+            <SettingsPageForm settings={data} page="advertise" />
           </div>
           <div hidden={tab !== 'seo'}>
             <SettingsSeoForm settings={data} />

@@ -62,7 +62,6 @@ export function findSettings(db: TransactionClient) {
     select: {
       siteName: true,
       tagline: true,
-      description: true,
       contactEmail: true,
       contactPhone: true,
       contactAddress: true,
@@ -78,6 +77,30 @@ export function findSettings(db: TransactionClient) {
       logo: mediaSelect,
       favicon: mediaSelect,
       defaultOgImage: mediaSelect,
+    },
+  });
+}
+
+/**
+ * Only the standalone pages' own copy. Separate from findSettings because
+ * that one backs /site, which every page on the reader site fetches — the
+ * two documents here would ride along on all of them for nothing.
+ */
+export function findPageSettings(db: TransactionClient) {
+  return db.siteSettings.findFirst({
+    select: {
+      aboutTitle: true,
+      aboutIntro: true,
+      aboutContent: true,
+      contactTitle: true,
+      contactIntro: true,
+      contactHours: true,
+      advertiseTitle: true,
+      advertiseIntro: true,
+      advertiseContent: true,
+      contactEmail: true,
+      contactPhone: true,
+      contactAddress: true,
     },
   });
 }

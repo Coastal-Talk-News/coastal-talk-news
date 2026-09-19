@@ -3,6 +3,7 @@ import type {
   PublicAdvertisementDetailDto,
   PublicArticleDto,
   PublicHomeDto,
+  PublicPageDto,
   PublicSiteDto,
 } from '@coastal-talk-news/types';
 import { NotFoundError } from '../../lib/errors.js';
@@ -15,6 +16,7 @@ import {
   toArticleCard,
   toArticleDetail,
   toNavCategory,
+  toPageContent,
   toSettings,
   withNavChildren,
   type ToPublicUrl,
@@ -86,6 +88,45 @@ export async function getSite({
     advertisements: advertisements.map((advertisement) =>
       toAdvertisement(advertisement, toPublicUrl),
     ),
+  };
+}
+
+export type PublicPageKey = 'about' | 'contact' | 'advertise';
+
+/** A standalone page's own copy, plus the one set of contact details every
+ * page shares. */
+export async function getPage(
+  { db }: PublicServiceDeps,
+  page: PublicPageKey,
+): Promise<PublicPageDto> {
+  const settings = await repository.findPageSettings(db);
+  if (!settings) {
+    throw new NotFoundError('Site settings');
+  }
+
+  if (page === 'contact') {
+    return {
+      title: settings.contactTitle,
+      intro: settings.contactIntro,
+      content: null,
+      email: settings.contactEmail,
+      phone: settings.contactPhone,
+      address: settings.contactAddress,
+      hours: settings.contactHours,
+    };
+  }
+
+  const isAbout = page === 'about';
+  return {
+    title: isAbout ? settings.aboutTitle : settings.advertiseTitle,
+    intro: isAbout ? settings.aboutIntro : settings.advertiseIntro,
+    content: toPageContent(
+      isAbout ? settings.aboutContent : settings.advertiseContent,
+    ),
+    email: settings.contactEmail,
+    phone: settings.contactPhone,
+    address: null,
+    hours: null,
   };
 }
 

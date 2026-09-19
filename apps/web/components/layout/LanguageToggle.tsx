@@ -42,7 +42,7 @@ export function LanguageToggle({
             : 'hover:bg-paper-sunken text-ink-muted'
         }`}
       >
-        EN
+        ENGLISH
       </button>
       <button
         type="button"

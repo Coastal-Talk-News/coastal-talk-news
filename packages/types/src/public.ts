@@ -59,7 +59,6 @@ export interface PublicAdvertisementDetailDto extends PublicAdvertisementDto {
 export interface PublicSiteSettingsDto {
   siteName: string;
   tagline: string | null;
-  description: string | null;
   logo: MediaSummaryDto | null;
   favicon: MediaSummaryDto | null;
   /** What a reader sees before choosing one themselves. */
@@ -89,6 +88,22 @@ export interface PublicNavCategoryDto extends PublicCategoryRefDto {
   /** This entry's direct children, each with its own `children` populated the
    * same way — walk it to render nesting of any depth. */
   children: PublicNavCategoryDto[];
+}
+
+/**
+ * One of the standalone pages (About, Contact, Advertise). Every field is
+ * optional: each falls back to a site-wide value or is simply left out, so a
+ * page still renders before the newsroom has filled anything in.
+ */
+export interface PublicPageDto {
+  title: string | null;
+  intro: string | null;
+  /** Tiptap document. Null on Contact, which is a set of details, not prose. */
+  content: ArticleContent | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  hours: string | null;
 }
 
 /** The site shell: everything the header, ticker and footer need. */
