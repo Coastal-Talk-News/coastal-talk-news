@@ -275,10 +275,15 @@ export async function searchPublished(
   };
 }
 
-export function categoryExists(db: TransactionClient, categoryId: string) {
+/** Also returns whether the category has subcategories — a parent category
+ * groups its children and can't take an article directly. */
+export function findCategoryForAssignment(
+  db: TransactionClient,
+  categoryId: string,
+) {
   return db.category.findUnique({
     where: { id: categoryId },
-    select: { id: true },
+    select: { id: true, _count: { select: { children: true } } },
   });
 }
 

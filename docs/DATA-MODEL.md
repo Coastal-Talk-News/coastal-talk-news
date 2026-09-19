@@ -56,11 +56,19 @@ up UI or filters.
 `id`, `media_id` (FK → Media Asset), `name`, `description`, `is_active`, `display_order`,
 `parent_id` (FK → Category, nullable, self-relation), `created_at`, `updated_at`
 
-CMS-only subcategories: `parent_id` is null for a top-level category. The hierarchy is
-capped at two levels — a category whose own `parent_id` is set can never itself be chosen
-as a parent — enforced in the API's service layer, not by the database. `display_order`
-is scoped per parent (top-level categories order among themselves; each parent's children
-order among themselves, independently).
+CMS-only subcategories: `parent_id` is null for a top-level category. Grouping can nest
+to any depth (a category can be another category's parent regardless of its own depth) —
+the only constraints are no cycles (a category can't become its own ancestor) and the
+leaf/group rule below, both enforced in the API's service layer, not by the database.
+`display_order` is scoped per parent (top-level categories order among themselves; each
+parent's children order among themselves, independently, at every depth).
+
+**Leaf vs. group (backend-enforced, no schema change needed):** a category either groups
+subcategories or holds articles directly — never both, the same way a filesystem folder
+holds files or other folders but isn't itself a file. `Article.category_id` can only
+reference a category with zero children; conversely, a category can only gain children
+(be chosen as someone's `parent_id`) while it has zero articles directly assigned. Both
+directions are checked in the API's service layer at write time, not by the database.
 
 **Deletion rules (backend-enforced, no schema change needed):**
 

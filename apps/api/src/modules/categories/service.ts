@@ -53,9 +53,10 @@ async function assertMediaExists(db: Database, mediaId: string): Promise<void> {
 }
 
 /**
- * A parent must exist and must itself be top-level — a category whose own
- * parentId is set can never be chosen as someone else's parent, which is what
- * caps the hierarchy at two levels.
+ * Grouping can nest to any depth: a parent just has to exist, not create a
+ * cycle (become a descendant of the category being moved), and not already
+ * hold articles directly — a category groups its children or holds articles,
+ * never both, at whatever depth it sits.
  */
 async function assertValidParent(
   db: TransactionClient,
@@ -71,9 +72,19 @@ async function assertValidParent(
       'parentId does not refer to an existing category.',
     );
   }
-  if (parent.parentId !== null) {
-    throw new BadRequestError(
-      'parentId refers to a category that is itself a subcategory. Only a top-level category can be a parent.',
+  if (excludingId) {
+    const descendantIds = await repository.findDescendantIds(db, excludingId);
+    if (descendantIds.has(parentId)) {
+      throw new BadRequestError(
+        'parentId refers to one of this category’s own subcategories, which would create a cycle.',
+      );
+    }
+  }
+  const articleCount = await repository.countArticles(db, parentId);
+  if (articleCount > 0) {
+    throw new ConflictError(
+      `Cannot use this category as a parent while ${articleCount} article(s) are still assigned to it directly. Reassign them to a subcategory first.`,
+      { articleCount },
     );
   }
 }
@@ -206,10 +217,6 @@ export async function update(
     input.parentId !== undefined && input.parentId !== existing.parentId;
   if (parentChanged && input.parentId !== null) {
     await assertValidParent(db, input.parentId as string, id);
-    // A category with its own children can't become someone else's child —
-    // that would make a third level. This is the real guard behind the CMS's
-    // disabled Parent Category dropdown, not just a UI nicety.
-    await assertNoChildren(db, id, 'move this category under a parent');
   }
 
   const coverImageChanged =

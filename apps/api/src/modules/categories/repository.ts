@@ -147,12 +147,35 @@ export function countChildren(db: TransactionClient, id: string) {
   return db.category.count({ where: { parentId: id } });
 }
 
-/** Just enough to validate a proposed parent: does it exist, and is it itself top-level? */
+/** Just enough to validate a proposed parent: does it exist? */
 export function findParentCandidate(db: TransactionClient, id: string) {
   return db.category.findUnique({
     where: { id },
-    select: { id: true, parentId: true },
+    select: { id: true },
   });
+}
+
+/**
+ * Every descendant of `id`, any number of levels down — walked level by
+ * level rather than with a recursive CTE, since the tree is small and this
+ * keeps the query shape consistent with the rest of the module. Used to
+ * reject a reparent that would make a category its own descendant's child.
+ */
+export async function findDescendantIds(
+  db: TransactionClient,
+  id: string,
+): Promise<Set<string>> {
+  const descendants = new Set<string>();
+  let frontier = [id];
+  while (frontier.length > 0) {
+    const children = await db.category.findMany({
+      where: { parentId: { in: frontier } },
+      select: { id: true },
+    });
+    frontier = children.map((child) => child.id);
+    for (const childId of frontier) descendants.add(childId);
+  }
+  return descendants;
 }
 
 export function mediaExists(db: TransactionClient, mediaId: string) {

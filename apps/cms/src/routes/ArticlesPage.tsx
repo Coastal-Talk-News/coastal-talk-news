@@ -22,6 +22,10 @@ import { PageHeader } from '../components/layout/PageHeader.js';
 import { ArticleRow } from '../features/articles/ArticleRow.js';
 import { ArticlesTableSkeleton } from '../features/articles/ArticlesTableSkeleton.js';
 import { useArticleMutations } from '../features/articles/useArticleMutations.js';
+import {
+  categoryPathLabel,
+  leafCategories,
+} from '../features/categories/tree.js';
 import { SEARCH_DEBOUNCE_MS, useDebounced } from '../lib/useDebounced.js';
 
 type StatusTab = 'all' | 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
@@ -110,11 +114,14 @@ export function ArticlesPage() {
     queryFn: ({ signal }) => categoriesApi.list({ limit: 100 }, signal),
   });
 
+  // A parent category never has articles of its own, so it's excluded here —
+  // filtering by one would always return nothing.
+  const allCategories = categoriesQuery.data?.data ?? [];
   const categoryOptions: SelectOption[] = [
     { value: '', label: 'All Categories' },
-    ...(categoriesQuery.data?.data ?? []).map((category) => ({
+    ...leafCategories(allCategories).map((category) => ({
       value: category.id,
-      label: category.name,
+      label: categoryPathLabel(category, allCategories),
     })),
   ];
 

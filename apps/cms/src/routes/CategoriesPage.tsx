@@ -5,17 +5,20 @@ import { Input } from '@coastal-talk-news/ui/input';
 import { EmptyState, ErrorState } from '@coastal-talk-news/ui/states';
 import {
   DndContext,
+  DragOverlay,
   KeyboardSensor,
+  MeasuringStrategy,
   PointerSensor,
   closestCenter,
   useSensor,
   useSensors,
   type DragEndEvent,
+  type DragMoveEvent,
+  type DragOverEvent,
+  type DragStartEvent,
 } from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   SortableContext,
-  arrayMove,
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
@@ -24,18 +27,31 @@ import {
   ChevronsDownUp,
   ChevronsUpDown,
   LayoutGrid,
+  MoveHorizontal,
   Plus,
   Search,
   X,
 } from 'lucide-react';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { categoriesApi } from '../api/categories.js';
 import { ApiError } from '../api/client.js';
 import { queryKeys } from '../api/queryKeys.js';
 import { PageHeader } from '../components/layout/PageHeader.js';
-import { CategoryRow } from '../features/categories/CategoryRow.js';
+import {
+  CategoryDragPreview,
+  CategoryRow,
+} from '../features/categories/CategoryRow.js';
 import { CategoryTableSkeleton } from '../features/categories/CategoryTableSkeleton.js';
 import { CategorySheet } from '../features/categories/CategorySheet.js';
+import {
+  categoriesWithChildrenIds,
+  descendantIds,
+  flattenTree,
+  getProjection,
+  siblingOrderAfterMove,
+  sortByDisplayOrder,
+  type FlatCategory,
+} from '../features/categories/tree.js';
 import { useCategoryMutations } from '../features/categories/useCategoryMutations.js';
 import { SEARCH_DEBOUNCE_MS, useDebounced } from '../lib/useDebounced.js';
 
@@ -52,12 +68,6 @@ const STATUS_PARAM: Record<StatusFilter, boolean | undefined> = {
   active: true,
   hidden: false,
 };
-
-function sortByDisplayOrder(categories: CmsCategoryDto[]): CmsCategoryDto[] {
-  return [...categories].sort(
-    (a, b) => a.displayOrder - b.displayOrder || a.name.localeCompare(b.name),
-  );
-}
 
 export function CategoriesPage() {
   const [status, setStatus] = useState<StatusFilter>('all');
@@ -80,75 +90,41 @@ export function CategoriesPage() {
 
   const mutations = useCategoryMutations(listKey);
 
-  const [order, setOrder] = useState<CmsCategoryDto[]>([]);
-  useEffect(() => {
-    if (data) setOrder(data.data);
-  }, [data]);
+  // The query cache is the single source of truth — mutations patch it
+  // optimistically, so there's no second local copy of the list to drift
+  // back to a stale order between the drop and the server's reply.
+  const categories = useMemo(() => data?.data ?? [], [data]);
 
+  const searchTerm = debouncedSearch.trim().toLowerCase();
   const visible = useMemo(() => {
-    const term = debouncedSearch.trim().toLowerCase();
-    if (!term) return order;
-    return order.filter(
+    if (!searchTerm) return categories;
+    return categories.filter(
       (category) =>
-        category.name.toLowerCase().includes(term) ||
-        (category.description ?? '').toLowerCase().includes(term),
+        category.name.toLowerCase().includes(searchTerm) ||
+        (category.description ?? '').toLowerCase().includes(searchTerm),
     );
-  }, [order, debouncedSearch]);
+  }, [categories, searchTerm]);
 
-  const isFiltered = debouncedSearch.trim() !== '' || status !== 'all';
-  const reorderHint = isFiltered
-    ? 'Clear the search and filter to reorder'
-    : 'Drag to reorder';
+  const isFiltered = searchTerm !== '' || status !== 'all';
+  // Reordering writes the whole group's order at once, so it can only run
+  // against the full list — a filtered view is missing rows it would drop.
+  const dragHint = isFiltered
+    ? 'Clear the search and filter to rearrange'
+    : 'Drag to move';
 
-  // Once displayOrder is scoped per parent, the flat array from the API is no
-  // longer naturally in tree order — a child and a top-level category can
-  // both sit at position 0. Each group is sorted independently instead of
-  // trusting the list's raw sequence.
-  const topLevel = useMemo(
-    () => sortByDisplayOrder(order.filter((category) => !category.parentId)),
-    [order],
+  const groupIds = useMemo(
+    () => categoriesWithChildrenIds(categories),
+    [categories],
   );
 
-  const childrenByParent = useMemo(() => {
-    const map = new Map<string, CmsCategoryDto[]>();
-    for (const category of order) {
-      if (!category.parentId) continue;
-      map.set(category.parentId, [
-        ...(map.get(category.parentId) ?? []),
-        category,
-      ]);
-    }
-    for (const [parentId, children] of map) {
-      map.set(parentId, sortByDisplayOrder(children));
-    }
-    return map;
-  }, [order]);
-
-  const parentsWithChildren = useMemo(
-    () => topLevel.filter((category) => childrenByParent.has(category.id)),
-    [topLevel, childrenByParent],
-  );
-
-  // Defaults to every parent expanded; preserves a manual collapse across
-  // refetches by only ever adding newly-seen parents, never removing one the
-  // admin already toggled shut.
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-  useEffect(() => {
-    setExpanded((current) => {
-      const next = new Set(current);
-      let changed = false;
-      for (const parent of parentsWithChildren) {
-        if (!next.has(parent.id)) {
-          next.add(parent.id);
-          changed = true;
-        }
-      }
-      return changed ? next : current;
-    });
-  }, [parentsWithChildren]);
+  // Groups start open, and what's tracked is which ones the admin shut —
+  // the inverse can't survive a refetch, because a group that was collapsed
+  // on purpose and one that has just appeared both read as "not expanded",
+  // so restoring the new one's default reopens the other.
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   function toggleExpanded(id: string) {
-    setExpanded((current) => {
+    setCollapsed((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -156,17 +132,31 @@ export function CategoriesPage() {
     });
   }
 
-  const allExpanded =
-    parentsWithChildren.length > 0 &&
-    parentsWithChildren.every((category) => expanded.has(category.id));
+  function reveal(id: string) {
+    setCollapsed((current) => {
+      if (!current.has(id)) return current;
+      const next = new Set(current);
+      next.delete(id);
+      return next;
+    });
+  }
+
+  const allExpanded = [...groupIds].every((id) => !collapsed.has(id));
 
   function toggleExpandAll() {
-    setExpanded(
-      allExpanded
-        ? new Set()
-        : new Set(parentsWithChildren.map((category) => category.id)),
-    );
+    setCollapsed(allExpanded ? new Set(groupIds) : new Set());
   }
+
+  const rows = useMemo<FlatCategory[]>(() => {
+    if (searchTerm) {
+      return sortByDisplayOrder(visible).map((category) => ({
+        category,
+        parentId: category.parentId ?? null,
+        depth: 0,
+      }));
+    }
+    return flattenTree(visible, collapsed);
+  }, [visible, collapsed, searchTerm]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -175,37 +165,92 @@ export function CategoriesPage() {
     }),
   );
 
-  function groupOf(id: string): string | null {
-    return order.find((category) => category.id === id)?.parentId ?? null;
+  // Vertical drag picks the position, horizontal drag picks the depth — the
+  // only way a drag can say "out of this group and under that one," which
+  // dropping onto a row cannot express on its own.
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
+  const [offsetLeft, setOffsetLeft] = useState(0);
+
+  // A category can't be dropped inside its own subtree, so that subtree
+  // leaves the list for the duration of the drag.
+  const dragRows = useMemo(() => {
+    if (!draggingId) return rows;
+    const inside = descendantIds(categories, draggingId);
+    return rows.filter((row) => !inside.has(row.category.id));
+  }, [rows, draggingId, categories]);
+
+  const projection =
+    draggingId && overId
+      ? getProjection(dragRows, draggingId, overId, offsetLeft)
+      : null;
+
+  function resetDrag() {
+    setDraggingId(null);
+    setOverId(null);
+    setOffsetLeft(0);
   }
 
-  // Cross-group drops (a row picked up from one parent's children and hovered
-  // over a different parent's, or over the top-level group) are a no-op —
-  // dnd-kit's collision detection doesn't know about the group boundary on
-  // its own, and re-parenting only happens through the Parent Category
-  // dropdown, not by dragging a row into a different group.
+  function handleDragStart({ active }: DragStartEvent) {
+    setDraggingId(String(active.id));
+    setOverId(String(active.id));
+    setOffsetLeft(0);
+  }
+
+  function handleDragMove({ delta }: DragMoveEvent) {
+    setOffsetLeft(delta.x);
+  }
+
+  function handleDragOver({ over }: DragOverEvent) {
+    setOverId(over ? String(over.id) : null);
+  }
+
   function handleDragEnd({ active, over }: DragEndEvent) {
-    if (!over || active.id === over.id) return;
-    const activeId = String(active.id);
-    const overId = String(over.id);
-    const group = groupOf(activeId);
-    if (group !== groupOf(overId)) return;
+    const id = String(active.id);
+    const currentRows = dragRows;
+    const currentOffset = offsetLeft;
+    resetDrag();
 
-    const groupItems = order.filter(
-      (category) => (category.parentId ?? null) === group,
+    if (!over) return;
+    const category = categories.find((item) => item.id === id);
+    const target = getProjection(
+      currentRows,
+      id,
+      String(over.id),
+      currentOffset,
     );
-    const from = groupItems.findIndex((category) => category.id === activeId);
-    const to = groupItems.findIndex((category) => category.id === overId);
-    if (from === -1 || to === -1) return;
+    if (!category || !target) return;
 
-    const reordered = arrayMove(groupItems, from, to);
-    const others = order.filter(
-      (category) => (category.parentId ?? null) !== group,
+    const parentIsExpanded =
+      target.parentId === null || !collapsed.has(target.parentId);
+    const siblingIds = siblingOrderAfterMove(
+      currentRows,
+      categories,
+      id,
+      String(over.id),
+      target.parentId,
+      parentIsExpanded,
     );
-    setOrder([...others, ...reordered]);
-    mutations.reorder.mutate({
-      parentId: group,
-      ids: reordered.map((category) => category.id),
+    if (siblingIds.length === 0) return;
+
+    const parentChanged = (category.parentId ?? null) !== target.parentId;
+    const currentOrder = sortByDisplayOrder(
+      categories.filter((item) => (item.parentId ?? null) === target.parentId),
+    ).map((item) => item.id);
+    const unchanged =
+      !parentChanged &&
+      currentOrder.length === siblingIds.length &&
+      currentOrder.every((value, index) => value === siblingIds[index]);
+    if (unchanged) return;
+
+    if (target.parentId) {
+      reveal(target.parentId);
+    }
+    mutations.move.mutate({
+      id,
+      parentId: target.parentId,
+      parentChanged,
+      siblingIds,
     });
   }
 
@@ -221,16 +266,22 @@ export function CategoriesPage() {
 
   const saveError = editing ? mutations.update.error : mutations.create.error;
   const total = data?.meta.total ?? 0;
+  const draggingCategory = draggingId
+    ? (categories.find((category) => category.id === draggingId) ?? null)
+    : null;
+  const projectedParent = projection?.parentId
+    ? categories.find((category) => category.id === projection.parentId)
+    : null;
 
   return (
     <>
       <PageHeader
         eyebrow="News"
         title="Categories"
-        description="Organise your news. Active categories appear in the website navigation."
+        description="Group related categories together. Articles are filed against the ones with no subcategories of their own."
         actions={
           <div className="flex gap-2">
-            {parentsWithChildren.length > 0 && !isFiltered && (
+            {groupIds.size > 0 && !isFiltered && (
               <Button variant="secondary" onClick={toggleExpandAll}>
                 {allExpanded ? (
                   <ChevronsDownUp className="size-4" aria-hidden />
@@ -303,7 +354,7 @@ export function CategoriesPage() {
             }
             onRetry={() => void refetch()}
           />
-        ) : visible.length === 0 ? (
+        ) : rows.length === 0 ? (
           <EmptyState
             icon={<LayoutGrid className="size-5" aria-hidden />}
             title={isFiltered ? 'No matching categories' : 'No categories yet'}
@@ -334,42 +385,78 @@ export function CategoriesPage() {
           />
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                modifiers={[restrictToVerticalAxis]}
-                onDragEnd={handleDragEnd}
+            {!isFiltered && (
+              <div
+                aria-live="polite"
+                className={
+                  draggingCategory
+                    ? 'border-accent bg-accent-soft text-accent-text flex items-center gap-2 border-b px-4 py-2 text-sm'
+                    : 'text-ink-muted border-hairline flex items-center gap-2 border-b px-4 py-2 text-xs'
+                }
               >
-                <table className="w-full min-w-208 text-left">
-                  <thead>
-                    <tr className="text-ink-subtle border-hairline bg-surface-sunken border-b text-[11px] font-semibold tracking-[0.08em] uppercase">
-                      <th className="w-9 pl-4">
-                        <span className="sr-only">Reorder</span>
-                      </th>
-                      <th className="w-14 py-3">#</th>
-                      <th className="py-3">Image</th>
-                      <th className="py-3 pr-4">Name</th>
-                      <th className="py-3 pr-4">Articles</th>
-                      <th className="py-3 pr-4">Status</th>
-                      <th className="py-3 pr-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-hairline divide-y">
-                    {isFiltered ? (
-                      <SortableContext
-                        items={visible.map((category) => category.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {visible.map((category, index) => (
+                <MoveHorizontal className="size-3.5 shrink-0" aria-hidden />
+                {draggingCategory ? (
+                  <span>
+                    <strong className="font-semibold">
+                      {draggingCategory.name}
+                    </strong>{' '}
+                    {projectedParent
+                      ? `will move under “${projectedParent.name}”.`
+                      : 'will move to the top level.'}
+                  </span>
+                ) : (
+                  <span>
+                    Drag a row up or down to reorder it, or sideways to move it
+                    in and out of a group.
+                  </span>
+                )}
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <div className="min-w-4xl">
+                <div className="text-ink-subtle border-hairline bg-surface-sunken flex items-center gap-3 border-b px-4 py-2.5 text-[11px] font-semibold tracking-[0.08em] uppercase">
+                  <span className="w-6 shrink-0" aria-hidden />
+                  <span className="flex-1">Category</span>
+                  <span className="w-24 shrink-0">Articles</span>
+                  <span className="w-24 shrink-0">Status</span>
+                  <span className="w-28 shrink-0 text-right">Actions</span>
+                </div>
+
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  measuring={{
+                    droppable: { strategy: MeasuringStrategy.Always },
+                  }}
+                  onDragStart={handleDragStart}
+                  onDragMove={handleDragMove}
+                  onDragOver={handleDragOver}
+                  onDragEnd={handleDragEnd}
+                  onDragCancel={resetDrag}
+                >
+                  <SortableContext
+                    items={dragRows.map((row) => row.category.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <ul className="divide-hairline divide-y">
+                      {dragRows.map((row) => {
+                        const isDragging = row.category.id === draggingId;
+                        return (
                           <CategoryRow
-                            key={category.id}
-                            category={category}
-                            position={String(index + 1)}
-                            isChild={category.parentId !== null}
-                            hasChildren={false}
-                            expanded={false}
-                            onToggleExpand={() => {}}
+                            key={row.category.id}
+                            category={row.category}
+                            depth={
+                              isDragging && projection
+                                ? projection.depth
+                                : row.depth
+                            }
+                            hasChildren={groupIds.has(row.category.id)}
+                            expanded={!collapsed.has(row.category.id)}
+                            isDragging={isDragging}
+                            onToggleExpand={() =>
+                              toggleExpanded(row.category.id)
+                            }
                             onEdit={openEdit}
                             onDelete={setPendingDelete}
                             onToggleActive={(target, isActive) =>
@@ -378,82 +465,26 @@ export function CategoriesPage() {
                                 isActive,
                               })
                             }
-                            reorderDisabled
-                            reorderHint={reorderHint}
+                            dragDisabled={isFiltered}
+                            dragHint={dragHint}
                           />
-                        ))}
-                      </SortableContext>
-                    ) : (
-                      <SortableContext
-                        items={topLevel.map((category) => category.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {topLevel.map((parent, parentIndex) => {
-                          const children = childrenByParent.get(parent.id);
-                          const isExpanded = expanded.has(parent.id);
-                          return (
-                            <Fragment key={parent.id}>
-                              <CategoryRow
-                                category={parent}
-                                position={String(parentIndex + 1)}
-                                isChild={false}
-                                hasChildren={Boolean(children)}
-                                expanded={isExpanded}
-                                onToggleExpand={() => toggleExpanded(parent.id)}
-                                onEdit={openEdit}
-                                onDelete={setPendingDelete}
-                                onToggleActive={(target, isActive) =>
-                                  mutations.setActive.mutate({
-                                    id: target.id,
-                                    isActive,
-                                  })
-                                }
-                                reorderDisabled={false}
-                                reorderHint={reorderHint}
-                              />
-                              {isExpanded && children && (
-                                <SortableContext
-                                  items={children.map(
-                                    (category) => category.id,
-                                  )}
-                                  strategy={verticalListSortingStrategy}
-                                >
-                                  {children.map((child, childIndex) => (
-                                    <CategoryRow
-                                      key={child.id}
-                                      category={child}
-                                      position={`${parentIndex + 1}.${childIndex + 1}`}
-                                      isChild
-                                      hasChildren={false}
-                                      expanded={false}
-                                      onToggleExpand={() => {}}
-                                      onEdit={openEdit}
-                                      onDelete={setPendingDelete}
-                                      onToggleActive={(target, isActive) =>
-                                        mutations.setActive.mutate({
-                                          id: target.id,
-                                          isActive,
-                                        })
-                                      }
-                                      reorderDisabled={false}
-                                      reorderHint={reorderHint}
-                                    />
-                                  ))}
-                                </SortableContext>
-                              )}
-                            </Fragment>
-                          );
-                        })}
-                      </SortableContext>
+                        );
+                      })}
+                    </ul>
+                  </SortableContext>
+
+                  <DragOverlay>
+                    {draggingCategory && (
+                      <CategoryDragPreview category={draggingCategory} />
                     )}
-                  </tbody>
-                </table>
-              </DndContext>
+                  </DragOverlay>
+                </DndContext>
+              </div>
             </div>
 
             <div className="border-hairline text-ink-muted flex items-center justify-between border-t px-4 py-3 text-xs">
               <span>
-                Showing {visible.length} of {total}{' '}
+                Showing {rows.length} of {total}{' '}
                 {total === 1 ? 'category' : 'categories'}
               </span>
               <span
@@ -481,8 +512,8 @@ export function CategoriesPage() {
               ? 'Could not save this category.'
               : null
         }
-        existingNames={order.map((category) => category.name)}
-        categories={order}
+        existingNames={categories.map((category) => category.name)}
+        categories={categories}
         onOpenChange={setSheetOpen}
         onSubmit={(values) => {
           const done = { onSuccess: () => setSheetOpen(false) };

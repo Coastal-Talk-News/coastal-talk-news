@@ -85,24 +85,31 @@ export function toNavCategory(
 }
 
 /**
- * Nests each child under its parent's `children` array for the desktop nav's
- * dropdown, without removing children from the flat array itself — the
- * homepage grid and mobile drawer still read the same list flat.
+ * Nests each category under its parent's `children` array, recursively —
+ * every entry keeps its own `children` populated (not just top-level ones),
+ * so the desktop nav's flyout and the mobile drawer's accordion can walk the
+ * tree to any depth. Children stay in the flat array too, unremoved, so the
+ * homepage grid and mobile drawer can still read the same list flat.
  */
 export function withNavChildren(
   categories: PublicNavCategoryDto[],
 ): PublicNavCategoryDto[] {
-  const childrenByParent = new Map<string, PublicNavCategoryDto[]>();
+  // One shared node per category, created up front, so linking a child into
+  // its parent's `children` array also carries that child's own (already
+  // linked) children with it — a single pass keyed only by id would instead
+  // copy each category's pre-link, still-empty `children`, flattening
+  // anything past the first level.
+  const nodes = new Map<string, PublicNavCategoryDto>();
+  for (const category of categories) {
+    nodes.set(category.id, { ...category, children: [] });
+  }
   for (const category of categories) {
     if (!category.parentId) continue;
-    const siblings = childrenByParent.get(category.parentId) ?? [];
-    siblings.push(category);
-    childrenByParent.set(category.parentId, siblings);
+    const parent = nodes.get(category.parentId);
+    const node = nodes.get(category.id);
+    if (parent && node) parent.children.push(node);
   }
-  return categories.map((category) => ({
-    ...category,
-    children: childrenByParent.get(category.id) ?? [],
-  }));
+  return categories.map((category) => nodes.get(category.id)!);
 }
 
 interface AdvertisementRow {

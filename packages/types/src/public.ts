@@ -83,9 +83,10 @@ export interface PublicSiteSettingsDto {
 export interface PublicNavCategoryDto extends PublicCategoryRefDto {
   articleCount: number;
   image: MediaSummaryDto | null;
-  /** Null means top-level. Capped at two levels, mirroring the CMS hierarchy. */
+  /** Null means top-level. Grouping can nest to any depth. */
   parentId: Id | null;
-  /** Populated on a top-level entry only; always empty on a child. */
+  /** This entry's direct children, each with its own `children` populated the
+   * same way — walk it to render nesting of any depth. */
   children: PublicNavCategoryDto[];
 }
 

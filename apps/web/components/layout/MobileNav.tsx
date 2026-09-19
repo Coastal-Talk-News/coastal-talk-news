@@ -21,8 +21,125 @@ interface MobileNavProps {
 
 export function MobileNav({ categories, settings, locale }: MobileNavProps) {
   const [open, setOpen] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const dictionary = getDictionary(locale);
   const pathname = usePathname();
+
+  const topLevel = categories.filter((category) => !category.parentId);
+
+  function toggleExpanded(id: string) {
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  // Opening the drawer while reading a section shows that section in place,
+  // rather than a list of shut groups giving no clue which one you are in.
+  useEffect(() => {
+    if (!open) return;
+    const byId = new Map(categories.map((category) => [category.id, category]));
+    const current = categories.find(
+      (category) => pathname === `/category/${category.id}`,
+    );
+    const ancestors = new Set<string>();
+    let parentId = current?.parentId ?? null;
+    while (parentId) {
+      ancestors.add(parentId);
+      parentId = byId.get(parentId)?.parentId ?? null;
+    }
+    if (ancestors.size > 0) {
+      setExpanded((previous) => new Set([...previous, ...ancestors]));
+    }
+  }, [open, pathname, categories]);
+
+  function renderCategory(category: PublicNavCategoryDto, depth: number) {
+    const hasChildren = category.children.length > 0;
+    const active = pathname === `/category/${category.id}`;
+    const isExpanded = expanded.has(category.id);
+
+    // One rule per level above this row, so an expanded group reads as a
+    // branch rather than a list that happens to be indented.
+    const guides = Array.from({ length: depth }, (_, level) => (
+      <span
+        key={level}
+        aria-hidden
+        className="border-rule ml-2.5 w-3 shrink-0 self-stretch border-l"
+      />
+    ));
+
+    return (
+      <li key={category.id}>
+        <div className="flex items-stretch">
+          {guides}
+          {hasChildren ? (
+            <button
+              type="button"
+              onClick={() => toggleExpanded(category.id)}
+              aria-expanded={isExpanded}
+              className="group hover:bg-paper-sunken flex flex-1 items-center justify-between gap-3 rounded-sm px-2 py-2.5 text-left transition-colors"
+            >
+              <span className="group-hover:text-brand min-w-0 font-semibold transition-colors">
+                {category.name}
+              </span>
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                aria-hidden
+                className={`text-ink-subtle size-3.5 shrink-0 transition-transform ${
+                  isExpanded ? 'rotate-180' : ''
+                }`}
+              >
+                <path
+                  d="m5 7.5 5 5 5-5"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ) : (
+            <Link
+              href={`/category/${category.id}`}
+              aria-current={active ? 'page' : undefined}
+              className={`group flex flex-1 items-center justify-between gap-3 rounded-sm px-2 py-2.5 transition-colors ${
+                active ? 'bg-brand-soft' : 'hover:bg-paper-sunken'
+              }`}
+            >
+              <span
+                className={`min-w-0 font-semibold transition-colors ${
+                  active ? 'text-brand' : 'group-hover:text-brand'
+                }`}
+              >
+                {category.name}
+              </span>
+              {/* A count only says something when there is something to
+                  count; a row of zeroes is just noise. */}
+              {category.articleCount > 0 && (
+                <span
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors ${
+                    active
+                      ? 'bg-brand text-white'
+                      : 'bg-paper-sunken text-ink-subtle group-hover:bg-brand-soft group-hover:text-brand'
+                  }`}
+                >
+                  {category.articleCount}
+                </span>
+              )}
+            </Link>
+          )}
+        </div>
+        {hasChildren && isExpanded && (
+          <ul>
+            {category.children.map((child) => renderCategory(child, depth + 1))}
+          </ul>
+        )}
+      </li>
+    );
+  }
 
   // Same links as the desktop utility bar (hidden below lg) — with nowhere
   // else to live on mobile, they belong in this drawer instead.
@@ -151,39 +268,7 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
               {dictionary.common.home}
             </Link>
 
-            <ul>
-              {categories.map((category) => {
-                const active = pathname === `/category/${category.id}`;
-                return (
-                  <li key={category.id}>
-                    <Link
-                      href={`/category/${category.id}`}
-                      aria-current={active ? 'page' : undefined}
-                      className={`group flex items-center justify-between gap-3 rounded-sm px-2 py-2.5 transition-colors ${
-                        active ? 'bg-brand-soft' : 'hover:bg-paper-sunken'
-                      }`}
-                    >
-                      <span
-                        className={`min-w-0 font-semibold transition-colors ${
-                          active ? 'text-brand' : 'group-hover:text-brand'
-                        }`}
-                      >
-                        {category.name}
-                      </span>
-                      <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors ${
-                          active
-                            ? 'bg-brand text-white'
-                            : 'bg-paper-sunken text-ink-subtle group-hover:bg-brand-soft group-hover:text-brand'
-                        }`}
-                      >
-                        {category.articleCount}
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <ul>{topLevel.map((category) => renderCategory(category, 0))}</ul>
 
             <ul className="border-rule mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t px-2 pt-3">
               {utilityLinks.map((link) => {
