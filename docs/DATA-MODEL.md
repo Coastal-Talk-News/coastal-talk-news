@@ -159,8 +159,7 @@ No role/permission field — single-tier admin access, confirmed for V1.
 Effectively a singleton — expect exactly one row.
 
 `default_ui_language` can stay as-is even though there's no reader-facing switcher in V1 —
-it just becomes a fixed configuration value (defaulting to Kannada per
-`docs/PROJECT-SCOPE.md`) rather than something a switcher reads at runtime.
+it just becomes a fixed configuration value (the reader-facing default is a fixed English per `docs/PROJECT-SCOPE.md`; this column is not read) rather than something a switcher reads at runtime.
 
 `contact_address` — confirmed present, a nullable column since the initial migration; no
 schema change was needed for it.

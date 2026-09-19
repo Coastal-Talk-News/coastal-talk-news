@@ -39,7 +39,7 @@ export function HeaderSearchToggle({
 
   if (open) {
     return (
-      <div ref={containerRef} className="w-56 shrink-0 py-1.5">
+      <div ref={containerRef} className="w-56 shrink-0">
         <SearchField locale={locale} autoFocus />
       </div>
     );
