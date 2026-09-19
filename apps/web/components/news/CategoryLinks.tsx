@@ -2,6 +2,22 @@ import Link from 'next/link';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
+import { StoryImage } from './StoryImage';
+
+/** Long enough for a sentence, short enough that no card's description runs
+ * past the two lines every card reserves for one. */
+const DESCRIPTION_MAX = 90;
+
+function shorten(text: string): string {
+  if (text.length <= DESCRIPTION_MAX) return text;
+  const cut = text.slice(0, DESCRIPTION_MAX);
+  const lastSpace = cut.lastIndexOf(' ');
+  // Only break on a word if one is near the end, so a long unbroken string
+  // still gets cut rather than kept whole.
+  const trimmed =
+    lastSpace > DESCRIPTION_MAX * 0.6 ? cut.slice(0, lastSpace) : cut;
+  return `${trimmed.trimEnd()}…`;
+}
 
 /**
  * A group's sections. A group holds no articles of its own, so its page is
@@ -34,20 +50,54 @@ export function SubcategoryGrid({
           <li key={category.id}>
             <Link
               href={`/category/${category.id}`}
-              className="group border-rule bg-paper rounded-card hover:border-brand flex h-full items-center gap-4 border p-4 transition-colors"
+              className="group border-rule bg-paper rounded-card hover:border-brand flex h-full flex-col overflow-hidden border transition-colors hover:shadow-md"
             >
-              <div className="min-w-0 flex-1">
+              {category.image ? (
+                <StoryImage
+                  image={category.image}
+                  alt=""
+                  sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
+                  className="aspect-video w-full object-cover"
+                />
+              ) : (
+                // A section with no cover still gets a card the same shape as
+                // the rest, rather than a ragged grid or an empty grey frame.
+                // Deliberately quiet: most sections have no cover yet, and a
+                // wall of bold monograms would shout over the few that do.
+                <span
+                  aria-hidden
+                  className="bg-paper-sunken text-ink-subtle/40 grain grid aspect-video w-full place-items-center font-serif text-4xl font-bold"
+                >
+                  {[...category.name][0]}
+                </span>
+              )}
+
+              <div className="flex flex-1 flex-col p-4">
                 <p className="group-hover:text-brand font-semibold transition-colors">
                   {category.name}
                 </p>
-                <p className="text-ink-muted mt-1 text-sm">{summary}</p>
+                {/* Two lines are reserved whether or not there is a second
+                    one, and the count is pushed to the bottom, so every card
+                    in a row rules off at the same height. */}
+                <p
+                  className={`clamp-2 mt-1 min-h-12 text-sm leading-relaxed ${
+                    category.description ? 'text-ink-muted' : 'text-ink-subtle'
+                  }`}
+                >
+                  {category.description
+                    ? shorten(category.description)
+                    : dictionary.category.noDescription}
+                </p>
+                <p className="text-ink-subtle mt-auto flex items-center justify-between pt-2 text-xs font-semibold tracking-[0.08em] uppercase">
+                  {summary}
+                  <span
+                    aria-hidden
+                    className="group-hover:text-brand text-base transition-colors"
+                  >
+                    →
+                  </span>
+                </p>
               </div>
-              <span
-                aria-hidden
-                className="text-ink-subtle group-hover:text-brand transition-colors"
-              >
-                →
-              </span>
             </Link>
           </li>
         );

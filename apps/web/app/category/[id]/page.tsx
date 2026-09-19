@@ -166,7 +166,7 @@ export default async function CategoryPage({
             // its own it says what it is instead of sitting under a bare name.
             isGroup && (
               <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
-                {dictionary.category.sectionsDescription(category.name)}
+                {dictionary.category.sectionsDescription}
               </p>
             )
           )}

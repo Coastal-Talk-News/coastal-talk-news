@@ -77,22 +77,20 @@ export const PublicSiteSettingsSchema = Type.Object({
 const publicNavCategoryFields = {
   id: Type.String(),
   name: Type.String(),
+  description: Nullable(Type.String()),
   articleCount: Type.Integer(),
   image: Type.Union([MediaSummarySchema, Type.Null()]),
   parentId: Type.Union([Type.String(), Type.Null()]),
 };
 
-// The hierarchy is capped at two levels, so a child's own `children` is
-// always empty — no need for a recursive schema.
-const PublicNavCategoryChildSchema = Type.Object({
-  ...publicNavCategoryFields,
-  children: Type.Array(Type.Never()),
-});
-
-export const PublicNavCategorySchema = Type.Object({
-  ...publicNavCategoryFields,
-  children: Type.Array(PublicNavCategoryChildSchema),
-});
+// Grouping nests to any depth, so `children` refers back to this schema
+// rather than bottoming out one level down.
+export const PublicNavCategorySchema = Type.Recursive((Self) =>
+  Type.Object({
+    ...publicNavCategoryFields,
+    children: Type.Array(Self),
+  }),
+);
 
 export const PublicArticleSchema = Type.Composite([
   PublicArticleCardSchema,

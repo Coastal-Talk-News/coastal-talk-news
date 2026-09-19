@@ -1,9 +1,39 @@
 import Link from 'next/link';
 import { Brand } from './Brand';
-import type { PublicSiteDto } from '@coastal-talk-news/types';
+import type {
+  PublicNavCategoryDto,
+  PublicSiteDto,
+} from '@coastal-talk-news/types';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { SocialLinks } from './SocialLinks';
+
+/** A group's sections, and theirs in turn — indented so a reader can see
+ * which group a section belongs to rather than meeting one flat list. */
+function SectionBranch({
+  categories,
+  depth,
+}: {
+  categories: PublicNavCategoryDto[];
+  depth: number;
+}) {
+  return categories.map((category) => (
+    <li key={category.id}>
+      <Link
+        href={`/category/${category.id}`}
+        style={depth > 0 ? { paddingInlineStart: depth * 12 } : undefined}
+        className="inline-block transition-colors hover:text-white"
+      >
+        {category.name}
+      </Link>
+      {category.children.length > 0 && (
+        <ul className="mt-1.5 space-y-1.5">
+          <SectionBranch categories={category.children} depth={depth + 1} />
+        </ul>
+      )}
+    </li>
+  ));
+}
 
 export function SiteFooter({
   site,
@@ -14,6 +44,16 @@ export function SiteFooter({
 }) {
   const { settings, categories } = site;
   const dictionary = getDictionary(locale);
+
+  // The list arrives flat, every depth mixed together, so a footer built
+  // straight from it sets a group beside one of its own grandchildren. Each
+  // top-level group gets a column of its own instead, and the categories
+  // that sit at the top level on their own share the last one.
+  const topLevel = categories.filter((category) => !category.parentId);
+  const groups = topLevel.filter((category) => category.children.length > 0);
+  const ungrouped = topLevel.filter(
+    (category) => category.children.length === 0,
+  );
 
   const quickLinks = [
     { href: '/', label: dictionary.common.home },
@@ -26,7 +66,7 @@ export function SiteFooter({
   return (
     <footer className="bg-night mt-12 text-white">
       <div className="mx-auto grid max-w-7xl gap-x-6 gap-y-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-12">
-        <div className="sm:col-span-2 lg:col-span-4">
+        <div className="sm:col-span-2 lg:col-span-3">
           <Brand
             siteName={settings.siteName}
             tagline={settings.tagline}
@@ -41,29 +81,45 @@ export function SiteFooter({
           />
         </div>
 
-        {categories.length > 0 && (
+        {topLevel.length > 0 && (
           <nav
             aria-label={dictionary.footer.categories}
-            className="sm:col-span-2 lg:col-span-4"
+            className="sm:col-span-2 lg:col-span-5"
           >
             <h2 className="text-sm font-semibold tracking-wide">
               {dictionary.footer.categories}
             </h2>
-            {/* Two lists wide so a dozen sections stay the height of the
-                groups beside them; none are hidden, since a footer is where
-                the full index is looked for. */}
-            <ul className="text-night-muted mt-3 grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-              {categories.map((category) => (
-                <li key={category.id}>
+            {/* Nothing is hidden behind a "more" link: a footer is where the
+                full index is looked for. */}
+            {/* Flowed rather than a grid: the groups are wildly different
+                heights, and grid rows would align them, leaving a short
+                group sitting above a long hole. Each block is kept whole. */}
+            <div className="mt-3 columns-1 gap-x-6 text-sm sm:columns-2">
+              {groups.map((group) => (
+                <div key={group.id} className="mb-5 break-inside-avoid">
                   <Link
-                    href={`/category/${category.id}`}
-                    className="inline-block transition-colors hover:text-white"
+                    href={`/category/${group.id}`}
+                    className="font-semibold text-white/90 transition-colors hover:text-white"
                   >
-                    {category.name}
+                    {group.name}
                   </Link>
-                </li>
+                  <ul className="text-night-muted mt-2 space-y-1.5">
+                    <SectionBranch categories={group.children} depth={0} />
+                  </ul>
+                </div>
               ))}
-            </ul>
+
+              {ungrouped.length > 0 && (
+                <div className="mb-5 break-inside-avoid">
+                  <p className="font-semibold text-white/90">
+                    {dictionary.footer.otherSections}
+                  </p>
+                  <ul className="text-night-muted mt-2 space-y-1.5">
+                    <SectionBranch categories={ungrouped} depth={0} />
+                  </ul>
+                </div>
+              )}
+            </div>
           </nav>
         )}
 
@@ -92,7 +148,7 @@ export function SiteFooter({
           <h2 className="text-sm font-semibold tracking-wide">
             {dictionary.footer.contact}
           </h2>
-          <ul className="text-night-muted mt-3 space-y-2 text-sm break-words">
+          <ul className="text-night-muted mt-3 space-y-2 text-sm wrap-break-word">
             {settings.contactAddress && <li>{settings.contactAddress}</li>}
             {settings.contactEmail && (
               <li>
