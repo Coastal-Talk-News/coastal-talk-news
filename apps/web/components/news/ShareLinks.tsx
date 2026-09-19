@@ -20,6 +20,10 @@ interface ShareLinksProps {
   whatsappKannadaUrl?: string | null;
 }
 
+// WhatsApp's own bold markup is *text*. Any asterisk already inside the text
+// would end the bold early, so those are dropped.
+const whatsappBold = (text: string) => `*${text.replaceAll('*', '').trim()}*`;
+
 // Always in Kannada regardless of UI locale — the newsroom's own standing
 // invite line for the WhatsApp channel, not a translated UI string.
 const WHATSAPP_CHANNEL_INVITE =
@@ -58,8 +62,8 @@ export function ShareLinks({
   // reader is currently on — a Kannada reader sharing a story may well have
   // English-reading contacts, and vice versa.
   const channelLines = [
-    whatsappEnglishUrl && `English\n${whatsappEnglishUrl}`,
-    whatsappKannadaUrl && `Kannada\n${whatsappKannadaUrl}`,
+    whatsappEnglishUrl && `${whatsappBold('English')}\n${whatsappEnglishUrl}`,
+    whatsappKannadaUrl && `${whatsappBold('Kannada')}\n${whatsappKannadaUrl}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -67,9 +71,9 @@ export function ShareLinks({
   // Each URL sits on its own line, not appended after a label — WhatsApp's
   // link detector doesn't reliably linkify one that trails inline text.
   const whatsappMessage = [
-    headline,
-    `${dictionary.readLine}\n${url}`,
-    channelLines && `${WHATSAPP_CHANNEL_INVITE}\n${channelLines}`,
+    whatsappBold(headline),
+    `${whatsappBold(dictionary.readLine)}\n${url}`,
+    channelLines && `${whatsappBold(WHATSAPP_CHANNEL_INVITE)}\n${channelLines}`,
   ]
     .filter(Boolean)
     .join('\n\n');

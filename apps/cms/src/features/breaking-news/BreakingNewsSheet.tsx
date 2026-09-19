@@ -177,8 +177,8 @@ export function BreakingNewsSheet({
     <Sheet
       open={open}
       onOpenChange={requestClose}
-      title={editing ? 'Edit Breaking News' : 'Add Breaking News'}
-      description="Manage live breaking news updates. These appear in the breaking news ticker on the website."
+      title={editing ? 'Edit Latest News' : 'Add Latest News'}
+      description="Manage live latest news updates. These appear in the latest news ticker on the website."
       footer={
         <div className="flex gap-3">
           <Button
@@ -196,7 +196,7 @@ export function BreakingNewsSheet({
             loading={saving}
             disabled={!canSubmit}
           >
-            {editing ? 'Save changes' : 'Save Breaking News'}
+            {editing ? 'Save changes' : 'Save Latest News'}
           </Button>
         </div>
       }

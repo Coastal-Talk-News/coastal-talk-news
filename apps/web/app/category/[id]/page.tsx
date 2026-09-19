@@ -8,6 +8,7 @@ import {
 } from '../../../components/news/CategoryLinks';
 import { HeroStory } from '../../../components/news/HeroStory';
 import { StoryCard } from '../../../components/news/StoryCard';
+import { StoryImage } from '../../../components/news/StoryImage';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { Pagination } from '../../../components/ui/Pagination';
 import {
@@ -153,18 +154,35 @@ export default async function CategoryPage({
         <span className="text-ink font-medium">{category.name}</span>
       </nav>
 
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
-        {category.description ? (
-          <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
-            {category.description}
-          </p>
-        ) : (
-          isGroup && (
+      <header className="border-ink mb-6 flex flex-col gap-5 border-b-2 pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
+          {category.description ? (
             <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
-              {dictionary.category.sectionsDescription(category.name)}
+              {category.description}
             </p>
-          )
+          ) : (
+            // A group has no archive of its own, so without a description of
+            // its own it says what it is instead of sitting under a bare name.
+            isGroup && (
+              <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
+                {dictionary.category.sectionsDescription(category.name)}
+              </p>
+            )
+          )}
+        </div>
+
+        {/* Drawn at its own proportions, never cropped, and never larger than
+            the uploaded file. */}
+        {category.coverImage && (
+          <StoryImage
+            image={category.coverImage}
+            alt=""
+            priority
+            sizes="(min-width: 640px) 288px, 100vw"
+            className="rounded-card h-auto w-full shrink-0 sm:w-72"
+            style={{ maxWidth: category.coverImage.width }}
+          />
         )}
       </header>
 

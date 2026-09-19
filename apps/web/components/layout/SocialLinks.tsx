@@ -63,6 +63,17 @@ const ICON_PATHS: Record<Platform, ReactNode> = {
   whatsapp: <path d={WHATSAPP_ICON_PATH} />,
 };
 
+// Full class names, not built from a colour: Tailwind only generates classes it
+// can find written out in the source. Each fills with the network's own colour
+// on hover, matching the article share row.
+const BRAND_HOVER: Record<Platform, string> = {
+  facebook: 'hover:bg-[#1877f2]',
+  instagram: 'hover:bg-[#e1306c]',
+  youtube: 'hover:bg-[#ff0000]',
+  x: 'hover:bg-ink',
+  whatsapp: 'hover:bg-[#1da851]',
+};
+
 const LABELS: Record<Platform, string> = {
   facebook: 'Facebook',
   instagram: 'Instagram',
@@ -112,10 +123,12 @@ export function SocialLinks({
 
   if (links.length === 0) return null;
 
-  const buttonTone =
+  // The dark footer keeps a white hover: a brand fill (X's near-black above
+  // all) would vanish into the background there.
+  const buttonTone = (platform: Platform) =>
     tone === 'inverse'
       ? 'bg-white/10 text-white hover:bg-white hover:text-night'
-      : 'bg-paper-sunken text-ink-muted hover:bg-brand hover:text-white';
+      : `bg-paper-sunken text-ink-muted hover:text-white ${BRAND_HOVER[platform]}`;
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -127,7 +140,7 @@ export function SocialLinks({
           rel="noopener noreferrer"
           aria-label={LABELS[link.platform]}
           title={LABELS[link.platform]}
-          className={`${buttonTone} grid size-7 shrink-0 place-items-center rounded-full transition-colors`}
+          className={`${buttonTone(link.platform)} grid size-7 shrink-0 place-items-center rounded-full transition-colors`}
         >
           <svg
             viewBox="0 0 24 24"

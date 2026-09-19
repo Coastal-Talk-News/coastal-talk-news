@@ -215,7 +215,7 @@ const kn: typeof en = {
     linkCopied: 'ಲಿಂಕ್ ನಕಲಾಗಿದೆ',
     shareHeading: 'ಈ ಸುದ್ದಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ',
     shareDescription: 'ಓದಬೇಕಾದವರಿಗೆ ಇದನ್ನು ತಲುಪಿಸಿ.',
-    readLine: 'ಓದಲು',
+    readLine: 'ಓದಲು ಈ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ 👉 :',
   },
   category: {
     noStoriesTitle: 'ಇಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಸುದ್ದಿ ಇಲ್ಲ',
