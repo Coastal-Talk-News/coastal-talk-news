@@ -24,10 +24,10 @@ interface ShareLinksProps {
 // would end the bold early, so those are dropped.
 const whatsappBold = (text: string) => `*${text.replaceAll('*', '').trim()}*`;
 
-// Always in Kannada regardless of UI locale — the newsroom's own standing
-// invite line for the WhatsApp channel, not a translated UI string.
-const WHATSAPP_CHANNEL_INVITE =
-  'Coastal Talk News Whatsapp ಚಾನೆಲ್ ಸೇರಲು ಕೆಳಗಿನ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ 👉 :';
+// Each channel's label is written in that channel's own language and shown the
+// same way whichever UI locale the reader is on.
+const ENGLISH_CHANNEL_LABEL = 'English Channel Link 👉 :';
+const KANNADA_CHANNEL_LABEL = 'ಕನ್ನಡ ಚಾನೆಲ್ ಲಿಂಕ್ 👉 :';
 
 const ICON = 'size-4';
 
@@ -62,8 +62,10 @@ export function ShareLinks({
   // reader is currently on — a Kannada reader sharing a story may well have
   // English-reading contacts, and vice versa.
   const channelLines = [
-    whatsappEnglishUrl && `${whatsappBold('English')}\n${whatsappEnglishUrl}`,
-    whatsappKannadaUrl && `${whatsappBold('Kannada')}\n${whatsappKannadaUrl}`,
+    whatsappEnglishUrl &&
+      `${whatsappBold(ENGLISH_CHANNEL_LABEL)}\n${whatsappEnglishUrl}`,
+    whatsappKannadaUrl &&
+      `${whatsappBold(KANNADA_CHANNEL_LABEL)}\n${whatsappKannadaUrl}`,
   ]
     .filter(Boolean)
     .join('\n');
@@ -73,7 +75,8 @@ export function ShareLinks({
   const whatsappMessage = [
     whatsappBold(headline),
     `${whatsappBold(dictionary.readLine)}\n${url}`,
-    channelLines && `${whatsappBold(WHATSAPP_CHANNEL_INVITE)}\n${channelLines}`,
+    channelLines &&
+      `${whatsappBold(dictionary.channelInvite)}\n${channelLines}`,
   ]
     .filter(Boolean)
     .join('\n\n');
