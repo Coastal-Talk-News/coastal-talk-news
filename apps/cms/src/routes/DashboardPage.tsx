@@ -136,7 +136,7 @@ export function DashboardPage() {
           value={stats.activeBreakingNews}
           icon={Bell}
           tone="red"
-          to="/breaking-news"
+          to="/latest-news"
         />
         <StatCard
           label="Active Advertisements"
@@ -158,10 +158,10 @@ export function DashboardPage() {
                 Create Article
               </Button>
             </Link>
-            <Link to="/breaking-news">
+            <Link to="/latest-news">
               <Button size="sm" variant="secondary">
                 <Bell className="size-4" aria-hidden />
-                Breaking News
+                Latest News
               </Button>
             </Link>
             <Link to="/media">
@@ -236,9 +236,9 @@ export function DashboardPage() {
 
         <div className="space-y-4">
           <Panel
-            title="Breaking News"
+            title="Latest News"
             actionLabel="Manage"
-            actionTo="/breaking-news"
+            actionTo="/latest-news"
           >
             {breakingNews.length === 0 ? (
               <EmptyState

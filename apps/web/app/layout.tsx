@@ -103,8 +103,15 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      translate="no"
       className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable} ${brandName.variable} ${brandTagline.variable}`}
     >
+      {/* Pages mix English UI with Kannada content, which makes the browser
+          offer to translate on every visit. The newsroom already publishes in
+          both languages, so the prompt is noise. */}
+      <head>
+        <meta name="google" content="notranslate" />
+      </head>
       <body className="grain flex min-h-screen flex-col">
         <SiteHeader site={site} locale={locale} />
         <BreakingTicker items={site.breakingNews} locale={locale} />

@@ -47,7 +47,7 @@ export const NAV_GROUPS: NavGroup[] = [
         ],
       },
       { to: '/categories', label: 'Categories', icon: LayoutGrid },
-      { to: '/breaking-news', label: 'Breaking News', icon: Bell },
+      { to: '/latest-news', label: 'Latest News', icon: Bell },
       { to: '/advertisements', label: 'Advertisements', icon: Megaphone },
       { to: '/media', label: 'Media Library', icon: Image },
     ],

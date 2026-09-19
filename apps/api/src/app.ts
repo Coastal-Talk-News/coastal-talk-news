@@ -113,7 +113,7 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
     prefix: `${API_BASE_PATH}/cms/categories`,
   });
   await app.register(cmsBreakingNewsRoutes, {
-    prefix: `${API_BASE_PATH}/cms/breaking-news`,
+    prefix: `${API_BASE_PATH}/cms/latest-news`,
   });
   await app.register(dashboardRoutes, {
     prefix: `${API_BASE_PATH}/cms/dashboard`,

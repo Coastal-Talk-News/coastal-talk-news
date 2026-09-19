@@ -5,7 +5,7 @@ import type {
 } from '@coastal-talk-news/types';
 import { api, buildQuery } from './client.js';
 
-const BASE = '/api/v1/cms/breaking-news';
+const BASE = '/api/v1/cms/latest-news';
 
 export interface BreakingNewsListParams {
   page?: number;

@@ -81,7 +81,7 @@ export default function App() {
                   />
                   <Route path="categories" element={<CategoriesPage />} />
                   <Route path="media" element={<MediaLibraryPage />} />
-                  <Route path="breaking-news" element={<BreakingNewsPage />} />
+                  <Route path="latest-news" element={<BreakingNewsPage />} />
                   <Route
                     path="advertisements"
                     element={<AdvertisementsPage />}
