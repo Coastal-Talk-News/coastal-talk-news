@@ -20,6 +20,9 @@ export interface AdvertisementEntity {
   description: unknown;
   displayOrder: number;
   placement: AdPlacement;
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
   startAt: Date;
   endAt: Date;
   createdAt: Date;
@@ -67,6 +70,9 @@ export function toAdvertisementDto(
     destinationUrl: item.destinationUrl,
     displayOrder: item.displayOrder,
     placement: item.placement,
+    zoom: item.zoom,
+    offsetX: item.offsetX,
+    offsetY: item.offsetY,
     startAt: item.startAt.toISOString(),
     endAt: item.endAt.toISOString(),
     isActive,

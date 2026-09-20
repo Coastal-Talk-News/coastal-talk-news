@@ -181,6 +181,17 @@ model Advertisement {
   /// rows sharing the same placement, never across zones.
   displayOrder    Int         @default(0) @map("display_order")
   placement       AdPlacement @default(SIDEBAR)
+  /// How the creative is framed inside the slot the advertiser bought, set in
+  /// the CMS by dragging and zooming the image the way a profile-picture
+  /// cropper works. 100 means the whole image sits inside the slot; above
+  /// that it is enlarged and the slot crops it. Only the zones that fix both
+  /// dimensions (Masthead, Top) frame anything - the Right Side rail sets
+  /// width alone and lets height follow the artwork.
+  zoom            Int         @default(100)
+  /// Pan, as a percentage of the slot's own width and height, applied before
+  /// the zoom. 0/0 is centred.
+  offsetX         Int         @default(0) @map("offset_x")
+  offsetY         Int         @default(0) @map("offset_y")
   startAt         DateTime    @map("start_at")
   endAt           DateTime    @map("end_at")
   createdAt       DateTime    @default(now()) @map("created_at")

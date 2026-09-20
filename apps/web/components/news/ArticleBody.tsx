@@ -42,6 +42,21 @@ function attr(node: Node, name: string): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
 
+/**
+ * The CMS can align a paragraph or heading. The stored value picks a class
+ * from this list rather than being written into a style attribute, so an
+ * attribute that arrives as anything else simply falls back to the default.
+ */
+const ALIGN_CLASSES: Record<string, string> = {
+  center: 'text-center',
+  right: 'text-right',
+  justify: 'text-justify',
+};
+
+function alignClass(node: Node): string | undefined {
+  return ALIGN_CLASSES[attr(node, 'textAlign') ?? ''];
+}
+
 function withMarks(text: string, marks: Mark[] | undefined): ReactNode {
   if (!marks || marks.length === 0) return text;
 
@@ -95,7 +110,11 @@ function renderNode(node: Node, key: string): ReactNode {
       // Tiptap emits an empty paragraph for a blank line; it would render as a
       // stray gap, so it is dropped.
       if (!node.content?.length) return null;
-      return <p key={key}>{children}</p>;
+      return (
+        <p key={key} className={alignClass(node)}>
+          {children}
+        </p>
+      );
 
     case 'heading': {
       const level = node.attrs?.['level'];
@@ -103,7 +122,11 @@ function renderNode(node: Node, key: string): ReactNode {
         typeof level === 'number' ? Math.min(Math.max(level, 1), 5) - 1 : 1;
       // The page's own h1 is the headline, so body headings start at h2.
       const Tag = HEADING_TAGS[index] ?? 'h3';
-      return <Tag key={key}>{children}</Tag>;
+      return (
+        <Tag key={key} className={alignClass(node)}>
+          {children}
+        </Tag>
+      );
     }
 
     case 'bulletList':

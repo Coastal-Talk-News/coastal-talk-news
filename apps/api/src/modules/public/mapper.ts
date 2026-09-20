@@ -123,6 +123,9 @@ interface AdvertisementRow {
   id: string;
   advertiserName: string;
   placement: AdPlacement;
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
   media: MediaRow;
 }
 
@@ -134,6 +137,9 @@ export function toAdvertisement(
     id: advertisement.id,
     advertiserName: advertisement.advertiserName,
     placement: advertisement.placement,
+    zoom: advertisement.zoom,
+    offsetX: advertisement.offsetX,
+    offsetY: advertisement.offsetY,
     image: {
       id: advertisement.media.id,
       url: toPublicUrl(advertisement.media.storageKey),

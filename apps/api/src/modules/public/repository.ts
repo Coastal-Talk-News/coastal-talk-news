@@ -154,6 +154,9 @@ const adCardSelect = {
   id: true,
   advertiserName: true,
   placement: true,
+  zoom: true,
+  offsetX: true,
+  offsetY: true,
   media: mediaSelect,
 } as const;
 

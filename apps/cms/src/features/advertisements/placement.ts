@@ -7,6 +7,15 @@ interface PlacementMeta {
   tone: 'amber' | 'blue' | 'slate';
   /** How many ads may run at once. Absent means unlimited. */
   capacity?: number;
+  /**
+   * The reader-site slot, used to frame the creative in the shape it is
+   * actually shown in. The shape is what matters and what the reader site
+   * holds at every width - these numbers are that slot at full size. Absent
+   * where the zone fixes width alone and lets height follow the artwork, so
+   * nothing is ever cropped and there is nothing to frame. Mirrors the
+   * constants in the web app's MastheadAd and AdBand components.
+   */
+  slot?: { width: number; height: number };
 }
 
 export const PLACEMENTS: AdPlacement[] = ['MASTHEAD', 'TOP', 'SIDEBAR'];
@@ -17,12 +26,14 @@ export const PLACEMENT_META: Record<AdPlacement, PlacementMeta> = {
     hint: 'Beside the site name. Wide banner.',
     tone: 'amber',
     capacity: 1,
+    slot: { width: 520, height: 96 },
   },
   TOP: {
     label: 'Top',
-    hint: '320.57 x 73.88 band under the header.',
+    hint: 'Band under the header. Three slots share the row.',
     tone: 'blue',
     capacity: 3,
+    slot: { width: 408, height: 88 },
   },
   SIDEBAR: {
     label: 'Right Side',

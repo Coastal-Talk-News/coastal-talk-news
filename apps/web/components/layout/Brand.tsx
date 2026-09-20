@@ -22,9 +22,33 @@ const GAP = {
   lg: 'gap-2 sm:gap-3.5',
 };
 
+/**
+ * The masthead is the largest type on the site, and one step of a single
+ * scale: headline 1.9x body, standfirst 1.1x body, the name matching the
+ * headline exactly so no heading ever outgrows the paper's own title.
+ * Change these and change the headline sizes with them (the article page's
+ * h1, HeroStory) and the body and standfirst in globals.css.
+ */
+/**
+ * The name is set from the width it actually has rather than from
+ * breakpoints, so it fills the lockup on one line at any screen size and
+ * still gets out of the way of the masthead ad when that sits beside it.
+ * 8.8cqw is what the site name measures per unit of container width; the cap
+ * sits just under the headline's (.headline-xl in globals.css).
+ */
 const NAME_SIZE = {
-  md: 'text-base sm:text-lg md:text-xl',
-  lg: 'text-base sm:text-xl lg:text-[26px]',
+  md: 'min(1.375rem, 8.8cqw)',
+  lg: 'min(2rem, 8.8cqw)',
+};
+
+/**
+ * The header keeps the lockup to a fixed height, so the tagline is held to a
+ * line there. The footer has the column to itself and simply wraps: a
+ * newspaper's own strapline should never end in an ellipsis.
+ */
+const TAGLINE_CLAMP = {
+  md: '',
+  lg: 'line-clamp-2 sm:line-clamp-1',
 };
 
 export function Brand({
@@ -53,17 +77,22 @@ export function Brand({
           className={`${LOGO_SIZE[size]} ring-1 ${ringColor} shrink-0 rounded-full object-cover shadow-sm`}
         />
       )}
-      <span className="min-w-0 leading-none">
-        {/* One phrase: truncate rather than break the name across lines. */}
+      {/* flex-1, not content-sized: the name is sized from this box, so the
+          box must be measured from the row's spare space rather than from the
+          name inside it. */}
+      <span className="@container min-w-0 flex-1 leading-none">
+        {/* One line at every width: a masthead that wraps or is cut off
+            mid-word reads as broken. */}
         <span
-          className={`${nameColor} ${NAME_SIZE[size]} block truncate font-brand-name uppercase`}
+          className={`${nameColor} block font-serif leading-tight font-bold whitespace-nowrap uppercase`}
+          style={{ fontSize: NAME_SIZE[size] }}
         >
           {siteName}
         </span>
         {tagline && (
           // Two lines on a phone rather than moving out of the lockup.
           <span
-            className={`${taglineColor} font-brand-tagline mt-1 line-clamp-2 text-[11px] sm:line-clamp-1`}
+            className={`${taglineColor} ${TAGLINE_CLAMP[size]} mt-1 font-serif text-[11px] font-semibold`}
           >
             {tagline}
           </span>

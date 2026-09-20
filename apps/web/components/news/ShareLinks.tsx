@@ -26,8 +26,8 @@ const whatsappBold = (text: string) => `*${text.replaceAll('*', '').trim()}*`;
 
 // Each channel's label is written in that channel's own language and shown the
 // same way whichever UI locale the reader is on.
-const ENGLISH_CHANNEL_LABEL = 'English Channel Link 👉 :';
-const KANNADA_CHANNEL_LABEL = 'ಕನ್ನಡ ಚಾನೆಲ್ ಲಿಂಕ್ 👉 :';
+const ENGLISH_CHANNEL_LABEL = 'English Group Link 👉 :';
+const KANNADA_CHANNEL_LABEL = 'ಕನ್ನಡ ಗ್ರೂಪ್ ಲಿಂಕ್ 👉 :';
 
 const ICON = 'size-4';
 

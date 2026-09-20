@@ -1,9 +1,9 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
-import { adHref } from '../../lib/ads';
+import { adHref, adImageTransform } from '../../lib/ads';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
+import { AdImage } from './AdImage';
 
 interface MastheadAdProps {
   advertisements: PublicAdvertisementDto[];
@@ -13,20 +13,33 @@ interface MastheadAdProps {
 }
 
 /**
- * The premium slot, sold one notch larger than the Top unit's 320.57x73.88 in
- * both dimensions. Both numbers are caps: the creative keeps its own
- * proportions inside them and is never cropped, whatever resolution the
- * advertiser sends.
+ * The premium slot's shape, fixed at every width like the Top band's: the CMS
+ * frames the creative against it, so the same crop has to hold beside the
+ * site name and in the row under it alike. Mirrored by PLACEMENT_META in the
+ * CMS.
  */
-const UNIT_WIDTH = 400;
-const UNIT_HEIGHT = 92;
+const UNIT_ASPECT = '520 / 96';
 
 /**
- * The band sits under the header below lg, where the unit's height cap would
- * leave a phone-width slot mostly empty. It fills the row instead, up to a
- * width past which a banner would just be stretched on a tablet.
+ * Held against the right edge and roughly as wide as the utility row above
+ * it, so it runs back to about where "About Us" sits. The cap is a fixed
+ * height or a share of the screen, whichever is smaller, applied as a width
+ * so that capping it never changes the shape. Never more than 40% of the row
+ * either: the slot keeps its place beside the site name down to the width
+ * where the nav collapses, and the masthead needs the rest to stay on one
+ * line at its full size.
  */
-const BAND_MAX_WIDTH = 640;
+const UNIT_WIDTH = 520;
+const UNIT_MAX_WIDTH = 'min(calc(min(6rem, 20vh) * 520 / 96), 40%)';
+
+/**
+ * Below md the nav collapses into the menu button and the site name has the
+ * masthead row to itself, so the ad moves to its own row under the header and
+ * takes the full width of it. The only limit is the height one every zone
+ * has, expressed as a width so it can't change the slot's shape — it bites
+ * on a short window, not on an ordinary phone or tablet.
+ */
+const BAND_MAX_WIDTH = 'calc(18vh * 520 / 96)';
 
 export function MastheadAd({
   advertisements,
@@ -39,25 +52,16 @@ export function MastheadAd({
   const { advertisement } = getDictionary(locale).common;
   const isInline = variant === 'inline';
 
-  // Inline: the cap goes on the link, which has a width to measure against,
-  // rather than on the image, whose own width is what is being constrained.
-  // Below that width the slot simply scales down with the screen.
-  const ratio = ad.image.width / ad.image.height;
-  const inlineMaxWidth = Math.min(
-    UNIT_WIDTH,
-    UNIT_HEIGHT * ratio,
-    // Never drawn larger than the file supplied, so a small creative in a
-    // wide slot stays sharp instead of blurring.
-    ad.image.width,
-  );
-
   return (
     <aside
       aria-label={advertisement}
       className={
         isInline
-          ? 'hidden min-w-0 flex-1 justify-center lg:flex'
-          : 'border-rule flex justify-center border-t px-4 py-2 lg:hidden'
+          ? 'hidden shrink-0 justify-end md:flex'
+          : 'border-rule flex justify-center border-t px-4 py-2 md:hidden'
+      }
+      style={
+        isInline ? { width: UNIT_WIDTH, maxWidth: UNIT_MAX_WIDTH } : undefined
       }
     >
       <Link
@@ -65,21 +69,20 @@ export function MastheadAd({
         rel="sponsored"
         prefetch={false}
         aria-label={`${advertisement}: ${ad.advertiserName}`}
-        className="block w-full min-w-0 transition-opacity hover:opacity-90"
-        style={{ maxWidth: isInline ? inlineMaxWidth : BAND_MAX_WIDTH }}
+        className="block w-full min-w-0 overflow-hidden rounded-sm transition-opacity hover:opacity-90"
+        style={{
+          aspectRatio: UNIT_ASPECT,
+          ...(isInline ? {} : { maxWidth: BAND_MAX_WIDTH }),
+        }}
       >
-        <Image
-          src={ad.image.url}
+        <AdImage
+          image={ad.image}
           alt={ad.advertiserName}
-          width={ad.image.width}
-          height={ad.image.height}
+          label={advertisement}
           priority
-          sizes={
-            isInline
-              ? `${UNIT_WIDTH}px`
-              : `(min-width: ${BAND_MAX_WIDTH}px) ${BAND_MAX_WIDTH}px, 100vw`
-          }
-          className="h-auto w-full"
+          sizes={isInline ? `${UNIT_WIDTH}px` : '100vw'}
+          className="h-full w-full object-contain"
+          style={adImageTransform(ad)}
         />
       </Link>
     </aside>

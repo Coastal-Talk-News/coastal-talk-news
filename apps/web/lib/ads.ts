@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
 
 export type AdZone = 'masthead' | 'top' | 'sidebar';
@@ -29,6 +30,18 @@ export function adsForZone(
   zone: AdZone,
 ): PublicAdvertisementDto[] {
   return advertisements.filter((ad) => ad.placement === ZONE_PLACEMENT[zone]);
+}
+
+/**
+ * The slot is what the advertiser bought, so its size is fixed and the
+ * artwork is framed inside it exactly as the CMS placed it: panned, then
+ * enlarged from the whole image outwards. Anything that leaves the frame is
+ * cropped, which is the point of the control.
+ */
+export function adImageTransform(ad: PublicAdvertisementDto): CSSProperties {
+  return {
+    transform: `translate(${ad.offsetX}%, ${ad.offsetY}%) scale(${ad.zoom / 100})`,
+  };
 }
 
 export function adAspectRatio(image: PublicAdvertisementDto['image']): number {

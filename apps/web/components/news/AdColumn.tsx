@@ -1,9 +1,9 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
 import { adHref, splitColumns } from '../../lib/ads';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
+import { AdImage } from './AdImage';
 
 interface AdColumnProps {
   advertisements: PublicAdvertisementDto[];
@@ -16,10 +16,16 @@ interface AdColumnProps {
 /**
  * Every ad in a zone is sold at the same price, so every one of them gets the
  * same width - a fixed column, not a size that depends on its own shape or on
- * whichever creative it happens to land beside. Height is never capped or
- * cropped: each creative keeps its own proportions at that fixed width,
- * however tall that turns out to be, so the complete ad always shows. The one
- * thing held equal, deliberately, is width.
+ * whichever creative it happens to land beside. Each creative keeps its own
+ * proportions at that fixed width and is never cropped, so the complete ad
+ * always shows. The one thing held equal, deliberately, is width.
+ *
+ * Height follows from that width and the creative's own shape, and is never
+ * capped: a cap would hold the height while the width stayed fixed, so the
+ * creative would shrink inside its column and sit in it with gaps at the
+ * sides rather than filling the space that was sold. Two columns keep every
+ * ad at half the width wherever the rail lands, which is what keeps a tall
+ * creative from running away with the screen.
  *
  * The two columns each stack their own ads independently (see splitColumns) -
  * not a shared grid row per pair, which would stretch a short ad's row to
@@ -61,11 +67,10 @@ export function AdColumn({
                   aria-label={`${advertisement}: ${ad.advertiserName}`}
                   className="border-rule group rounded-card block overflow-hidden border transition-shadow hover:shadow-lg"
                 >
-                  <Image
-                    src={ad.image.url}
+                  <AdImage
+                    image={ad.image}
                     alt={ad.advertiserName}
-                    width={ad.image.width}
-                    height={ad.image.height}
+                    label={advertisement}
                     sizes={SIZES[variant]}
                     className="h-auto w-full transition-transform duration-300 group-hover:scale-[1.03]"
                   />

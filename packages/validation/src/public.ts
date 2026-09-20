@@ -1,5 +1,9 @@
 import { Type } from '@sinclair/typebox';
-import { AdPlacementSchema } from './advertisement.js';
+import {
+  AdOffsetSchema,
+  AdPlacementSchema,
+  AdZoomSchema,
+} from './advertisement.js';
 import { ArticleContentSchema, LanguageSchema } from './article.js';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
@@ -34,6 +38,9 @@ const publicAdvertisementFields = {
   advertiserName: Type.String(),
   placement: AdPlacementSchema,
   image: MediaSummarySchema,
+  zoom: AdZoomSchema,
+  offsetX: AdOffsetSchema,
+  offsetY: AdOffsetSchema,
 };
 
 export const PublicAdvertisementSchema = Type.Object(publicAdvertisementFields);

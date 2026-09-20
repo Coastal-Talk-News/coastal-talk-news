@@ -1,7 +1,5 @@
 import type { Metadata } from 'next';
 import {
-  Cinzel,
-  DM_Serif_Display,
   Noto_Sans,
   Noto_Sans_Kannada,
   Noto_Serif,
@@ -66,22 +64,6 @@ const bodyKannada = Noto_Sans_Kannada({
   display: 'swap',
 });
 
-// Lockup only: the site name and tagline beside the logo. Neither face has
-// Kannada glyphs, so the Kannada faces above sit behind them in the stacks.
-const brandName = DM_Serif_Display({
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-dm-serif-display',
-  display: 'swap',
-});
-
-const brandTagline = Cinzel({
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-cinzel',
-  display: 'swap',
-});
-
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const [{ settings }, locale, origin] = await Promise.all([
@@ -108,7 +90,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       translate="no"
-      className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable} ${brandName.variable} ${brandTagline.variable}`}
+      className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable}`}
     >
       {/* Pages mix English UI with Kannada content, which makes the browser
           offer to translate on every visit. The newsroom already publishes in

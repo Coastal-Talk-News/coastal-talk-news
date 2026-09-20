@@ -6,6 +6,14 @@ import { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX } from './limits.js';
 
 export { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX };
 
+/** Percent. 100 fits the whole creative in the slot; above that it is
+ *  enlarged and the slot crops it. */
+export const AdZoomSchema = Type.Integer({ minimum: 100, maximum: 300 });
+
+/** Pan, as a percentage of the slot's own width or height. The bound is
+ *  what the deepest zoom can need; the CMS clamps to the exact overflow. */
+export const AdOffsetSchema = Type.Integer({ minimum: -200, maximum: 200 });
+
 export const AdPlacementSchema = Type.Union([
   Type.Literal('MASTHEAD'),
   Type.Literal('TOP'),
@@ -21,6 +29,9 @@ const advertisementFields = {
   destinationUrl: Type.Union([Type.String(), Type.Null()]),
   displayOrder: Type.Integer(),
   placement: AdPlacementSchema,
+  zoom: AdZoomSchema,
+  offsetX: AdOffsetSchema,
+  offsetY: AdOffsetSchema,
   startAt: IsoDateTime,
   endAt: IsoDateTime,
   isActive: Type.Boolean(),
@@ -44,6 +55,9 @@ const writableAdvertisementFields = {
   ]),
   displayOrder: Type.Integer({ minimum: 0 }),
   placement: AdPlacementSchema,
+  zoom: AdZoomSchema,
+  offsetX: AdOffsetSchema,
+  offsetY: AdOffsetSchema,
   startAt: IsoDateTime,
   endAt: IsoDateTime,
 };
@@ -57,6 +71,9 @@ export const CreateAdvertisementBodySchema = Type.Object(
     destinationUrl: Type.Optional(writableAdvertisementFields.destinationUrl),
     displayOrder: Type.Optional(writableAdvertisementFields.displayOrder),
     placement: Type.Optional(writableAdvertisementFields.placement),
+    zoom: Type.Optional(writableAdvertisementFields.zoom),
+    offsetX: Type.Optional(writableAdvertisementFields.offsetX),
+    offsetY: Type.Optional(writableAdvertisementFields.offsetY),
     startAt: writableAdvertisementFields.startAt,
     endAt: writableAdvertisementFields.endAt,
   },

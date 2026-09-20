@@ -29,6 +29,9 @@ export interface CreateAdvertisementInput {
   destinationUrl?: string | null;
   displayOrder?: number;
   placement?: AdPlacement;
+  zoom?: number;
+  offsetX?: number;
+  offsetY?: number;
   startAt: string;
   endAt: string;
 }
@@ -152,6 +155,9 @@ export async function create(
     displayOrder:
       input.displayOrder ?? (await repository.nextDisplayOrder(db, placement)),
     placement,
+    zoom: input.zoom ?? 100,
+    offsetX: input.offsetX ?? 0,
+    offsetY: input.offsetY ?? 0,
     startAt,
     endAt,
     description: input.description ?? Prisma.DbNull,
@@ -234,6 +240,9 @@ export async function update(
         : {}),
       ...(displayOrder !== undefined ? { displayOrder } : {}),
       ...(input.placement !== undefined ? { placement: input.placement } : {}),
+      ...(input.zoom !== undefined ? { zoom: input.zoom } : {}),
+      ...(input.offsetX !== undefined ? { offsetX: input.offsetX } : {}),
+      ...(input.offsetY !== undefined ? { offsetY: input.offsetY } : {}),
       ...(input.startAt !== undefined ? { startAt } : {}),
       ...(input.endAt !== undefined ? { endAt } : {}),
       ...descriptionWrite(input.description),
