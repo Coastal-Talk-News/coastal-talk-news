@@ -1,0 +1,7 @@
+-- CreateEnum
+CREATE TYPE "AdFit" AS ENUM ('CONTAIN', 'COVER');
+
+-- AlterTable
+ALTER TABLE "advertisements" ADD COLUMN "image_fit" "AdFit" NOT NULL DEFAULT 'CONTAIN',
+ADD COLUMN "focal_x" INTEGER NOT NULL DEFAULT 50,
+ADD COLUMN "focal_y" INTEGER NOT NULL DEFAULT 50;

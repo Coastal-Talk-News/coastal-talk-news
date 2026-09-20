@@ -1,5 +1,5 @@
 import type { Id, IsoDateTime, RichTextContent } from './api.js';
-import type { AdPlacement } from './advertisement.js';
+import type { AdImageCrop, AdPlacement } from './advertisement.js';
 import type { ArticleContent, Language } from './article.js';
 import type { MediaSummaryDto } from './media.js';
 
@@ -40,7 +40,7 @@ export interface PublicBreakingNewsDto {
  * advertiser's URL and copy stay out of the site payload that each and every
  * page render carries.
  */
-export interface PublicAdvertisementDto {
+export interface PublicAdvertisementDto extends AdImageCrop {
   id: Id;
   advertiserName: string;
   placement: AdPlacement;

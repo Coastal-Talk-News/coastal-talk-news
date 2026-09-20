@@ -62,14 +62,18 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
       <header>
         <CategoryTag category={article.category} />
 
-        <h1 className="mt-3 font-serif text-3xl leading-tight font-bold text-balance sm:text-4xl lg:text-[2.75rem]">
+        {/* Never larger than the masthead: these track Brand's NAME_SIZE.lg
+            breakpoint for breakpoint. */}
+        <h1 className="headline-xl mt-3 font-serif leading-tight font-bold text-balance">
           {article.headline}
         </h1>
 
         {/* The standfirst. A handful of articles open the body with this same
             sentence, in which case it reads twice — but that is an authoring
             habit, and dropping it would cost every other article its summary. */}
-        <p className="text-ink-muted mt-3 text-lg leading-relaxed text-pretty">
+        {/* Set at the body's size: the standfirst is the article's opening
+            paragraph, so anything larger reads as a second headline. */}
+        <p className="text-ink-muted mt-3 text-[1rem] leading-relaxed text-justify sm:text-[1.125rem]">
           {article.summary}
         </p>
 

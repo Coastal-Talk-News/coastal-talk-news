@@ -13,6 +13,15 @@
     @apply outline-accent outline-2 outline-offset-2;
   }
 
+  /* The browser default selection is a flat blue block that buries the text
+     it covers on this dark theme. A tint of the accent keeps the selected
+     words readable, which matters most in the article editor where selecting
+     a phrase is the first half of every formatting action. */
+  ::selection {
+    background-color: color-mix(in srgb, var(--accent) 35%, transparent);
+    color: var(--ink);
+  }
+
   /* Thin, theme-aware scrollbars in place of the platform default, which draws
      a wide light track that fights the dark theme and reserved a permanent
      empty gutter down the right edge.
@@ -50,4 +59,70 @@
   ::-webkit-scrollbar-corner {
     background: transparent;
   }
+}
+
+/* The editor draws its own content styles, unlayered so they win over
+   Tailwind's preflight — which strips list markers and blockquote rules, and
+   would otherwise leave a bullet list, a numbered list and a quote looking
+   exactly like the paragraph they were made from. Kept close to the reader
+   site's own `.article-body` rules, so the preview is worth trusting. */
+.tiptap-content h1 {
+  @apply mt-5 mb-2 text-2xl font-semibold;
+}
+
+.tiptap-content h2 {
+  @apply mt-5 mb-2 text-xl font-semibold;
+}
+
+.tiptap-content h3 {
+  @apply mt-4 mb-2 text-lg font-semibold;
+}
+
+.tiptap-content p {
+  @apply my-2;
+}
+
+.tiptap-content ul {
+  @apply my-2 list-disc ps-6;
+}
+
+.tiptap-content ol {
+  @apply my-2 list-decimal ps-6;
+}
+
+.tiptap-content li {
+  @apply my-1;
+}
+
+/* Tiptap wraps each item's text in its own paragraph. */
+.tiptap-content li > p {
+  @apply my-0;
+}
+
+.tiptap-content blockquote {
+  @apply border-accent text-ink-muted my-3 border-s-2 ps-4 italic;
+}
+
+.tiptap-content a {
+  @apply text-accent-text underline underline-offset-2;
+}
+
+.tiptap-content code {
+  @apply bg-surface-sunken rounded px-1 py-0.5 text-[0.9em];
+}
+
+.tiptap-content pre {
+  @apply bg-surface-sunken my-3 overflow-x-auto rounded-lg p-3 text-sm;
+}
+
+.tiptap-content pre code {
+  @apply bg-transparent p-0;
+}
+
+.tiptap-content hr {
+  @apply border-hairline my-4;
+}
+
+.tiptap-content img {
+  @apply my-3 max-w-full rounded-lg;
 }

@@ -80,6 +80,20 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    title: 'Rich text',
+    entries: [
+      { keys: ['Ctrl', 'B'], label: 'Bold' },
+      { keys: ['Ctrl', 'I'], label: 'Italic' },
+      { keys: ['Ctrl', 'U'], label: 'Underline' },
+      {
+        keys: ['Ctrl', 'Shift', 'L / E / R / J'],
+        label: 'Align left, centre, right or justify',
+      },
+      { keys: ['Ctrl', 'Z'], label: 'Undo' },
+      { keys: ['Ctrl', 'Shift', 'Z'], label: 'Redo' },
+    ],
+  },
+  {
     title: 'View',
     entries: [
       { keys: ['Ctrl', 'Shift', 'B'], label: 'Show or hide sidebar' },

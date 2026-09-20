@@ -32,7 +32,10 @@ export function SiteHeader({
 
   return (
     <header className="border-rule bg-paper grain border-b">
-      <div className="border-rule hidden border-b lg:block">
+      {/* The utility row keeps the masthead's company down to the width
+          where the nav collapses into the menu button, not just on the
+          widest screens. */}
+      <div className="border-rule hidden border-b md:block">
         <div className="text-ink-muted mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-xs">
           <p>{formatLongDate(new Date(), locale)}</p>
           <div className="flex items-center gap-3">
@@ -77,12 +80,12 @@ export function SiteHeader({
 
       <MastheadAd advertisements={mastheadAds} variant="band" locale={locale} />
 
-      {/* The two controls with no room in the masthead below lg share one row
+      {/* The two controls with no room in the masthead below md share one row
           rather than stacking two: the non-shrinking logo+name already fills a
-          phone-width line, and the utility bar that holds the toggle from lg up
-          is hidden here. The search drops out at md, where it moves inline. */}
-      <div className="border-rule flex items-center gap-3 border-t px-4 py-2 lg:hidden">
-        <div className="min-w-0 flex-1 md:hidden">
+          phone-width line, and the utility bar that holds the toggle from md up
+          is hidden here. */}
+      <div className="border-rule flex items-center gap-3 border-t px-4 py-2 md:hidden">
+        <div className="min-w-0 flex-1">
           <SearchField locale={locale} />
         </div>
         <LanguageToggle locale={locale} className="ms-auto" />

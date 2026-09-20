@@ -95,8 +95,8 @@ display, but it is never persisted — recompute it on every read.
 
 `id`, `media_id` (FK → Media Asset), `detail_media_id` (FK → Media Asset, nullable),
 `advertiser_name`, `destination_url` (nullable), `description` (Tiptap JSON, nullable),
-`description_text` (nullable), `display_order`, `placement`, `start_at`, `end_at`,
-`created_at`, `updated_at`
+`description_text` (nullable), `display_order`, `placement`, `zoom`, `offset_x`,
+`offset_y`, `start_at`, `end_at`, `created_at`, `updated_at`
 
 There is **no `is_active` database field**, for the same reason as Breaking News. The
 backend derives the active state from the schedule:
@@ -109,17 +109,27 @@ active advertisements from inactive/expired ones.
 
 `placement` chooses one of three reader-site ad zones, each sold separately:
 
-| Placement  | Zone                           | Capacity  |
-| ---------- | ------------------------------ | --------- |
-| `MASTHEAD` | Beside the site name           | 1         |
-| `TOP`      | 320.57×73.88 band under header | 3         |
-| `SIDEBAR`  | 250×300 rail (column default)  | unlimited |
+| Placement  | Zone                                | Capacity  |
+| ---------- | ----------------------------------- | --------- |
+| `MASTHEAD` | Beside the site name, 520×96 shape  | 1         |
+| `TOP`      | Band under the header, 408×88 shape | 3         |
+| `SIDEBAR`  | 250×300 rail (column default)       | unlimited |
 
 Capacity counts the ads whose run **overlaps** the one being saved, not every row with
 that placement: a zone's cap is on how many run at once, so a finished booking frees its
 slot for the next advertiser. The API rejects an overflowing create/update with a 409
 Conflict. This replaces an earlier "no placement field, confirmed" note recorded here —
 that decision has been reversed.
+
+**`zoom` / `offset_x` / `offset_y` frame the creative inside the slot.** Masthead and
+Top are sold as a fixed shape, and the reader site holds that shape at every screen width
+— only the slot's size changes with the viewport. The CMS frames the artwork inside it the
+way a profile-picture cropper does: `zoom` is a percentage where 100 fits the whole image
+in the slot and anything above enlarges it so the slot crops the overflow, and the offsets
+pan it, as a percentage of the slot's own width and height (0/0 is centred). The CMS
+clamps a pan to the artwork's actual overflow, so it can never be dragged out of view.
+The Right Side rail fixes width alone and lets height follow the artwork, so nothing is
+cropped there and the values are ignored.
 
 **Ordering is a per-placement position, not a number the admin sets.** `display_order`
 is ascending (0 is first) and is only ever written by `PATCH /cms/advertisements/order`,

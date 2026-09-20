@@ -8,6 +8,19 @@ import type { MediaSummaryDto } from './media.js';
  */
 export type AdPlacement = 'MASTHEAD' | 'TOP' | 'SIDEBAR';
 
+/**
+ * How a creative is framed inside the slot the advertiser bought. The slot's
+ * size is fixed - what the CMS sets is where the artwork sits in it, by
+ * dragging and zooming it the way a profile-picture cropper works.
+ */
+export interface AdImageCrop {
+  /** 100 fits the whole image in the slot; above that the slot crops it. */
+  zoom: number;
+  /** Pan, as a percentage of the slot's width and height. 0/0 is centred. */
+  offsetX: number;
+  offsetY: number;
+}
+
 export interface AdvertisementDto {
   id: Id;
   advertiserName: string;
@@ -22,6 +35,9 @@ export interface AdvertisementDto {
    *  to reorder in the CMS - Top and Sidebar are ordered independently. */
   displayOrder: number;
   placement: AdPlacement;
+  zoom: number;
+  offsetX: number;
+  offsetY: number;
   startAt: IsoDateTime;
   endAt: IsoDateTime;
   isActive: boolean;
@@ -39,6 +55,10 @@ export interface CreateAdvertisementRequest {
   displayOrder?: number;
   /** Defaults to SIDEBAR server-side when omitted. */
   placement?: AdPlacement;
+  /** Omit for an untouched frame: the whole image, centred. */
+  zoom?: number;
+  offsetX?: number;
+  offsetY?: number;
   startAt: IsoDateTime;
   endAt: IsoDateTime;
 }

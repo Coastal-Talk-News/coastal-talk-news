@@ -29,7 +29,10 @@ export function LanguageToggle({
     <div
       role="group"
       aria-label="Language"
-      className={`border-rule inline-flex shrink-0 overflow-hidden rounded-sm border text-xs font-bold ${className}`}
+      // Two equal columns rather than two content-width buttons: "ENGLISH"
+      // is wider than the Kannada label, and a lopsided pair reads as a
+      // mistake rather than as a switch.
+      className={`border-rule inline-grid shrink-0 grid-cols-2 overflow-hidden rounded-sm border text-xs font-bold ${className}`}
     >
       <button
         type="button"

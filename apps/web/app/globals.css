@@ -28,18 +28,31 @@
     var(--font-body), var(--font-body-kannada), ui-sans-serif, system-ui,
     sans-serif;
 
-  --font-brand-name:
-    var(--font-dm-serif-display), var(--font-headline-kannada), Georgia, serif;
-  --font-brand-tagline:
-    var(--font-cinzel), var(--font-body-kannada), ui-sans-serif, system-ui,
-    sans-serif;
-
   --radius-card: 0.5rem;
 }
 
 @layer base {
   body {
     @apply bg-paper text-ink font-sans antialiased;
+    /* The newsroom's reporting and photography are the product, so the site
+       doesn't hand them to a drag-select or an image drag. A deterrent, not
+       protection: the page source is still public, and anyone determined can
+       read it. */
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Anything a reader types is still theirs to select and correct. */
+  input,
+  textarea,
+  select,
+  [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  img {
+    -webkit-user-drag: none;
   }
 
   h1,
@@ -126,8 +139,18 @@
   /* The body carries its own gap from whatever sits above it — the lead
      image when there is one, the share row when there isn't. Neither has a
      bottom margin, so without this the first paragraph butts against it. */
+  /* The masthead is sized from the room it has beside the logo rather than
+     from breakpoints, so the headline follows the same shape of curve — a
+     share of the viewport, capped — and sits one step above it. Raising the
+     cap or the slope here moves every article headline and the homepage
+     hero; NAME_SIZE in Brand.tsx sets the masthead alongside it. */
+  .headline-xl {
+    font-size: clamp(1.375rem, calc(10.1vw - 13px), 2.375rem);
+  }
+
+  /* One step of the same scale as the headline and standfirst above it. */
   .article-body {
-    @apply mt-6 font-serif text-[1.125rem] leading-[1.8];
+    @apply mt-6 font-serif text-[1rem] leading-[1.8] sm:text-[1.125rem];
   }
 
   .article-body > * + * {

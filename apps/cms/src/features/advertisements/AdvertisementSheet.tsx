@@ -1,4 +1,5 @@
 import type {
+  AdImageCrop,
   AdPlacement,
   AdvertisementDto,
   CreateAdvertisementRequest,
@@ -16,6 +17,8 @@ import { ImagePlus, Link as LinkIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { TiptapEditor } from '../../components/TiptapEditor.js';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
+import { AdImageFrame } from './AdImageFrame.js';
+import { DEFAULT_CROP, clampCrop } from './crop.js';
 import {
   PLACEMENTS,
   PLACEMENT_META,
@@ -29,6 +32,7 @@ interface FormValues {
   description: RichTextContent | null;
   destinationUrl: string;
   placement: AdPlacement;
+  crop: AdImageCrop;
   startDate: string;
   startTime: string;
   endDate: string;
@@ -79,6 +83,7 @@ function toValues(
       description: null,
       destinationUrl: '',
       placement: defaultPlacement,
+      crop: DEFAULT_CROP,
       startDate: start.date,
       startTime: start.time,
       endDate: '',
@@ -94,6 +99,7 @@ function toValues(
     description: item.description,
     destinationUrl: item.destinationUrl ?? '',
     placement: item.placement,
+    crop: { zoom: item.zoom, offsetX: item.offsetX, offsetY: item.offsetY },
     startDate: start.date,
     startTime: start.time,
     endDate: end.date,
@@ -161,6 +167,9 @@ export function AdvertisementSheet({
       JSON.stringify(initial.current.description) ||
     trimmedUrl !== initial.current.destinationUrl.trim() ||
     values.placement !== initial.current.placement ||
+    values.crop.zoom !== initial.current.crop.zoom ||
+    values.crop.offsetX !== initial.current.crop.offsetX ||
+    values.crop.offsetY !== initial.current.crop.offsetY ||
     values.startDate !== initial.current.startDate ||
     values.startTime !== initial.current.startTime ||
     values.endDate !== initial.current.endDate ||
@@ -220,6 +229,7 @@ export function AdvertisementSheet({
       description: isEmptyDoc(values.description) ? null : values.description,
       destinationUrl: trimmedUrl,
       placement: values.placement,
+      ...values.crop,
       startAt: startIso,
       endAt: endIso,
     });
@@ -236,6 +246,10 @@ export function AdvertisementSheet({
       ? new Date() >= new Date(startIso) && new Date() <= new Date(endIso)
       : false;
   const scheduled = startIso ? new Date(startIso) > new Date() : false;
+
+  // Only the zones that fix both dimensions can crop, so only they get a fit
+  // choice. The Right Side rail sets width alone and lets height follow.
+  const slot = PLACEMENT_META[values.placement].slot;
 
   const imageSlots = [
     {
@@ -332,7 +346,20 @@ export function AdvertisementSheet({
                   disabled={full}
                   aria-pressed={selected}
                   onClick={() =>
-                    setValues((current) => ({ ...current, placement }))
+                    setValues((current) => {
+                      // Each zone is a different shape, so a frame set for
+                      // one can overhang the next. Re-clamping keeps the
+                      // artwork where the admin put it, minus the overhang.
+                      const target = PLACEMENT_META[placement].slot;
+                      return {
+                        ...current,
+                        placement,
+                        crop:
+                          target && current.image
+                            ? clampCrop(current.crop, current.image, target)
+                            : current.crop,
+                      };
+                    })
                   }
                   className={cn(
                     'rounded-lg border p-3 text-left transition-colors',
@@ -362,30 +389,32 @@ export function AdvertisementSheet({
           )}
         </div>
 
-        {imageSlots.map((slot) => (
-          <div key={slot.key} className="space-y-1.5">
+        {imageSlots.map((imageSlot) => (
+          <div key={imageSlot.key} className="space-y-1.5">
             <span className="text-ink-muted block text-sm font-medium">
-              {slot.label}
-              {slot.required && <span className="ml-0.5 text-danger">*</span>}
+              {imageSlot.label}
+              {imageSlot.required && (
+                <span className="ml-0.5 text-danger">*</span>
+              )}
             </span>
 
-            {slot.value ? (
+            {imageSlot.value ? (
               <div className="border-hairline flex items-center gap-3 rounded-lg border p-3">
                 <img
-                  src={slot.value.url}
+                  src={imageSlot.value.url}
                   alt=""
                   width={64}
                   height={48}
                   className="h-12 w-16 shrink-0 rounded-md object-cover"
                 />
                 <p className="text-ink-muted min-w-0 flex-1 truncate text-sm">
-                  {slot.value.width}x{slot.value.height}
+                  {imageSlot.value.width}x{imageSlot.value.height}
                 </p>
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
-                  onClick={() => setPicker(slot.key)}
+                  onClick={() => setPicker(imageSlot.key)}
                 >
                   Change
                 </Button>
@@ -393,9 +422,15 @@ export function AdvertisementSheet({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  aria-label={`Remove ${slot.label.toLowerCase()}`}
+                  aria-label={`Remove ${imageSlot.label.toLowerCase()}`}
                   onClick={() =>
-                    setValues((current) => ({ ...current, [slot.key]: null }))
+                    setValues((current) => ({
+                      ...current,
+                      [imageSlot.key]: null,
+                      ...(imageSlot.key === 'image'
+                        ? { crop: DEFAULT_CROP }
+                        : {}),
+                    }))
                   }
                 >
                   <X className="size-4" aria-hidden />
@@ -404,10 +439,10 @@ export function AdvertisementSheet({
             ) : (
               <button
                 type="button"
-                onClick={() => setPicker(slot.key)}
+                onClick={() => setPicker(imageSlot.key)}
                 className={cn(
                   'border-hairline bg-surface-sunken hover:border-accent hover:bg-accent-soft flex w-full items-center gap-3 rounded-lg border border-dashed px-4 py-4 text-left transition-colors',
-                  slot.error && 'border-danger',
+                  imageSlot.error && 'border-danger',
                 )}
               >
                 <span className="text-ink-subtle bg-surface grid size-10 shrink-0 place-items-center rounded-full">
@@ -418,18 +453,31 @@ export function AdvertisementSheet({
                     Click to upload an image
                   </span>
                   <span className="text-ink-subtle block text-xs">
-                    {slot.hint}
+                    {imageSlot.hint}
                   </span>
                 </span>
               </button>
             )}
-            {slot.error && (
+            {imageSlot.error && (
               <p
                 role="alert"
                 className="animate-fade-in text-danger-text text-xs"
               >
-                {slot.error}
+                {imageSlot.error}
               </p>
+            )}
+
+            {imageSlot.key === 'image' && slot && values.image && (
+              <div className="pt-3">
+                <AdImageFrame
+                  image={values.image}
+                  slot={slot}
+                  crop={values.crop}
+                  onChange={(crop) =>
+                    setValues((current) => ({ ...current, crop }))
+                  }
+                />
+              </div>
             )}
           </div>
         ))}
@@ -557,6 +605,9 @@ export function AdvertisementSheet({
                     : null,
                 }
               : {}),
+            // A frame belongs to the artwork it was set on, so a new banner
+            // starts from the whole image again.
+            ...(picker === 'image' ? { crop: DEFAULT_CROP } : {}),
           }));
           setPicker(null);
         }}
