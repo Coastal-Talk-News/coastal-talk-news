@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import {
-  Archivo_Black,
-  Iansui,
+  Cinzel,
+  DM_Serif_Display,
   Noto_Sans,
   Noto_Sans_Kannada,
   Noto_Serif,
@@ -68,17 +68,17 @@ const bodyKannada = Noto_Sans_Kannada({
 
 // Lockup only: the site name and tagline beside the logo. Neither face has
 // Kannada glyphs, so the Kannada faces above sit behind them in the stacks.
-const brandName = Archivo_Black({
+const brandName = DM_Serif_Display({
   subsets: ['latin'],
   weight: '400',
-  variable: '--font-archivo',
+  variable: '--font-dm-serif-display',
   display: 'swap',
 });
 
-const brandTagline = Iansui({
+const brandTagline = Cinzel({
   subsets: ['latin'],
   weight: '400',
-  variable: '--font-iansui',
+  variable: '--font-cinzel',
   display: 'swap',
 });
 

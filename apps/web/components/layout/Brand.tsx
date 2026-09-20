@@ -56,7 +56,7 @@ export function Brand({
       <span className="min-w-0 leading-none">
         {/* One phrase: truncate rather than break the name across lines. */}
         <span
-          className={`${nameColor} ${NAME_SIZE[size]} block truncate font-brand-name`}
+          className={`${nameColor} ${NAME_SIZE[size]} block truncate font-brand-name uppercase`}
         >
           {siteName}
         </span>

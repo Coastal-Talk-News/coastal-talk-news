@@ -29,9 +29,9 @@
     sans-serif;
 
   --font-brand-name:
-    var(--font-archivo), var(--font-headline-kannada), Georgia, serif;
+    var(--font-dm-serif-display), var(--font-headline-kannada), Georgia, serif;
   --font-brand-tagline:
-    var(--font-iansui), var(--font-body-kannada), ui-sans-serif, system-ui,
+    var(--font-cinzel), var(--font-body-kannada), ui-sans-serif, system-ui,
     sans-serif;
 
   --radius-card: 0.5rem;
