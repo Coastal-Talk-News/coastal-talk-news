@@ -116,19 +116,6 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
               >
                 {category.name}
               </span>
-              {/* A count only says something when there is something to
-                  count; a row of zeroes is just noise. */}
-              {category.articleCount > 0 && (
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-colors ${
-                    active
-                      ? 'bg-brand text-white'
-                      : 'bg-paper-sunken text-ink-subtle group-hover:bg-brand-soft group-hover:text-brand'
-                  }`}
-                >
-                  {category.articleCount}
-                </span>
-              )}
             </Link>
           )}
         </div>

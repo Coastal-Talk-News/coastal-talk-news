@@ -276,6 +276,7 @@ export function AdvertisementSheet({
           <Button
             type="submit"
             form="advertisement-form"
+            data-shortcut="save"
             className="flex-1"
             loading={saving}
             disabled={!canSubmit}

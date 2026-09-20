@@ -131,7 +131,12 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
       />
 
       <div className="flex justify-end border-t border-hairline pt-6">
-        <Button type="submit" loading={mutation.isPending} disabled={!isDirty}>
+        <Button
+          type="submit"
+          data-shortcut="save"
+          loading={mutation.isPending}
+          disabled={!isDirty}
+        >
           Save Changes
         </Button>
       </div>

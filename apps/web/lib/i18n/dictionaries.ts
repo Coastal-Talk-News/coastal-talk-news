@@ -77,10 +77,8 @@ const en = {
     // only choosing where to read next.
     sectionsDescription: 'Choose a section below to start reading.',
     moreIn: (categoryName: string) => `More in ${categoryName}`,
-    storyCount: (count: number) =>
-      `${count} ${count === 1 ? 'story' : 'stories'}`,
-    sectionCount: (count: number) =>
-      `${count} ${count === 1 ? 'section' : 'sections'}`,
+    browseSections: 'Browse sections',
+    readStories: 'Read stories',
     noDescription: 'No description yet',
   },
   leadStories: {
@@ -236,8 +234,8 @@ const kn: typeof en = {
     sections: 'ವಿಭಾಗಗಳು',
     sectionsDescription: 'ಓದಲು ಕೆಳಗಿನ ವಿಭಾಗವೊಂದನ್ನು ಆಯ್ಕೆಮಾಡಿ.',
     moreIn: (categoryName: string) => `${categoryName} ವಿಭಾಗದ ಇನ್ನಷ್ಟು`,
-    storyCount: (count: number) => `${count} ಸುದ್ದಿಗಳು`,
-    sectionCount: (count: number) => `${count} ವಿಭಾಗಗಳು`,
+    browseSections: 'ವಿಭಾಗಗಳನ್ನು ನೋಡಿ',
+    readStories: 'ಸುದ್ದಿ ಓದಿ',
     noDescription: 'ಇನ್ನೂ ವಿವರಣೆ ಸೇರಿಸಿಲ್ಲ',
   },
   leadStories: {

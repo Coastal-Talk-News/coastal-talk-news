@@ -88,7 +88,7 @@ export function descendantIds(
  */
 export function flattenTree(
   categories: CmsCategoryDto[],
-  collapsed: Set<string>,
+  expanded: Set<string>,
 ): FlatCategory[] {
   const present = new Set(categories.map((category) => category.id));
   const childrenByParent = new Map<string, CmsCategoryDto[]>();
@@ -116,7 +116,7 @@ export function flattenTree(
   ) => {
     for (const category of sortByDisplayOrder(siblings)) {
       flat.push({ category, parentId, depth });
-      if (!collapsed.has(category.id)) {
+      if (expanded.has(category.id)) {
         walk(childrenByParent.get(category.id) ?? [], category.id, depth + 1);
       }
     }
