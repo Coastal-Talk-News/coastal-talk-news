@@ -26,6 +26,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { Megaphone, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { advertisementsApi } from '../api/advertisements.js';
 import { ApiError } from '../api/client.js';
 import { queryKeys } from '../api/queryKeys.js';
@@ -57,6 +58,7 @@ const LIST_PARAMS = { limit: 100 };
 const CLOCK_TICK_MS = 15_000;
 
 export function AdvertisementsPage() {
+  const tabListKeys = useTabListKeys();
   const [placement, setPlacement] = useState<AdPlacement>('TOP');
   const [status, setStatus] = useState<StatusFilter>('all');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -156,7 +158,7 @@ export function AdvertisementsPage() {
         title="Advertisements"
         description="Manage banner advertisements on your website."
         actions={
-          <Button onClick={openCreate}>
+          <Button onClick={openCreate} data-shortcut="create">
             <Plus className="size-4" aria-hidden />
             Add Advertisement
           </Button>
@@ -165,6 +167,7 @@ export function AdvertisementsPage() {
 
       <div
         role="tablist"
+        {...tabListKeys}
         aria-label="Placement"
         className="border-hairline mb-4 inline-flex rounded-lg border bg-surface-sunken p-0.5"
       >

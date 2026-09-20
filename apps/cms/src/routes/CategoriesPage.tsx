@@ -33,6 +33,7 @@ import {
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { categoriesApi } from '../api/categories.js';
 import { ApiError } from '../api/client.js';
 import { queryKeys } from '../api/queryKeys.js';
@@ -70,6 +71,7 @@ const STATUS_PARAM: Record<StatusFilter, boolean | undefined> = {
 };
 
 export function CategoriesPage() {
+  const tabListKeys = useTabListKeys();
   const [status, setStatus] = useState<StatusFilter>('all');
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounced(search, SEARCH_DEBOUNCE_MS);
@@ -117,14 +119,14 @@ export function CategoriesPage() {
     [categories],
   );
 
-  // Groups start open, and what's tracked is which ones the admin shut —
-  // the inverse can't survive a refetch, because a group that was collapsed
-  // on purpose and one that has just appeared both read as "not expanded",
-  // so restoring the new one's default reopens the other.
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  // Groups start shut, so the list opens as a short index of top-level
+  // groups rather than every category at once. Only what the admin opened is
+  // tracked, which needs no restoring after a refetch — a group that has
+  // just appeared is simply closed, same as its default.
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   function toggleExpanded(id: string) {
-    setCollapsed((current) => {
+    setExpanded((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);
       else next.add(id);
@@ -133,18 +135,17 @@ export function CategoriesPage() {
   }
 
   function reveal(id: string) {
-    setCollapsed((current) => {
-      if (!current.has(id)) return current;
-      const next = new Set(current);
-      next.delete(id);
-      return next;
+    setExpanded((current) => {
+      if (current.has(id)) return current;
+      return new Set(current).add(id);
     });
   }
 
-  const allExpanded = [...groupIds].every((id) => !collapsed.has(id));
+  const allExpanded =
+    groupIds.size > 0 && [...groupIds].every((id) => expanded.has(id));
 
   function toggleExpandAll() {
-    setCollapsed(allExpanded ? new Set(groupIds) : new Set());
+    setExpanded(allExpanded ? new Set() : new Set(groupIds));
   }
 
   const rows = useMemo<FlatCategory[]>(() => {
@@ -155,8 +156,8 @@ export function CategoriesPage() {
         depth: 0,
       }));
     }
-    return flattenTree(visible, collapsed);
-  }, [visible, collapsed, searchTerm]);
+    return flattenTree(visible, expanded);
+  }, [visible, expanded, searchTerm]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -222,7 +223,7 @@ export function CategoriesPage() {
     if (!category || !target) return;
 
     const parentIsExpanded =
-      target.parentId === null || !collapsed.has(target.parentId);
+      target.parentId === null || expanded.has(target.parentId);
     const siblingIds = siblingOrderAfterMove(
       currentRows,
       categories,
@@ -291,7 +292,7 @@ export function CategoriesPage() {
                 {allExpanded ? 'Collapse All' : 'Expand All'}
               </Button>
             )}
-            <Button onClick={openCreate}>
+            <Button onClick={openCreate} data-shortcut="create">
               <Plus className="size-4" aria-hidden />
               Add category
             </Button>
@@ -307,6 +308,7 @@ export function CategoriesPage() {
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search by name or description…"
               aria-label="Search categories"
+              data-shortcut="search"
               icon={<Search className="size-4" aria-hidden />}
               className={search ? 'pr-9' : undefined}
             />
@@ -314,6 +316,7 @@ export function CategoriesPage() {
 
           <div
             role="tablist"
+            {...tabListKeys}
             aria-label="Filter by status"
             className="border-hairline flex rounded-lg border bg-surface-sunken p-0.5"
           >
@@ -452,7 +455,7 @@ export function CategoriesPage() {
                                 : row.depth
                             }
                             hasChildren={groupIds.has(row.category.id)}
-                            expanded={!collapsed.has(row.category.id)}
+                            expanded={expanded.has(row.category.id)}
                             isDragging={isDragging}
                             onToggleExpand={() =>
                               toggleExpanded(row.category.id)

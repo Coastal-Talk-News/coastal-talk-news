@@ -192,6 +192,7 @@ export function BreakingNewsSheet({
           <Button
             type="submit"
             form="breaking-news-form"
+            data-shortcut="save"
             className="flex-1"
             loading={saving}
             disabled={!canSubmit}

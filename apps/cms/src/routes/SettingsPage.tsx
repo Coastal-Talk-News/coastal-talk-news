@@ -2,6 +2,7 @@ import { ErrorState, LoadingState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import { Globe, Info, Mail, Megaphone, Search } from 'lucide-react';
 import { useState } from 'react';
+import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { settingsApi } from '../api/settings.js';
 import { queryKeys } from '../api/queryKeys.js';
 import { SettingsContactForm } from '../features/settings/SettingsContactForm.js';
@@ -23,6 +24,7 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
 ];
 
 export function SettingsPage() {
+  const tabListKeys = useTabListKeys('vertical');
   const [tab, setTab] = useState<Tab>('general');
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: queryKeys.settings,
@@ -54,6 +56,7 @@ export function SettingsPage() {
       <div className="flex flex-col gap-6 lg:flex-row">
         <nav
           role="tablist"
+          {...tabListKeys}
           aria-label="Settings sections"
           className="flex gap-1 overflow-x-auto lg:w-56 lg:shrink-0 lg:flex-col lg:overflow-visible"
         >

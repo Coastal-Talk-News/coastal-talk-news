@@ -9,6 +9,7 @@ import { EmptyState, ErrorState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowUpDown, Bell, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { breakingNewsApi } from '../api/breaking-news.js';
 import { ApiError } from '../api/client.js';
 import { queryKeys } from '../api/queryKeys.js';
@@ -42,6 +43,7 @@ const LIST_PARAMS = { limit: 100 };
 const CLOCK_TICK_MS = 15_000;
 
 export function BreakingNewsPage() {
+  const tabListKeys = useTabListKeys();
   const [tab, setTab] = useState<TabValue>('all');
   const [sort, setSort] = useState<SortOrder>('newest');
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -109,7 +111,7 @@ export function BreakingNewsPage() {
         title="Latest News"
         description="Manage live latest news updates. These appear in the latest news ticker on the website."
         actions={
-          <Button onClick={openCreate}>
+          <Button onClick={openCreate} data-shortcut="create">
             <Plus className="size-4" aria-hidden />
             Add Latest News
           </Button>
@@ -120,6 +122,7 @@ export function BreakingNewsPage() {
         <div className="border-hairline flex flex-wrap items-center justify-between gap-3 border-b p-4">
           <div
             role="tablist"
+            {...tabListKeys}
             aria-label="Filter by status"
             className="border-hairline flex rounded-lg border bg-surface-sunken p-0.5"
           >

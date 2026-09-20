@@ -200,7 +200,12 @@ export function SettingsPageForm({
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit" loading={mutation.isPending} disabled={!isDirty}>
+        <Button
+          type="submit"
+          data-shortcut="save"
+          loading={mutation.isPending}
+          disabled={!isDirty}
+        >
           Save changes
         </Button>
       </div>

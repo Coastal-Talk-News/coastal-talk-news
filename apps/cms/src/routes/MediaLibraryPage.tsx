@@ -64,6 +64,7 @@ export function MediaLibraryPage() {
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search by file name…"
                 aria-label="Search media"
+                data-shortcut="search"
                 icon={<Search className="size-4" aria-hidden />}
               />
             </div>

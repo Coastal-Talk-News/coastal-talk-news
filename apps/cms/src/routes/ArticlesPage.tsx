@@ -13,6 +13,7 @@ import {
   Search,
 } from 'lucide-react';
 import { useState } from 'react';
+import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { Link, useSearchParams } from 'react-router-dom';
 import { articlesApi } from '../api/articles.js';
 import { ApiError } from '../api/client.js';
@@ -78,6 +79,7 @@ const primaryLinkClass =
   'inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-action px-4 text-sm font-medium text-action-fg shadow-sm transition-[background-color,box-shadow,transform,color] duration-150 hover:bg-action-hover active:scale-[0.98]';
 
 export function ArticlesPage() {
+  const tabListKeys = useTabListKeys();
   const [page, setPage] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const statusTab = toStatusTab(searchParams.get('status'));
@@ -171,7 +173,11 @@ export function ArticlesPage() {
         title="All Articles"
         description="Manage and organize your news articles."
         actions={
-          <Link to="/articles/new" className={primaryLinkClass}>
+          <Link
+            to="/articles/new"
+            data-shortcut="create"
+            className={primaryLinkClass}
+          >
             <Plus className="size-4" aria-hidden />
             Create Article
           </Link>
@@ -186,6 +192,7 @@ export function ArticlesPage() {
               onChange={(event) => withReset(setSearch)(event.target.value)}
               placeholder="Search headlines and content…"
               aria-label="Search articles"
+              data-shortcut="search"
               icon={<Search className="size-4" aria-hidden />}
             />
           </div>
@@ -230,6 +237,7 @@ export function ArticlesPage() {
 
         <div
           role="tablist"
+          {...tabListKeys}
           aria-label="Filter by status"
           className="flex flex-wrap items-center gap-1 px-4 py-3"
         >

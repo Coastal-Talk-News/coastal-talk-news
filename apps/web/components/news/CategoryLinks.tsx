@@ -36,16 +36,10 @@ export function SubcategoryGrid({
   return (
     <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {categories.map((category) => {
-        const total = totalArticles(category);
         const summary =
           category.children.length > 0
-            ? [
-                dictionary.category.sectionCount(category.children.length),
-                total > 0 ? dictionary.category.storyCount(total) : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')
-            : dictionary.category.storyCount(total);
+            ? dictionary.category.browseSections
+            : dictionary.category.readStories;
         return (
           <li key={category.id}>
             <Link
@@ -134,12 +128,5 @@ export function SiblingLinks({
         ))}
       </ul>
     </nav>
-  );
-}
-
-function totalArticles(category: PublicNavCategoryDto): number {
-  return category.children.reduce(
-    (sum, child) => sum + totalArticles(child),
-    category.articleCount,
   );
 }

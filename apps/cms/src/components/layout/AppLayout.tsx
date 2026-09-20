@@ -2,8 +2,10 @@ import { Drawer } from '@coastal-talk-news/ui/drawer';
 import { LoadingState } from '@coastal-talk-news/ui/states';
 import { TooltipProvider } from '@coastal-talk-news/ui/tooltip';
 import { Menu } from 'lucide-react';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { ShortcutsDialog } from '../../features/shortcuts/ShortcutsDialog.js';
+import { useGlobalShortcuts } from '../../features/shortcuts/useGlobalShortcuts.js';
 import { useLocalStorage } from '../../lib/useLocalStorage.js';
 import { Sidebar } from './sidebar/Sidebar.js';
 
@@ -14,21 +16,15 @@ export function AppLayout() {
     false,
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (
-        event.key.toLowerCase() === 'b' &&
-        event.shiftKey &&
-        (event.ctrlKey || event.metaKey)
-      ) {
-        event.preventDefault();
-        setCollapsed(!collapsed);
-      }
-    }
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [collapsed, setCollapsed]);
+  useGlobalShortcuts({
+    onShowShortcuts: useCallback(() => setShortcutsOpen(true), []),
+    onToggleSidebar: useCallback(
+      () => setCollapsed(!collapsed),
+      [collapsed, setCollapsed],
+    ),
+  });
 
   return (
     <TooltipProvider delayDuration={250}>
@@ -37,6 +33,7 @@ export function AppLayout() {
           <Sidebar
             collapsed={collapsed}
             onToggleCollapsed={() => setCollapsed(!collapsed)}
+            onShowShortcuts={() => setShortcutsOpen(true)}
           />
         </aside>
 
@@ -51,9 +48,12 @@ export function AppLayout() {
             collapsed={false}
             onToggleCollapsed={() => undefined}
             onNavigate={() => setDrawerOpen(false)}
+            onShowShortcuts={() => setShortcutsOpen(true)}
             showCollapseControl={false}
           />
         </Drawer>
+
+        <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="border-hairline bg-surface/85 sticky top-0 z-30 flex h-14 items-center gap-3 border-b px-4 backdrop-blur-md lg:hidden">

@@ -297,7 +297,12 @@ export function SettingsGeneralForm({ settings }: SettingsGeneralFormProps) {
       </div>
 
       <div className="flex justify-end border-t border-hairline pt-6">
-        <Button type="submit" loading={mutation.isPending} disabled={!canSave}>
+        <Button
+          type="submit"
+          data-shortcut="save"
+          loading={mutation.isPending}
+          disabled={!canSave}
+        >
           Save Changes
         </Button>
       </div>

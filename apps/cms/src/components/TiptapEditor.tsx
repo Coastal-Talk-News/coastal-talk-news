@@ -179,7 +179,10 @@ export function TiptapEditor({
   });
 
   useEffect(() => {
-    if (!editor) return;
+    // A destroyed editor still satisfies the null check but throws from
+    // every command getter — React remounts this effect when the tree is
+    // hidden and reconnected, which can happen after Tiptap has torn down.
+    if (!editor || editor.isDestroyed) return;
     const next = (content ?? '') as Content;
     const current = editor.getJSON();
     if (JSON.stringify(current) !== JSON.stringify(next)) {

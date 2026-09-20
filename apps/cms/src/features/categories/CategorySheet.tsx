@@ -187,6 +187,7 @@ export function CategorySheet({
           <Button
             type="submit"
             form="category-form"
+            data-shortcut="save"
             className="flex-1"
             loading={saving}
             disabled={!canSubmit}
