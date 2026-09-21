@@ -12,6 +12,7 @@ import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { LanguageToggle } from './LanguageToggle';
 import { SocialLinks } from './SocialLinks';
+import { Brand } from './Brand';
 
 interface MobileNavProps {
   categories: PublicNavCategoryDto[];
@@ -200,18 +201,14 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
           }`}
         >
           <div className="border-rule flex items-center gap-3 border-b px-5 py-4">
-            {settings.logo && (
-              <Image
-                src={settings.logo.url}
-                alt=""
-                width={settings.logo.width}
-                height={settings.logo.height}
-                className="ring-rule size-10 shrink-0 rounded-full object-cover ring-1"
-              />
-            )}
             <span className="min-w-0 flex-1 font-serif text-lg leading-tight font-bold">
-              {settings.siteName}
-              <span className="text-brand">.</span>
+              <Brand
+                siteName={settings.siteName}
+                tagline={null}
+                logo={settings.logo}
+                priority
+                size="lg"
+              />
             </span>
             <button
               type="button"
