@@ -7,11 +7,13 @@ const dateFormatters: Record<Locale, Intl.DateTimeFormat> = {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   }),
   kn: new Intl.DateTimeFormat('kn-IN', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   }),
 };
 
@@ -22,6 +24,7 @@ const dateTimeFormatters: Record<Locale, Intl.DateTimeFormat> = {
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: 'Asia/Kolkata',
   }),
   kn: new Intl.DateTimeFormat('kn-IN', {
     day: 'numeric',
@@ -29,6 +32,7 @@ const dateTimeFormatters: Record<Locale, Intl.DateTimeFormat> = {
     year: 'numeric',
     hour: 'numeric',
     minute: '2-digit',
+    timeZone: 'Asia/Kolkata',
   }),
 };
 
@@ -38,12 +42,14 @@ const longDateFormatters: Record<Locale, Intl.DateTimeFormat> = {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   }),
   kn: new Intl.DateTimeFormat('kn-IN', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'Asia/Kolkata',
   }),
 };
 
