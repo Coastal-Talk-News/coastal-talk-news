@@ -243,6 +243,9 @@ model SiteSettings {
   /// Tiptap document JSON, same shape as Article.content — rendered by the
   /// reader site's own node renderer, never as HTML.
   aboutContent Json?   @map("about_content")
+  /// Kannada body for the About page. Null falls back to `aboutContent` (the
+  /// English body) — see the reader-site service layer, not the DB.
+  aboutContentKannada Json? @map("about_content_kannada")
 
   contactTitle String? @map("contact_title")
   contactIntro String? @map("contact_intro")

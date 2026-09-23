@@ -92,6 +92,7 @@ export function findPageSettings(db: TransactionClient) {
       aboutTitle: true,
       aboutIntro: true,
       aboutContent: true,
+      aboutContentKannada: true,
       contactTitle: true,
       contactIntro: true,
       contactHours: true,

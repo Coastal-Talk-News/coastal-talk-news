@@ -115,11 +115,17 @@ export async function getSite(): Promise<PublicSiteDto> {
 }
 
 /** The newsroom's own copy for About, Contact or Advertise. Its own call
- * rather than part of /site, because only this page needs the body. */
+ * rather than part of /site, because only this page needs the body.
+ * `locale` only matters to About, which can carry a separate Kannada body —
+ * the API ignores it for Contact and Advertise. */
 export async function getPage(
   page: 'about' | 'contact' | 'advertise',
+  locale?: Locale,
 ): Promise<PublicPageDto> {
-  return fetchPublic<PublicPageDto>(`/pages/${page}`);
+  const language = locale ? ARTICLE_LANGUAGE_BY_LOCALE[locale] : undefined;
+  return fetchPublic<PublicPageDto>(
+    `/pages/${page}${language ? `?language=${language}` : ''}`,
+  );
 }
 
 export async function getHome(locale: Locale): Promise<PublicHomeDto> {

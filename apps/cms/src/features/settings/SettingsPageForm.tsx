@@ -56,6 +56,9 @@ interface PageValues {
   title: string;
   intro: string;
   content: ArticleContent | null;
+  /** About only — the reader site shows this instead of `content` once the
+   * UI-language toggle is set to Kannada, falling back to `content` if empty. */
+  contentKannada: ArticleContent | null;
 }
 
 function toValues(settings: SiteSettingsDto, page: PageKey): PageValues {
@@ -64,6 +67,7 @@ function toValues(settings: SiteSettingsDto, page: PageKey): PageValues {
     title: (isAbout ? settings.aboutTitle : settings.advertiseTitle) ?? '',
     intro: (isAbout ? settings.aboutIntro : settings.advertiseIntro) ?? '',
     content: isAbout ? settings.aboutContent : settings.advertiseContent,
+    contentKannada: isAbout ? settings.aboutContentKannada : null,
   };
 }
 
@@ -104,27 +108,34 @@ export function SettingsPageForm({
     initial.current = next;
   }, [settings, page]);
 
+  const isAbout = page === 'about';
   const isDirty =
     values.title.trim() !== initial.current.title.trim() ||
     values.intro.trim() !== initial.current.intro.trim() ||
-    JSON.stringify(values.content) !== JSON.stringify(initial.current.content);
+    JSON.stringify(values.content) !==
+      JSON.stringify(initial.current.content) ||
+    (isAbout &&
+      JSON.stringify(values.contentKannada) !==
+        JSON.stringify(initial.current.contentKannada));
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!isDirty) return;
 
-    const body: UpdateSiteSettingsRequest =
-      page === 'about'
-        ? {
-            aboutTitle: orNull(values.title),
-            aboutIntro: orNull(values.intro),
-            aboutContent: hasText(values.content) ? values.content : null,
-          }
-        : {
-            advertiseTitle: orNull(values.title),
-            advertiseIntro: orNull(values.intro),
-            advertiseContent: hasText(values.content) ? values.content : null,
-          };
+    const body: UpdateSiteSettingsRequest = isAbout
+      ? {
+          aboutTitle: orNull(values.title),
+          aboutIntro: orNull(values.intro),
+          aboutContent: hasText(values.content) ? values.content : null,
+          aboutContentKannada: hasText(values.contentKannada)
+            ? values.contentKannada
+            : null,
+        }
+      : {
+          advertiseTitle: orNull(values.title),
+          advertiseIntro: orNull(values.intro),
+          advertiseContent: hasText(values.content) ? values.content : null,
+        };
 
     mutation.mutate(body, {
       onSuccess: () => toast.success(copy.savedMessage),
@@ -181,7 +192,7 @@ export function SettingsPageForm({
 
       <div className="space-y-1.5">
         <span className="text-ink-muted block text-sm font-medium">
-          Page content
+          {isAbout ? 'Page content (English)' : 'Page content'}
           <span className="text-ink-subtle ml-1 font-normal">(optional)</span>
         </span>
         <TiptapEditor
@@ -196,8 +207,32 @@ export function SettingsPageForm({
         />
         <p className="text-ink-subtle text-xs">
           Headings, lists, links and images work the same as in a news article.
+          {isAbout && ' Shown when a reader has the site set to English.'}
         </p>
       </div>
+
+      {isAbout && (
+        <div className="space-y-1.5">
+          <span className="text-ink-muted block text-sm font-medium">
+            Page content (Kannada)
+            <span className="text-ink-subtle ml-1 font-normal">(optional)</span>
+          </span>
+          <TiptapEditor
+            content={values.contentKannada}
+            placeholder="ಸುದ್ದಿ ವಿಭಾಗ ಯಾರು, ಏನನ್ನು ವರದಿ ಮಾಡುತ್ತದೆ ಮತ್ತು ಅದು ಏಕೆ ಮುಖ್ಯ ಎಂಬುದನ್ನು ಓದುಗರಿಗೆ ತಿಳಿಸಿ…"
+            onChange={(content) =>
+              setValues((current) => ({
+                ...current,
+                contentKannada: content as ArticleContent,
+              }))
+            }
+          />
+          <p className="text-ink-subtle text-xs">
+            Shown when a reader has the site set to Kannada. Leave empty and the
+            English content above is shown instead.
+          </p>
+        </div>
+      )}
 
       <div className="flex justify-end">
         <Button

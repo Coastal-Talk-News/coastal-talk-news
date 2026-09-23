@@ -17,10 +17,17 @@ export async function getSite(request: FastifyRequest) {
 }
 
 export async function getPage(
-  request: FastifyRequest<{ Params: { page: service.PublicPageKey } }>,
+  request: FastifyRequest<{
+    Params: { page: service.PublicPageKey };
+    Querystring: { language?: Language };
+  }>,
 ) {
   return dataEnvelope(
-    await service.getPage(deps(request), request.params.page),
+    await service.getPage(
+      deps(request),
+      request.params.page,
+      request.query.language,
+    ),
   );
 }
 

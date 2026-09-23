@@ -153,6 +153,12 @@ export const PublicPageParamsSchema = Type.Object({
   ]),
 });
 
+// Omitted means English — About's Kannada body is opt-in per request, not a
+// second document every caller must think about.
+export const PublicPageQuerySchema = Type.Object({
+  language: Type.Optional(LanguageSchema),
+});
+
 export const PublicSearchQuerySchema = Type.Object({
   q: Type.String({ minLength: 1, maxLength: 200 }),
   // Omitted entirely means "All" — both languages, mixed together.

@@ -14,6 +14,8 @@ export interface SiteSettingsDto {
   aboutTitle: string | null;
   aboutIntro: string | null;
   aboutContent: ArticleContent | null;
+  /** Falls back to `aboutContent` on the reader site when null. */
+  aboutContentKannada: ArticleContent | null;
   contactTitle: string | null;
   contactIntro: string | null;
   contactHours: string | null;
@@ -44,6 +46,7 @@ export interface UpdateSiteSettingsRequest {
   aboutTitle?: string | null;
   aboutIntro?: string | null;
   aboutContent?: ArticleContent | null;
+  aboutContentKannada?: ArticleContent | null;
   contactTitle?: string | null;
   contactIntro?: string | null;
   contactHours?: string | null;

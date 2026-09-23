@@ -53,6 +53,7 @@ export const SiteSettingsSchema = Type.Object({
   aboutTitle: Type.Union([Type.String(), Type.Null()]),
   aboutIntro: Type.Union([Type.String(), Type.Null()]),
   aboutContent: Type.Union([ArticleContentSchema, Type.Null()]),
+  aboutContentKannada: Type.Union([ArticleContentSchema, Type.Null()]),
   contactTitle: Type.Union([Type.String(), Type.Null()]),
   contactIntro: Type.Union([Type.String(), Type.Null()]),
   contactHours: Type.Union([Type.String(), Type.Null()]),
@@ -86,6 +87,9 @@ export const UpdateSiteSettingsBodySchema = Type.Object(
     aboutTitle: Type.Optional(nullableString(SETTINGS_PAGE_TITLE_MAX)),
     aboutIntro: Type.Optional(nullableString(SETTINGS_PAGE_INTRO_MAX)),
     aboutContent: Type.Optional(
+      Type.Union([ArticleContentSchema, Type.Null()]),
+    ),
+    aboutContentKannada: Type.Optional(
       Type.Union([ArticleContentSchema, Type.Null()]),
     ),
     contactTitle: Type.Optional(nullableString(SETTINGS_PAGE_TITLE_MAX)),
