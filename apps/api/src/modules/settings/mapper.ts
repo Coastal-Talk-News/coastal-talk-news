@@ -17,6 +17,7 @@ export interface SiteSettingsEntity {
   aboutTitle: string | null;
   aboutIntro: string | null;
   aboutContent: unknown;
+  aboutContentKannada: unknown;
   contactTitle: string | null;
   contactIntro: string | null;
   contactHours: string | null;
@@ -73,6 +74,7 @@ export function toSiteSettingsDto(
     aboutTitle: settings.aboutTitle,
     aboutIntro: settings.aboutIntro,
     aboutContent: toContent(settings.aboutContent),
+    aboutContentKannada: toContent(settings.aboutContentKannada),
     contactTitle: settings.contactTitle,
     contactIntro: settings.contactIntro,
     contactHours: settings.contactHours,

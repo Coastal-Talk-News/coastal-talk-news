@@ -98,6 +98,7 @@ export type PublicPageKey = 'about' | 'contact' | 'advertise';
 export async function getPage(
   { db }: PublicServiceDeps,
   page: PublicPageKey,
+  language?: Language,
 ): Promise<PublicPageDto> {
   const settings = await repository.findPageSettings(db);
   if (!settings) {
@@ -117,12 +118,16 @@ export async function getPage(
   }
 
   const isAbout = page === 'about';
+  // Kannada falls back to the English body when the newsroom hasn't written
+  // one yet, so the page still has content rather than sitting empty.
+  const aboutContent =
+    language === 'KANNADA' && settings.aboutContentKannada
+      ? settings.aboutContentKannada
+      : settings.aboutContent;
   return {
     title: isAbout ? settings.aboutTitle : settings.advertiseTitle,
     intro: isAbout ? settings.aboutIntro : settings.advertiseIntro,
-    content: toPageContent(
-      isAbout ? settings.aboutContent : settings.advertiseContent,
-    ),
+    content: toPageContent(isAbout ? aboutContent : settings.advertiseContent),
     email: settings.contactEmail,
     phone: settings.contactPhone,
     address: null,

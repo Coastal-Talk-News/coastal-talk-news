@@ -24,6 +24,7 @@ export interface UpdateSiteSettingsInput {
   aboutTitle?: string | null;
   aboutIntro?: string | null;
   aboutContent?: ArticleContent | null;
+  aboutContentKannada?: ArticleContent | null;
   contactTitle?: string | null;
   contactIntro?: string | null;
   contactHours?: string | null;
@@ -123,6 +124,9 @@ export async function update(
         : {}),
       ...(input.aboutContent !== undefined
         ? { aboutContent: input.aboutContent }
+        : {}),
+      ...(input.aboutContentKannada !== undefined
+        ? { aboutContentKannada: input.aboutContentKannada }
         : {}),
       ...(input.contactTitle !== undefined
         ? { contactTitle: input.contactTitle?.trim() || null }
