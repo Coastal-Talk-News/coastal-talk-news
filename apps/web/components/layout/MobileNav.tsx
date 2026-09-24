@@ -8,6 +8,7 @@ import type {
   PublicNavCategoryDto,
   PublicSiteSettingsDto,
 } from '@coastal-talk-news/types';
+import { categoryName } from '../../lib/category-name';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { LanguageToggle } from './LanguageToggle';
@@ -83,7 +84,7 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
               className="group hover:bg-paper-sunken flex flex-1 items-center justify-between gap-3 rounded-sm px-2 py-2.5 text-left transition-colors"
             >
               <span className="group-hover:text-brand min-w-0 font-semibold transition-colors">
-                {category.name}
+                {categoryName(category, locale)}
               </span>
               <svg
                 viewBox="0 0 20 20"
@@ -115,7 +116,7 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
                   active ? 'text-brand' : 'group-hover:text-brand'
                 }`}
               >
-                {category.name}
+                {categoryName(category, locale)}
               </span>
             </Link>
           )}

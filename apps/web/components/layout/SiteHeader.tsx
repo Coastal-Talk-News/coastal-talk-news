@@ -100,6 +100,7 @@ export function SiteHeader({
               moreLabel={dictionary.header.more}
               moreAriaLabel={dictionary.header.moreSections}
               sectionsLabel={dictionary.header.sections}
+              locale={locale}
             />
           </div>
           <HeaderSearchToggle

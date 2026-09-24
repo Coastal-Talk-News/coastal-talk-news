@@ -12,6 +12,7 @@ export interface BreakingNewsServiceDeps {
 
 export interface CreateBreakingNewsInput {
   headline: string;
+  headlineKannada: string;
   articleUrl?: string;
   startAt: string;
   endAt?: string | null;
@@ -54,6 +55,7 @@ export async function create(
 
   return repository.create(db, {
     headline: input.headline.trim(),
+    headlineKannada: input.headlineKannada.trim(),
     // No is_active column: startAt/endAt are the only source of truth.
     articleUrl: input.articleUrl?.trim() ?? '',
     startAt,
@@ -83,6 +85,9 @@ export async function update(
   return repository.update(db, id, {
     ...(input.headline !== undefined
       ? { headline: input.headline.trim() }
+      : {}),
+    ...(input.headlineKannada !== undefined
+      ? { headlineKannada: input.headlineKannada.trim() }
       : {}),
     ...(input.articleUrl !== undefined
       ? { articleUrl: input.articleUrl.trim() }

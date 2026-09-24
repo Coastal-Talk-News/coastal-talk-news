@@ -14,6 +14,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 
 interface FormValues {
   headline: string;
+  headlineKannada: string;
   articleUrl: string;
   startDate: string;
   startTime: string;
@@ -51,6 +52,7 @@ function toValues(item: BreakingNewsDto | null): FormValues {
     const start = defaultStart();
     return {
       headline: '',
+      headlineKannada: '',
       articleUrl: '',
       startDate: start.date,
       startTime: start.time,
@@ -63,6 +65,7 @@ function toValues(item: BreakingNewsDto | null): FormValues {
   const end = item.endAt ? splitIso(item.endAt) : null;
   return {
     headline: item.headline,
+    headlineKannada: item.headlineKannada ?? '',
     articleUrl: item.articleUrl,
     startDate: start.date,
     startTime: start.time,
@@ -105,6 +108,7 @@ export function BreakingNewsSheet({
   }, [open, editing]);
 
   const trimmedHeadline = values.headline.trim();
+  const trimmedHeadlineKannada = values.headlineKannada.trim();
   const startIso = combineToIso(values.startDate, values.startTime);
   const endIso = values.hasEnd
     ? combineToIso(values.endDate, values.endTime)
@@ -116,6 +120,7 @@ export function BreakingNewsSheet({
 
   const isDirty =
     trimmedHeadline !== initial.current.headline.trim() ||
+    values.headlineKannada.trim() !== initial.current.headlineKannada.trim() ||
     values.articleUrl.trim() !== initial.current.articleUrl.trim() ||
     values.startDate !== initial.current.startDate ||
     values.startTime !== initial.current.startTime ||
@@ -125,6 +130,10 @@ export function BreakingNewsSheet({
 
   const headlineError =
     touched && !trimmedHeadline ? 'Headline is required.' : undefined;
+  const headlineKannadaError =
+    touched && !trimmedHeadlineKannada
+      ? 'Kannada headline is required.'
+      : undefined;
   const startError =
     touched && !startIso ? 'Start date and time are required.' : undefined;
   // The "required" message waits for touched, like every other field's -
@@ -144,7 +153,10 @@ export function BreakingNewsSheet({
     : undefined;
 
   const canSubmit =
-    Boolean(trimmedHeadline) && windowValid && (isDirty || !editing);
+    Boolean(trimmedHeadline) &&
+    Boolean(trimmedHeadlineKannada) &&
+    windowValid &&
+    (isDirty || !editing);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -152,6 +164,7 @@ export function BreakingNewsSheet({
     if (!canSubmit || !startIso) return;
     onSubmit({
       headline: trimmedHeadline,
+      headlineKannada: trimmedHeadlineKannada,
       // Empty string, not undefined: the column is non-nullable and uses ''
       // for "no link", and undefined would be dropped from the body and read
       // as "leave unchanged".
@@ -209,14 +222,14 @@ export function BreakingNewsSheet({
         noValidate
       >
         <Field
-          label="Headline"
+          label="Headline (English)"
           htmlFor="breaking-news-headline"
           required
           error={headlineError}
           hint={
             headlineError
               ? undefined
-              : 'Keep it short and impactful. This will appear in the ticker.'
+              : 'Keep it short and impactful. Shown in the ticker when a reader has the site set to English.'
           }
         >
           <Input
@@ -236,6 +249,36 @@ export function BreakingNewsSheet({
           />
           <p className="text-ink-subtle text-right text-xs tabular-nums">
             {values.headline.length}/{BREAKING_NEWS_HEADLINE_MAX}
+          </p>
+        </Field>
+
+        <Field
+          label="Headline (Kannada)"
+          htmlFor="breaking-news-headline-kannada"
+          required
+          error={headlineKannadaError}
+          hint={
+            headlineKannadaError
+              ? undefined
+              : 'Shown in the ticker when a reader has the site set to Kannada.'
+          }
+        >
+          <Input
+            id="breaking-news-headline-kannada"
+            value={values.headlineKannada}
+            maxLength={BREAKING_NEWS_HEADLINE_MAX}
+            placeholder="ಕನ್ನಡದಲ್ಲಿ ಶೀರ್ಷಿಕೆ ನಮೂದಿಸಿ"
+            invalid={Boolean(headlineKannadaError)}
+            onBlur={() => setTouched(true)}
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                headlineKannada: event.target.value,
+              }))
+            }
+          />
+          <p className="text-ink-subtle text-right text-xs tabular-nums">
+            {values.headlineKannada.length}/{BREAKING_NEWS_HEADLINE_MAX}
           </p>
         </Field>
 

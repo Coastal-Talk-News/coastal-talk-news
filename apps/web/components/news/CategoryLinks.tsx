@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
+import { categoryName } from '../../lib/category-name';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { StoryImage } from './StoryImage';
@@ -62,13 +63,13 @@ export function SubcategoryGrid({
                   aria-hidden
                   className="bg-paper-sunken text-ink-subtle/40 grain grid aspect-video w-full place-items-center font-serif text-4xl font-bold"
                 >
-                  {[...category.name][0]}
+                  {[...categoryName(category, locale)][0]}
                 </span>
               )}
 
               <div className="flex flex-1 flex-col p-4">
                 <p className="group-hover:text-brand font-semibold transition-colors">
-                  {category.name}
+                  {categoryName(category, locale)}
                 </p>
                 {/* Two lines are reserved whether or not there is a second
                     one, and the count is pushed to the bottom, so every card
@@ -104,9 +105,11 @@ export function SubcategoryGrid({
 export function SiblingLinks({
   label,
   categories,
+  locale = 'en',
 }: {
   label: string;
   categories: PublicNavCategoryDto[];
+  locale?: Locale;
 }) {
   if (categories.length === 0) return null;
 
@@ -122,7 +125,7 @@ export function SiblingLinks({
               href={`/category/${category.id}`}
               className="border-rule bg-paper hover:border-brand hover:text-brand block rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors"
             >
-              {category.name}
+              {categoryName(category, locale)}
             </Link>
           </li>
         ))}

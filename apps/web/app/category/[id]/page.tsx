@@ -17,6 +17,7 @@ import {
   getCategoryArticles,
   getSite,
 } from '../../../lib/api';
+import { categoryName } from '../../../lib/category-name';
 import { getDictionary } from '../../../lib/i18n/dictionaries';
 import { getLocale } from '../../../lib/i18n/server';
 import { buildMetadata } from '../../../lib/seo';
@@ -69,7 +70,7 @@ export async function generateMetadata({
       settings,
       locale,
       origin,
-      title: category.name,
+      title: categoryName(category, locale),
       description: category.description,
       image: category.coverImage,
       path: `/category/${category.id}`,
@@ -146,17 +147,21 @@ export default async function CategoryPage({
               href={`/category/${ancestor.id}`}
               className="hover:text-brand transition-colors"
             >
-              {ancestor.name}
+              {categoryName(ancestor, locale)}
             </Link>
           </span>
         ))}
         <span aria-hidden>/</span>
-        <span className="text-ink font-medium">{category.name}</span>
+        <span className="text-ink font-medium">
+          {categoryName(category, locale)}
+        </span>
       </nav>
 
       <header className="border-ink mb-6 flex flex-col gap-5 border-b-2 pb-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
         <div className="min-w-0">
-          <h1 className="text-3xl font-bold sm:text-4xl">{category.name}</h1>
+          <h1 className="text-3xl font-bold sm:text-4xl">
+            {categoryName(category, locale)}
+          </h1>
           {category.description ? (
             <p className="text-ink-muted mt-2 max-w-2xl leading-relaxed">
               {category.description}
@@ -192,7 +197,9 @@ export default async function CategoryPage({
         <EmptyState
           variant="page"
           title={dictionary.category.noStoriesTitle}
-          description={dictionary.category.noStoriesDescription(category.name)}
+          description={dictionary.category.noStoriesDescription(
+            categoryName(category, locale),
+          )}
         />
       ) : (
         <>
@@ -229,8 +236,9 @@ export default async function CategoryPage({
 
       {parent && (
         <SiblingLinks
-          label={dictionary.category.moreIn(parent.name)}
+          label={dictionary.category.moreIn(categoryName(parent, locale))}
           categories={siblings}
+          locale={locale}
         />
       )}
     </div>

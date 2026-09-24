@@ -46,6 +46,12 @@ export function BreakingTicker({
   if (items.length === 0) return null;
 
   const label = getDictionary(locale).breakingNews.label;
+  // An item with no Kannada headline still shows, in English, rather than
+  // dropping out of the ticker for Kannada readers.
+  const headlineFor = (item: PublicBreakingNewsDto) =>
+    locale === 'kn' && item.headlineKannada
+      ? item.headlineKannada
+      : item.headline;
   // Measured rather than estimated from character counts: a Kannada headline
   // and an English one of the same length are nowhere near the same width.
   const duration = copyWidth > 0 ? copyWidth / SPEED_PX_PER_SECOND : 0;
@@ -86,10 +92,12 @@ export function BreakingTicker({
                         tabIndex={copyIndex > 0 ? -1 : 0}
                         className="whitespace-nowrap transition-opacity hover:opacity-80"
                       >
-                        {item.headline}
+                        {headlineFor(item)}
                       </Link>
                     ) : (
-                      <span className="whitespace-nowrap">{item.headline}</span>
+                      <span className="whitespace-nowrap">
+                        {headlineFor(item)}
+                      </span>
                     )}
                   </li>
                 ))}

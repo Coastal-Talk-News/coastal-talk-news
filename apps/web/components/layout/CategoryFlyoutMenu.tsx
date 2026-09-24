@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
+import { categoryName } from '../../lib/category-name';
+import type { Locale } from '../../lib/i18n/types';
 
 export function containsActive(
   category: PublicNavCategoryDto,
@@ -18,6 +20,7 @@ interface CategoryFlyoutListProps {
   categories: PublicNavCategoryDto[];
   activeCategoryId: string | undefined;
   categoryHref: (id: string) => string;
+  locale: Locale;
 }
 
 /**
@@ -31,6 +34,7 @@ export function CategoryFlyoutList({
   categories,
   activeCategoryId,
   categoryHref,
+  locale,
 }: CategoryFlyoutListProps) {
   const [openId, setOpenId] = useState<string | null>(null);
 
@@ -52,7 +56,7 @@ export function CategoryFlyoutList({
                   highlighted ? 'bg-brand-soft text-brand' : 'hover:text-brand'
                 }`}
               >
-                {category.name}
+                {categoryName(category, locale)}
               </Link>
             </li>
           );
@@ -71,7 +75,7 @@ export function CategoryFlyoutList({
                 highlighted ? 'bg-brand-soft text-brand' : 'hover:text-brand'
               }`}
             >
-              {category.name}
+              {categoryName(category, locale)}
               <span aria-hidden className="text-ink-subtle text-xs">
                 ›
               </span>
@@ -83,6 +87,7 @@ export function CategoryFlyoutList({
                   categories={category.children}
                   activeCategoryId={activeCategoryId}
                   categoryHref={categoryHref}
+                  locale={locale}
                 />
               </div>
             )}

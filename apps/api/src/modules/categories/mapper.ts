@@ -10,6 +10,7 @@ interface MediaRow {
 export interface CategoryEntity {
   id: string;
   name: string;
+  nameKannada: string | null;
   description: string | null;
   isActive: boolean;
   displayOrder: number;
@@ -28,6 +29,7 @@ export function toCategoryDto(
   return {
     id: category.id,
     name: category.name,
+    nameKannada: category.nameKannada,
     description: category.description,
     isActive: category.isActive,
     displayOrder: category.displayOrder,
