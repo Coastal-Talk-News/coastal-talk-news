@@ -34,7 +34,7 @@ interface AdColumnProps {
 const COLUMN_COUNT = 2;
 
 const SIZES = {
-  rail: '(min-width: 1120px) 174px, 118px',
+  rail: '(min-width: 1120px) 224px, 118px',
   // block only ever renders below the 800px breakpoint that switches the
   // layout to the rail, so it is always close to half that viewport.
   block: '50vw',
