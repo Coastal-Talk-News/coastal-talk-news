@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import {
   Noto_Sans,
   Noto_Sans_Kannada,
@@ -19,23 +19,8 @@ import { buildMetadata } from '../lib/seo';
 import { getOrigin } from '../lib/site-url';
 import './globals.css';
 
-// Every route reads live site/news data through this layout, so there is
-// nothing meaningful to prerender at build time — and `next build` has no
-// running API to fetch from anyway (CI builds against a placeholder DB with
-// no API process). Forcing dynamic rendering here makes the whole app render
-// per-request instead, which also means readers never see stale HTML.
 export const dynamic = 'force-dynamic';
 
-/**
- * Each script gets its own face from the same superfamily. A Latin-only face
- * has no Kannada glyphs, so without these the ನಾಟಕ headlines fall through to
- * whatever the reader's OS supplies and a bilingual headline renders as two
- * unrelated typefaces — different on Windows, iOS and Android.
- */
-/* 400 is what article bodies are set in. Without it the browser has only the
- * heavier faces to pick from and renders ordinary paragraphs at 600, which
- * reads as bold and leaves genuinely bold words indistinguishable from the
- * text around them. */
 const headline = Noto_Serif({
   subsets: ['latin'],
   weight: ['400', '600', '700'],
@@ -63,6 +48,12 @@ const bodyKannada = Noto_Sans_Kannada({
   variable: '--font-body-kannada',
   display: 'swap',
 });
+
+export const viewport: Viewport = {
+  width: '1280px',
+  initialScale: undefined,
+  viewportFit: 'cover',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
@@ -109,7 +100,7 @@ export default async function RootLayout({
         <main className="flex-1">
           <div className="mx-auto flex w-full max-w-7xl gap-6 px-4">
             <div className="min-w-0 flex-1">{children}</div>
-            <StickyRail className="hidden w-[clamp(240px,calc(100vw-760px),360px)] shrink-0 py-5 min-[800px]:block">
+            <StickyRail className="hidden w-[clamp(260px,calc(100vw-760px),460px)] shrink-0 py-5 min-[800px]:block">
               <AdColumn
                 advertisements={adsForZone(advertisements, 'sidebar')}
                 locale={locale}
