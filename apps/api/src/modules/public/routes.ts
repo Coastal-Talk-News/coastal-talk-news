@@ -10,6 +10,7 @@ import {
   PublicHomeQuerySchema,
   PublicHomeSchema,
   PublicPageParamsSchema,
+  PublicPageQuerySchema,
   PublicPageSchema,
   PublicSearchQuerySchema,
   PublicSiteSchema,
@@ -62,6 +63,7 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
         description:
           'Kept out of /site because the bodies are whole documents only their own page needs. Contact details fall back to the site-wide ones.',
         params: PublicPageParamsSchema,
+        querystring: PublicPageQuerySchema,
         response: {
           200: SuccessResponse(PublicPageSchema),
           ...commonErrorResponses,

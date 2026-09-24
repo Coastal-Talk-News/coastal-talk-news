@@ -11,10 +11,10 @@ import { buildMetadata } from '../../lib/seo';
 import { getOrigin } from '../../lib/site-url';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [{ settings }, page, locale, origin] = await Promise.all([
+  const locale = await getLocale();
+  const [{ settings }, page, origin] = await Promise.all([
     getSite(),
-    getPage('about'),
-    getLocale(),
+    getPage('about', locale),
     getOrigin(),
   ]);
   return buildMetadata({
@@ -28,10 +28,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const [{ settings }, page, locale] = await Promise.all([
+  const locale = await getLocale();
+  const [{ settings }, page] = await Promise.all([
     getSite(),
-    getPage('about'),
-    getLocale(),
+    getPage('about', locale),
   ]);
   const dictionary = getDictionary(locale);
 

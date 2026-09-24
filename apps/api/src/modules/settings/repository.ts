@@ -27,6 +27,7 @@ export interface SiteSettingsWriteData {
   aboutTitle?: string | null;
   aboutIntro?: string | null;
   aboutContent?: object | null;
+  aboutContentKannada?: object | null;
   contactTitle?: string | null;
   contactIntro?: string | null;
   contactHours?: string | null;
@@ -55,13 +56,16 @@ export function update(
   id: string,
   data: SiteSettingsWriteData,
 ) {
-  const { aboutContent, advertiseContent, ...rest } = data;
+  const { aboutContent, aboutContentKannada, advertiseContent, ...rest } = data;
   return db.siteSettings.update({
     where: { id },
     data: {
       ...rest,
       ...(aboutContent !== undefined
         ? { aboutContent: jsonOrNull(aboutContent) }
+        : {}),
+      ...(aboutContentKannada !== undefined
+        ? { aboutContentKannada: jsonOrNull(aboutContentKannada) }
         : {}),
       ...(advertiseContent !== undefined
         ? { advertiseContent: jsonOrNull(advertiseContent) }

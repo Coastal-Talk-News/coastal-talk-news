@@ -187,7 +187,7 @@ const kn: typeof en = {
     moreSections: 'ಇನ್ನಷ್ಟು ವಿಭಾಗಗಳು',
   },
   breakingNews: {
-    label: 'ಹೊಸ ಸುದ್ದಿ',
+    label: 'ಇತ್ತೀಚಿನ ಸುದ್ದಿ',
   },
   footer: {
     quickLinks: 'ತ್ವರಿತ ಲಿಂಕ್‌ಗಳು',
