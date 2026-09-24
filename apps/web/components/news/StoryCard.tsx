@@ -65,7 +65,9 @@ export function StoryCard({
         )}
 
         <div className="min-w-0 flex-1 p-4 sm:p-5">
-          {showCategory && <CategoryTag category={article.category} />}
+          {showCategory && (
+            <CategoryTag category={article.category} locale={locale} />
+          )}
           <h3 className="mt-2 text-lg leading-snug font-semibold sm:text-xl">
             <Link
               href={href}
@@ -113,7 +115,11 @@ export function StoryCard({
         <div className="min-w-0 flex-1">
           {showCategory && (
             <div className="mb-1.5">
-              <CategoryTag category={article.category} tone="solid" />
+              <CategoryTag
+                category={article.category}
+                locale={locale}
+                tone="solid"
+              />
             </div>
           )}
           <h3
@@ -161,7 +167,7 @@ export function StoryCard({
       )}
 
       <div className="flex flex-1 flex-col p-4">
-        <CategoryTag category={article.category} />
+        <CategoryTag category={article.category} locale={locale} />
         <h3
           className={`mt-2 leading-snug font-semibold ${hasImage ? 'text-lg' : 'text-xl sm:text-2xl'}`}
         >

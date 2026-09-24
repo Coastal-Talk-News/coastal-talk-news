@@ -24,6 +24,7 @@ export interface CategoryServiceDeps {
 
 export interface CreateCategoryInput {
   name: string;
+  nameKannada: string;
   description?: string | null;
   isActive?: boolean;
   displayOrder?: number;
@@ -184,6 +185,7 @@ export async function create(
 
   return repository.create(db, {
     name,
+    nameKannada: input.nameKannada.trim(),
     description: input.description?.trim() || null,
     isActive: input.isActive ?? true,
     displayOrder:
@@ -225,6 +227,9 @@ export async function update(
   const { category, orphanedKeys } = await db.$transaction(async (tx) => {
     const category = await repository.update(tx, id, {
       ...(name !== undefined ? { name } : {}),
+      ...(input.nameKannada !== undefined
+        ? { nameKannada: input.nameKannada.trim() }
+        : {}),
       ...(input.description !== undefined
         ? { description: input.description?.trim() || null }
         : {}),

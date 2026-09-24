@@ -60,7 +60,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     // roughly 70 characters a reader starts losing their place between lines.
     <article className="max-w-[44rem] min-[1120px]:max-w-[52rem] py-6 sm:py-8">
       <header>
-        <CategoryTag category={article.category} />
+        <CategoryTag category={article.category} locale={locale} />
 
         {/* Never larger than the masthead: these track Brand's NAME_SIZE.lg
             breakpoint for breakpoint. */}

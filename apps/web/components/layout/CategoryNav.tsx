@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
+import { categoryName } from '../../lib/category-name';
+import type { Locale } from '../../lib/i18n/types';
 import { CategoryFlyoutList, containsActive } from './CategoryFlyoutMenu';
 
 interface CategoryNavProps {
@@ -12,6 +14,7 @@ interface CategoryNavProps {
   moreLabel: string;
   moreAriaLabel: string;
   sectionsLabel: string;
+  locale: Locale;
 }
 
 const ITEM_CLASS =
@@ -56,6 +59,7 @@ export function CategoryNav({
   moreLabel,
   moreAriaLabel,
   sectionsLabel,
+  locale,
 }: CategoryNavProps) {
   const rowRef = useRef<HTMLDivElement>(null);
   const measureRef = useRef<HTMLDivElement>(null);
@@ -186,7 +190,7 @@ export function CategoryNav({
             style={padding}
             className="text-ink-subtle block py-1.5 pr-4 text-xs font-semibold tracking-wide uppercase"
           >
-            {category.name}
+            {categoryName(category, locale)}
           </span>
         ) : (
           <Link
@@ -197,7 +201,7 @@ export function CategoryNav({
               highlighted ? 'bg-brand-soft text-brand' : 'hover:text-brand'
             }`}
           >
-            {category.name}
+            {categoryName(category, locale)}
           </Link>
         )}
         {hasChildren && (
@@ -233,7 +237,7 @@ export function CategoryNav({
                 aria-current={active ? 'page' : undefined}
                 className={`${ITEM_CLASS} ${active ? ACTIVE : IDLE}`}
               >
-                {category.name}
+                {categoryName(category, locale)}
               </Link>
             );
           }
@@ -256,7 +260,7 @@ export function CategoryNav({
               aria-haspopup="true"
               className={`${ITEM_CLASS} ${active ? ACTIVE : IDLE} flex items-center gap-1`}
             >
-              {category.name}
+              {categoryName(category, locale)}
               <ChevronIcon open={dropdownOpen} />
             </button>
           );
@@ -291,6 +295,7 @@ export function CategoryNav({
                 categories={category.children}
                 activeCategoryId={activeCategoryId}
                 categoryHref={categoryHref}
+                locale={locale}
               />
             </div>
           );
@@ -322,7 +327,7 @@ export function CategoryNav({
               key={category.id}
               className={`${ITEM_CLASS} ${IDLE} inline-flex items-center gap-1`}
             >
-              {category.name}
+              {categoryName(category, locale)}
               {category.children.length > 0 && <span className="size-3.5" />}
             </span>
           ))}

@@ -21,6 +21,7 @@ import { categoryPathLabel, descendantIds } from './tree.js';
 
 interface FormValues {
   name: string;
+  nameKannada: string;
   description: string;
   isActive: boolean;
   parentId: string | null;
@@ -30,6 +31,7 @@ interface FormValues {
 function toValues(category: CmsCategoryDto | null): FormValues {
   return {
     name: category?.name ?? '',
+    nameKannada: category?.nameKannada ?? '',
     description: category?.description ?? '',
     isActive: category?.isActive ?? true,
     parentId: category?.parentId ?? null,
@@ -97,8 +99,10 @@ export function CategorySheet({
   }, [open, editing]);
 
   const trimmedName = values.name.trim();
+  const trimmedNameKannada = values.nameKannada.trim();
   const isDirty =
     trimmedName !== initial.current.name.trim() ||
+    trimmedNameKannada !== initial.current.nameKannada.trim() ||
     values.description.trim() !== initial.current.description.trim() ||
     values.isActive !== initial.current.isActive ||
     values.parentId !== initial.current.parentId ||
@@ -121,7 +125,16 @@ export function CategorySheet({
         : undefined
     : undefined;
 
-  const canSubmit = Boolean(trimmedName) && !duplicate && (isDirty || !editing);
+  const nameKannadaError =
+    touched && !trimmedNameKannada
+      ? 'Kannada category name is required.'
+      : undefined;
+
+  const canSubmit =
+    Boolean(trimmedName) &&
+    Boolean(trimmedNameKannada) &&
+    !duplicate &&
+    (isDirty || !editing);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -129,6 +142,7 @@ export function CategorySheet({
     if (!canSubmit) return;
     onSubmit({
       name: trimmedName,
+      nameKannada: trimmedNameKannada,
       description: values.description.trim() || null,
       isActive: values.isActive,
       parentId: values.parentId,
@@ -204,10 +218,15 @@ export function CategorySheet({
         noValidate
       >
         <Field
-          label="Category name"
+          label="Category name (English)"
           htmlFor="category-name"
           required
           error={nameError}
+          hint={
+            nameError
+              ? undefined
+              : 'Shown when a reader has the site set to English.'
+          }
         >
           <Input
             id="category-name"
@@ -219,6 +238,33 @@ export function CategorySheet({
             onBlur={() => setTouched(true)}
             onChange={(event) =>
               setValues((current) => ({ ...current, name: event.target.value }))
+            }
+          />
+        </Field>
+
+        <Field
+          label="Category name (Kannada)"
+          htmlFor="category-name-kannada"
+          required
+          error={nameKannadaError}
+          hint={
+            nameKannadaError
+              ? undefined
+              : 'Shown when a reader has the site set to Kannada.'
+          }
+        >
+          <Input
+            id="category-name-kannada"
+            value={values.nameKannada}
+            maxLength={CATEGORY_NAME_MAX}
+            placeholder="ಉದಾ. ಉಡುಪಿ"
+            invalid={Boolean(nameKannadaError)}
+            onBlur={() => setTouched(true)}
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                nameKannada: event.target.value,
+              }))
             }
           />
         </Field>

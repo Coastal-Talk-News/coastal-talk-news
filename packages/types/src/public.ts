@@ -6,6 +6,8 @@ import type { MediaSummaryDto } from './media.js';
 export interface PublicCategoryRefDto {
   id: Id;
   name: string;
+  /** Shown instead of `name` under the Kannada toggle; null falls back. */
+  nameKannada: string | null;
 }
 
 /** Everything a card, list row or hero needs — never the article body. */
@@ -31,6 +33,8 @@ export interface PublicArticleDto extends PublicArticleCardDto {
 export interface PublicBreakingNewsDto {
   id: Id;
   headline: string;
+  /** Shown instead of `headline` under the Kannada toggle; null falls back. */
+  headlineKannada: string | null;
   /** Empty when the item carries no outbound link. */
   articleUrl: string;
 }

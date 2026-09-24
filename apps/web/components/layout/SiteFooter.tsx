@@ -4,6 +4,7 @@ import type {
   PublicNavCategoryDto,
   PublicSiteDto,
 } from '@coastal-talk-news/types';
+import { categoryName } from '../../lib/category-name';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { SocialLinks } from './SocialLinks';
@@ -13,9 +14,11 @@ import { SocialLinks } from './SocialLinks';
 function SectionBranch({
   categories,
   depth,
+  locale,
 }: {
   categories: PublicNavCategoryDto[];
   depth: number;
+  locale: Locale;
 }) {
   return categories.map((category) => (
     <li key={category.id}>
@@ -24,11 +27,15 @@ function SectionBranch({
         style={depth > 0 ? { paddingInlineStart: depth * 12 } : undefined}
         className="inline-block transition-colors hover:text-white"
       >
-        {category.name}
+        {categoryName(category, locale)}
       </Link>
       {category.children.length > 0 && (
         <ul className="mt-1.5 space-y-1.5">
-          <SectionBranch categories={category.children} depth={depth + 1} />
+          <SectionBranch
+            categories={category.children}
+            depth={depth + 1}
+            locale={locale}
+          />
         </ul>
       )}
     </li>
@@ -101,10 +108,14 @@ export function SiteFooter({
                     href={`/category/${group.id}`}
                     className="font-semibold text-white/90 transition-colors hover:text-white"
                   >
-                    {group.name}
+                    {categoryName(group, locale)}
                   </Link>
                   <ul className="text-night-muted mt-2 space-y-1.5">
-                    <SectionBranch categories={group.children} depth={0} />
+                    <SectionBranch
+                      categories={group.children}
+                      depth={0}
+                      locale={locale}
+                    />
                   </ul>
                 </div>
               ))}
@@ -115,7 +126,11 @@ export function SiteFooter({
                     {dictionary.footer.otherSections}
                   </p>
                   <ul className="text-night-muted mt-2 space-y-1.5">
-                    <SectionBranch categories={ungrouped} depth={0} />
+                    <SectionBranch
+                      categories={ungrouped}
+                      depth={0}
+                      locale={locale}
+                    />
                   </ul>
                 </div>
               )}

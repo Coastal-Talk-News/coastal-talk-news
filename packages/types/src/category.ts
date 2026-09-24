@@ -4,6 +4,9 @@ import type { MediaSummaryDto } from './media.js';
 export interface CategoryDto {
   id: Id;
   name: string;
+  /** Required on every new or edited category. Null only on categories saved
+   * before it was required — the reader site falls back to `name` for those. */
+  nameKannada: string | null;
   description: string | null;
   isActive: boolean;
   displayOrder: number;
@@ -20,6 +23,7 @@ export interface CmsCategoryDto extends CategoryDto {
 
 export interface CreateCategoryRequest {
   name: string;
+  nameKannada: string;
   description?: string | null;
   isActive?: boolean;
   displayOrder?: number;

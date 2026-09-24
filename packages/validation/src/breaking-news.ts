@@ -7,6 +7,7 @@ export { BREAKING_NEWS_HEADLINE_MAX };
 export const BreakingNewsSchema = Type.Object({
   id: Type.String(),
   headline: Type.String(),
+  headlineKannada: Type.Union([Type.String(), Type.Null()]),
   articleUrl: Type.String(),
   startAt: IsoDateTime,
   endAt: Type.Union([IsoDateTime, Type.Null()]),
@@ -18,6 +19,10 @@ export const BreakingNewsSchema = Type.Object({
 export const CreateBreakingNewsBodySchema = Type.Object(
   {
     headline: Type.String({
+      minLength: 1,
+      maxLength: BREAKING_NEWS_HEADLINE_MAX,
+    }),
+    headlineKannada: Type.String({
       minLength: 1,
       maxLength: BREAKING_NEWS_HEADLINE_MAX,
     }),

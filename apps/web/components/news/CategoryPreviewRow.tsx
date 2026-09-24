@@ -1,4 +1,5 @@
 import type { PublicCategorySectionDto } from '@coastal-talk-news/types';
+import { categoryName } from '../../lib/category-name';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { gridColumnsFor } from '../../lib/layout';
@@ -21,19 +22,21 @@ export function CategoryPreviewRow({
   const { category, articles } = section;
   if (articles.length === 0) return null;
 
+  const name = categoryName(category, locale);
+
   const dictionary = getDictionary(locale);
   const hasMore = category.articleCount > articles.length;
   const heading = (
     <SectionHeading
-      title={category.name}
+      title={name}
       href={hasMore ? `/category/${category.id}` : undefined}
-      linkLabel={dictionary.home.viewAllIn(category.name)}
+      linkLabel={dictionary.home.viewAllIn(name)}
     />
   );
 
   if (articles.length === 1) {
     return (
-      <section aria-label={category.name}>
+      <section aria-label={name}>
         {heading}
         <StoryCard
           article={articles[0]!}
@@ -50,7 +53,7 @@ export function CategoryPreviewRow({
   // half-empty column.
   if (articles.length <= 3) {
     return (
-      <section aria-label={category.name}>
+      <section aria-label={name}>
         {heading}
         <div className={`grid gap-5 ${gridColumnsFor(articles.length)}`}>
           {articles.map((article) => (
@@ -70,7 +73,7 @@ export function CategoryPreviewRow({
   const [lead, ...rest] = articles;
 
   return (
-    <section aria-label={category.name}>
+    <section aria-label={name}>
       {heading}
       {/* Both columns sit at their own height. Stretching either one only
           opens a gap inside it — the card's dateline drifts away from the
