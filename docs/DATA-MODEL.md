@@ -184,7 +184,8 @@ No role/permission field — single-tier admin access, confirmed for V1.
 `id`, `site_name`, `tagline`, `logo_media_id` (FK), `favicon_media_id` (FK),
 `contact_email`, `contact_phone`, `contact_address`, `contact_title`, `contact_intro`,
 `contact_hours`, `about_title`, `about_intro`, `about_content`, `about_content_kannada`,
-`advertise_title`, `advertise_intro`, `advertise_content`, `facebook_url`, `instagram_url`,
+`advertise_title`, `advertise_intro`, `advertise_content`, `privacy_content`, `facebook_url`,
+`instagram_url`,
 `youtube_url`, `x_url`, `whatsapp_english_url`, `whatsapp_kannada_url`, `default_ui_language`,
 `default_seo_title`, `default_meta_description`, `default_og_image_id` (FK), `created_at`,
 `updated_at`
@@ -193,6 +194,9 @@ The `about_*`, `contact_*` and `advertise_*` columns are the copy for the three 
 pages, each editable under its own tab in Settings. `about_content` and `advertise_content`
 are Tiptap documents, the same shape as `Article.content`, rendered by the reader site's
 own node renderer rather than as HTML. Contact details are **not** duplicated per page —
+`privacy_content` is the Privacy Policy page's body only (same Tiptap shape); the page's heading
+is fixed, so there is no title or introduction column for it. Contact details are **not**
+duplicated per page —
 there is one set (`contact_email`, `contact_phone`, `contact_address`) that the Contact
 page, the About page, the Advertise page and the footer all read.
 

@@ -128,6 +128,11 @@ General (revised 2026-09-19 — they were previously one combined page).
 Every field is optional and falls back to a site-wide value, so the pages render before
 anyone has filled them in. No contact form in V1.
 
+**Privacy Policy** (added 2026-09-25) is a fourth standalone page with its own Settings tab:
+a single rich-text body, no editable heading or introduction. It is reached from a
+"Privacy Policy" link under the footer's Contact details, at `/privacy-policy`, and shows a
+short "not added yet" note until the newsroom writes it.
+
 ### Website states
 
 404 (with a clear way back), search no-results, empty category, loading state. Pure

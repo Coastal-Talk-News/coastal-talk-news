@@ -31,6 +31,7 @@ export interface UpdateSiteSettingsInput {
   advertiseTitle?: string | null;
   advertiseIntro?: string | null;
   advertiseContent?: ArticleContent | null;
+  privacyContent?: ArticleContent | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   youtubeUrl?: string | null;
@@ -145,6 +146,9 @@ export async function update(
         : {}),
       ...(input.advertiseContent !== undefined
         ? { advertiseContent: input.advertiseContent }
+        : {}),
+      ...(input.privacyContent !== undefined
+        ? { privacyContent: input.privacyContent }
         : {}),
       ...(input.facebookUrl !== undefined
         ? { facebookUrl: input.facebookUrl?.trim() || null }
