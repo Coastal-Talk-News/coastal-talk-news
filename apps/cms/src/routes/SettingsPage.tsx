@@ -1,6 +1,13 @@
 import { ErrorState, LoadingState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
-import { Globe, Info, Mail, Megaphone, Search } from 'lucide-react';
+import {
+  Globe,
+  Info,
+  Mail,
+  Megaphone,
+  Search,
+  ShieldCheck,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { settingsApi } from '../api/settings.js';
@@ -8,9 +15,10 @@ import { queryKeys } from '../api/queryKeys.js';
 import { SettingsContactForm } from '../features/settings/SettingsContactForm.js';
 import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js';
 import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
+import { SettingsPrivacyForm } from '../features/settings/SettingsPrivacyForm.js';
 import { SettingsSeoForm } from '../features/settings/SettingsSeoForm.js';
 
-type Tab = 'general' | 'about' | 'contact' | 'advertise' | 'seo';
+type Tab = 'general' | 'about' | 'contact' | 'advertise' | 'privacy' | 'seo';
 
 // Each standalone page on the website gets its own tab, so an admin looking
 // for the About page's text finds it under About rather than buried in a
@@ -20,6 +28,7 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'about', label: 'About Us', icon: Info },
   { value: 'contact', label: 'Contact Us', icon: Mail },
   { value: 'advertise', label: 'Advertise', icon: Megaphone },
+  { value: 'privacy', label: 'Privacy Policy', icon: ShieldCheck },
   { value: 'seo', label: 'SEO', icon: Search },
 ];
 
@@ -49,7 +58,7 @@ export function SettingsPage() {
         <h1 className="text-3xl font-bold tracking-tight text-ink">Settings</h1>
         <p className="mt-1 text-sm text-ink-muted">
           Manage how your website appears, and the text on its About Us, Contact
-          Us and Advertise pages.
+          Us, Advertise and Privacy Policy pages.
         </p>
       </div>
 
@@ -91,6 +100,9 @@ export function SettingsPage() {
           </div>
           <div hidden={tab !== 'advertise'}>
             <SettingsPageForm settings={data} page="advertise" />
+          </div>
+          <div hidden={tab !== 'privacy'}>
+            <SettingsPrivacyForm settings={data} />
           </div>
           <div hidden={tab !== 'seo'}>
             <SettingsSeoForm settings={data} />

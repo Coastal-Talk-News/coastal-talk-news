@@ -156,6 +156,16 @@ export function SiteFooter({
                 </Link>
               </li>
             ))}
+            {/* Set apart by a line's gap, and in white, so it reads as a
+                notice rather than another section of the site. */}
+            <li className="pt-3">
+              <Link
+                href="/privacy-policy"
+                className="font-serif font-semibold text-white transition-colors hover:text-white/80"
+              >
+                {dictionary.common.privacyPolicy}
+              </Link>
+            </li>
           </ul>
         </nav>
 

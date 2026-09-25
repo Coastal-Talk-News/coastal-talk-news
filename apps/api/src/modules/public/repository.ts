@@ -99,6 +99,7 @@ export function findPageSettings(db: TransactionClient) {
       advertiseTitle: true,
       advertiseIntro: true,
       advertiseContent: true,
+      privacyContent: true,
       contactEmail: true,
       contactPhone: true,
       contactAddress: true,
