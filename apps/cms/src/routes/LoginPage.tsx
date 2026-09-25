@@ -2,21 +2,13 @@ import { useMutation } from '@tanstack/react-query';
 import { Button } from '@coastal-talk-news/ui/button';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
-import {
-  ArrowRight,
-  Eye,
-  EyeOff,
-  Images,
-  Lock,
-  Mail,
-  Newspaper,
-  Users,
-} from 'lucide-react';
+import { ArrowRight, Images, Mail, Newspaper, Users } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth.js';
 import { loginErrorMessage } from '../features/auth/loginError.js';
 import { useAuth } from '../features/auth/useAuth.js';
+import { PasswordInput } from '../components/PasswordInput.js';
 
 const HIGHLIGHTS = [
   {
@@ -44,7 +36,6 @@ export function LoginPage() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
 
   const login = useMutation({
     mutationFn: () => authApi.login({ email: email.trim(), password }),
@@ -153,32 +144,15 @@ export function LoginPage() {
             </Field>
 
             <Field label="Password" htmlFor="password">
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  placeholder="Enter your password"
-                  icon={<Lock className="size-4" aria-hidden />}
-                  value={password}
-                  onChange={edit(setPassword)}
-                  invalid={Boolean(errorMessage)}
-                  className="pr-11"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((visible) => !visible)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  className="absolute inset-y-0 right-0 flex items-center px-3 text-ink-subtle hover:text-ink"
-                >
-                  {showPassword ? (
-                    <EyeOff className="size-4" aria-hidden />
-                  ) : (
-                    <Eye className="size-4" aria-hidden />
-                  )}
-                </button>
-              </div>
+              <PasswordInput
+                id="password"
+                autoComplete="current-password"
+                required
+                placeholder="Enter your password"
+                value={password}
+                onChange={edit(setPassword)}
+                invalid={Boolean(errorMessage)}
+              />
             </Field>
 
             {expiredNotice && (

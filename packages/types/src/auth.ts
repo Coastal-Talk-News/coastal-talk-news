@@ -20,3 +20,13 @@ export interface SessionDto {
   ipAddress: string | null;
   isCurrent: boolean;
 }
+
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface PasswordChangedDto {
+  /** Other devices signed out by the change. */
+  revokedSessions: number;
+}

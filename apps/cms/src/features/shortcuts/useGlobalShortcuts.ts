@@ -18,10 +18,18 @@ function isTyping(target: EventTarget | null): boolean {
   return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
 }
 
+/**
+ * Pages that keep every tab mounted (Settings) carry one button per tab, all
+ * but one of them hidden, and an open panel sits after the page in the DOM. So
+ * the target is the last one actually on screen - the first match would be a
+ * hidden tab's button, and Ctrl+S would quietly do nothing.
+ */
 function clickPageAction(action: 'create' | 'search' | 'save'): boolean {
-  const element = document.querySelector<HTMLElement>(
-    `[data-shortcut="${action}"]`,
-  );
+  const element = [
+    ...document.querySelectorAll<HTMLElement>(`[data-shortcut="${action}"]`),
+  ]
+    .filter((candidate) => candidate.getClientRects().length > 0)
+    .at(-1);
   if (!element) return false;
   if (action === 'search') element.focus();
   else element.click();

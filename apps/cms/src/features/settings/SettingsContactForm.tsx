@@ -14,10 +14,10 @@ import {
   SETTINGS_PAGE_TITLE_MAX,
   SETTINGS_PHONE_MAX,
 } from '@coastal-talk-news/validation/limits';
-import { Info } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { useUpdateSettings } from './useUpdateSettings.js';
+import { SettingsNote } from './SettingsNote.js';
 
 interface ContactValues {
   title: string;
@@ -88,14 +88,11 @@ export function SettingsContactForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      <div className="bg-accent-soft flex gap-3 rounded-lg p-4">
-        <Info className="text-accent mt-0.5 size-4 shrink-0" aria-hidden />
-        <p className="text-ink-muted text-sm">
-          These are your newsroom&rsquo;s contact details. They fill the Contact
-          Us page, and the same email, phone and address also appear in the
-          website footer and on the Advertise page.
-        </p>
-      </div>
+      <SettingsNote>
+        These are your newsroom&rsquo;s contact details. They fill the Contact
+        Us page, and the same email, phone and address also appear in the
+        website footer and on the Advertise page.
+      </SettingsNote>
 
       <Field
         label="Page heading"

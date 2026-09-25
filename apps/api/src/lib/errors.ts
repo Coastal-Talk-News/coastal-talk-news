@@ -29,6 +29,18 @@ export class UnauthorizedError extends AppError {
   }
 }
 
+/** Not a 401: the CMS reads a 401 as an expired session and signs the person
+ *  out, and whoever hits this is signed in and has just mistyped. */
+export class InvalidCurrentPasswordError extends AppError {
+  constructor() {
+    super(
+      400,
+      'INVALID_CURRENT_PASSWORD',
+      'Your current password is incorrect.',
+    );
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(resource: string) {
     super(404, 'NOT_FOUND', `${resource} not found.`);

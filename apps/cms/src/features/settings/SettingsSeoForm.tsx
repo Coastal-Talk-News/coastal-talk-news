@@ -10,11 +10,11 @@ import {
   SETTINGS_META_DESCRIPTION_MAX,
   SETTINGS_SEO_TITLE_MAX,
 } from '@coastal-talk-news/validation/limits';
-import { Info } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { SettingsImageField } from './SettingsImageField.js';
 import { useUpdateSettings } from './useUpdateSettings.js';
+import { SettingsNote } from './SettingsNote.js';
 
 interface SeoValues {
   defaultSeoTitle: string;
@@ -73,14 +73,11 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      <div className="bg-accent-soft flex gap-3 rounded-lg p-4">
-        <Info className="text-accent mt-0.5 size-4 shrink-0" aria-hidden />
-        <p className="text-ink-muted text-sm">
-          These defaults are used for pages that don&rsquo;t set their own
-          title, description, or preview image — an article&rsquo;s own SEO
-          fields always take priority over these.
-        </p>
-      </div>
+      <SettingsNote>
+        These defaults are used for pages that don&rsquo;t set their own title,
+        description, or preview image — an article&rsquo;s own SEO fields always
+        take priority over these.
+      </SettingsNote>
 
       <Field label="Default Site Title" htmlFor="settings-seo-title" optional>
         <Input
