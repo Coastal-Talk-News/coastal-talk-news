@@ -24,6 +24,7 @@ export function create(
   db: TransactionClient,
   data: {
     headline: string;
+    headlineKannada: string;
     articleUrl: string;
     startAt: Date;
     endAt: Date | null;
@@ -37,6 +38,7 @@ export function update(
   id: string,
   data: {
     headline?: string;
+    headlineKannada?: string;
     articleUrl?: string;
     startAt?: Date;
     endAt?: Date | null;

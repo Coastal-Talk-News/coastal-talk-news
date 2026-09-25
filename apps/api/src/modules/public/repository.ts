@@ -18,7 +18,7 @@ export const cardSelect = {
   summary: true,
   language: true,
   publicationDate: true,
-  category: { select: { id: true, name: true } },
+  category: { select: { id: true, name: true, nameKannada: true } },
   media: mediaSelect,
 } as const;
 
@@ -99,6 +99,7 @@ export function findPageSettings(db: TransactionClient) {
       advertiseTitle: true,
       advertiseIntro: true,
       advertiseContent: true,
+      privacyContent: true,
       contactEmail: true,
       contactPhone: true,
       contactAddress: true,
@@ -122,6 +123,7 @@ export function findNavCategories(
     select: {
       id: true,
       name: true,
+      nameKannada: true,
       description: true,
       parentId: true,
       media: mediaSelect,
@@ -143,7 +145,12 @@ export function findActiveBreakingNews(db: TransactionClient, now: Date) {
       OR: [{ endAt: null }, { endAt: { gte: now } }],
     },
     orderBy: { startAt: 'desc' },
-    select: { id: true, headline: true, articleUrl: true },
+    select: {
+      id: true,
+      headline: true,
+      headlineKannada: true,
+      articleUrl: true,
+    },
     take: 10,
   });
 }

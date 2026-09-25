@@ -11,6 +11,7 @@ import { MediaSummarySchema } from './media.js';
 const PublicCategoryRefSchema = Type.Object({
   id: Type.String(),
   name: Type.String(),
+  nameKannada: Type.Union([Type.String(), Type.Null()]),
 });
 
 export const PublicArticleCardSchema = Type.Object({
@@ -30,6 +31,7 @@ export const PublicArticleParamsSchema = Type.Object({
 export const PublicBreakingNewsSchema = Type.Object({
   id: Type.String(),
   headline: Type.String(),
+  headlineKannada: Type.Union([Type.String(), Type.Null()]),
   articleUrl: Type.String(),
 });
 
@@ -83,6 +85,7 @@ export const PublicSiteSettingsSchema = Type.Object({
 const publicNavCategoryFields = {
   id: Type.String(),
   name: Type.String(),
+  nameKannada: Type.Union([Type.String(), Type.Null()]),
   description: Nullable(Type.String()),
   articleCount: Type.Integer(),
   image: Type.Union([MediaSummarySchema, Type.Null()]),
@@ -150,6 +153,7 @@ export const PublicPageParamsSchema = Type.Object({
     Type.Literal('about'),
     Type.Literal('contact'),
     Type.Literal('advertise'),
+    Type.Literal('privacy'),
   ]),
 });
 

@@ -80,6 +80,7 @@ export function toNavCategory(
   return {
     id: category.id,
     name: category.name,
+    nameKannada: category.nameKannada,
     description: category.description,
     articleCount: category._count.articles,
     image: toMedia(category.media, toPublicUrl),

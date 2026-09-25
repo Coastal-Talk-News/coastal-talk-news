@@ -22,6 +22,7 @@ export interface SiteSettingsDto {
   advertiseTitle: string | null;
   advertiseIntro: string | null;
   advertiseContent: ArticleContent | null;
+  privacyContent: ArticleContent | null;
   facebookUrl: string | null;
   instagramUrl: string | null;
   youtubeUrl: string | null;
@@ -53,6 +54,7 @@ export interface UpdateSiteSettingsRequest {
   advertiseTitle?: string | null;
   advertiseIntro?: string | null;
   advertiseContent?: ArticleContent | null;
+  privacyContent?: ArticleContent | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   youtubeUrl?: string | null;

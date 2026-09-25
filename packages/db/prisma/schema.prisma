@@ -71,6 +71,10 @@ model MediaAsset {
 model Category {
   id           String   @id @default(uuid(7))
   name         String   @unique
+  /// Shown instead of `name` when a reader has the site set to Kannada. The
+  /// API and CMS require it on every save; the column stays nullable so
+  /// categories that predate it keep working, falling back to `name`.
+  nameKannada  String?  @map("name_kannada")
   description  String?
   isActive     Boolean  @default(true) @map("is_active")
   displayOrder Int      @map("display_order")
@@ -148,6 +152,9 @@ model Article {
 model BreakingNews {
   id         String    @id @default(uuid(7))
   headline   String
+  /// Shown instead of `headline` when a reader has the site set to Kannada;
+  /// null falls back to `headline`.
+  headlineKannada String? @map("headline_kannada")
   articleUrl String    @map("article_url")
   startAt    DateTime  @map("start_at")
   endAt      DateTime? @map("end_at")
@@ -254,6 +261,10 @@ model SiteSettings {
   advertiseTitle   String? @map("advertise_title")
   advertiseIntro   String? @map("advertise_intro")
   advertiseContent Json?   @map("advertise_content")
+
+  /// The Privacy Policy page's body, a Tiptap document like the page bodies
+  /// above. Only a body: the page's heading is fixed, not editable.
+  privacyContent Json? @map("privacy_content")
 
   facebookUrl  String? @map("facebook_url")
   instagramUrl String? @map("instagram_url")

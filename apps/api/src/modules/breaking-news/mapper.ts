@@ -4,6 +4,7 @@ import { withIsActiveOpenEnded } from '../../lib/schedule.js';
 export interface BreakingNewsEntity {
   id: string;
   headline: string;
+  headlineKannada: string | null;
   articleUrl: string;
   startAt: Date;
   endAt: Date | null;
@@ -19,6 +20,7 @@ export function toBreakingNewsDto(
   return {
     id: item.id,
     headline: item.headline,
+    headlineKannada: item.headlineKannada,
     articleUrl: item.articleUrl,
     startAt: item.startAt.toISOString(),
     endAt: item.endAt ? item.endAt.toISOString() : null,

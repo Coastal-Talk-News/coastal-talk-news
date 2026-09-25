@@ -53,8 +53,14 @@ up UI or filters.
 
 ### Category
 
-`id`, `media_id` (FK → Media Asset), `name`, `description`, `is_active`, `display_order`,
-`parent_id` (FK → Category, nullable, self-relation), `created_at`, `updated_at`
+`id`, `media_id` (FK → Media Asset), `name`, `name_kannada`, `description`, `is_active`,
+`display_order`, `parent_id` (FK → Category, nullable, self-relation), `created_at`,
+`updated_at`
+
+`name` is the English name and stays unique. `name_kannada` is required by the API and the
+CMS on every save, but the column stays nullable so categories that predate it keep working.
+It travels with every public category, and the reader site shows it instead of `name` when
+the English/Kannada toggle is set to Kannada, falling back to `name` for older categories.
 
 CMS-only subcategories: `parent_id` is null for a top-level category. Grouping can nest
 to any depth (a category can be another category's parent regardless of its own depth) —
@@ -78,9 +84,15 @@ directions are checked in the API's service layer at write time, not by the data
 
 ### Breaking News
 
-`id`, `headline`, `article_url` (plain URL, **not** a foreign key — confirmed intentional:
-breaking news can point outside the article system), `start_at`, `end_at`, `created_at`,
-`updated_at`
+`id`, `headline`, `headline_kannada`, `article_url` (plain URL, **not** a foreign key —
+confirmed intentional: breaking news can point outside the article system), `start_at`,
+`end_at`, `created_at`, `updated_at`
+
+`headline` is the English headline. `headline_kannada` is required by the API and the CMS
+for every new or edited item, but the column stays nullable so items saved before it was
+required keep working. When a reader has the site's English/Kannada toggle set to Kannada,
+the ticker shows it instead, and falls back to `headline` for those older items. Both headlines travel in the public site payload and the reader
+site picks one by locale, so no extra request is made when the toggle changes.
 
 There is **no `is_active` database field.** The backend derives the active state from the
 schedule:
@@ -172,7 +184,8 @@ No role/permission field — single-tier admin access, confirmed for V1.
 `id`, `site_name`, `tagline`, `logo_media_id` (FK), `favicon_media_id` (FK),
 `contact_email`, `contact_phone`, `contact_address`, `contact_title`, `contact_intro`,
 `contact_hours`, `about_title`, `about_intro`, `about_content`, `about_content_kannada`,
-`advertise_title`, `advertise_intro`, `advertise_content`, `facebook_url`, `instagram_url`,
+`advertise_title`, `advertise_intro`, `advertise_content`, `privacy_content`, `facebook_url`,
+`instagram_url`,
 `youtube_url`, `x_url`, `whatsapp_english_url`, `whatsapp_kannada_url`, `default_ui_language`,
 `default_seo_title`, `default_meta_description`, `default_og_image_id` (FK), `created_at`,
 `updated_at`
@@ -181,6 +194,9 @@ The `about_*`, `contact_*` and `advertise_*` columns are the copy for the three 
 pages, each editable under its own tab in Settings. `about_content` and `advertise_content`
 are Tiptap documents, the same shape as `Article.content`, rendered by the reader site's
 own node renderer rather than as HTML. Contact details are **not** duplicated per page —
+`privacy_content` is the Privacy Policy page's body only (same Tiptap shape); the page's heading
+is fixed, so there is no title or introduction column for it. Contact details are **not**
+duplicated per page —
 there is one set (`contact_email`, `contact_phone`, `contact_address`) that the Contact
 page, the About page, the Advertise page and the footer all read.
 

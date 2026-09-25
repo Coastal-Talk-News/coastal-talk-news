@@ -29,7 +29,7 @@ export interface PublicServiceDeps {
 }
 
 const CATEGORY_PREVIEW_ARTICLES = 4;
-const HOME_LEAD_STORIES = 5;
+const HOME_LEAD_STORIES = 6;
 const HOME_FEATURED = 6;
 const HOME_TOP_STORIES = 6;
 
@@ -91,7 +91,7 @@ export async function getSite({
   };
 }
 
-export type PublicPageKey = 'about' | 'contact' | 'advertise';
+export type PublicPageKey = 'about' | 'contact' | 'advertise' | 'privacy';
 
 /** A standalone page's own copy, plus the one set of contact details every
  * page shares. */
@@ -114,6 +114,20 @@ export async function getPage(
       phone: settings.contactPhone,
       address: settings.contactAddress,
       hours: settings.contactHours,
+    };
+  }
+
+  // A body and nothing else: the Privacy Policy has no editable heading,
+  // introduction or contact block.
+  if (page === 'privacy') {
+    return {
+      title: null,
+      intro: null,
+      content: toPageContent(settings.privacyContent),
+      email: null,
+      phone: null,
+      address: null,
+      hours: null,
     };
   }
 

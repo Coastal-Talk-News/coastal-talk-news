@@ -34,6 +34,7 @@ export interface SiteSettingsWriteData {
   advertiseTitle?: string | null;
   advertiseIntro?: string | null;
   advertiseContent?: object | null;
+  privacyContent?: object | null;
   facebookUrl?: string | null;
   instagramUrl?: string | null;
   youtubeUrl?: string | null;
@@ -56,7 +57,13 @@ export function update(
   id: string,
   data: SiteSettingsWriteData,
 ) {
-  const { aboutContent, aboutContentKannada, advertiseContent, ...rest } = data;
+  const {
+    aboutContent,
+    aboutContentKannada,
+    advertiseContent,
+    privacyContent,
+    ...rest
+  } = data;
   return db.siteSettings.update({
     where: { id },
     data: {
@@ -69,6 +76,9 @@ export function update(
         : {}),
       ...(advertiseContent !== undefined
         ? { advertiseContent: jsonOrNull(advertiseContent) }
+        : {}),
+      ...(privacyContent !== undefined
+        ? { privacyContent: jsonOrNull(privacyContent) }
         : {}),
     },
     include: withMedia,

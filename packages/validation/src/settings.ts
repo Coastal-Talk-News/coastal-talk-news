@@ -60,6 +60,7 @@ export const SiteSettingsSchema = Type.Object({
   advertiseTitle: Type.Union([Type.String(), Type.Null()]),
   advertiseIntro: Type.Union([Type.String(), Type.Null()]),
   advertiseContent: Type.Union([ArticleContentSchema, Type.Null()]),
+  privacyContent: Type.Union([ArticleContentSchema, Type.Null()]),
   facebookUrl: Type.Union([Type.String(), Type.Null()]),
   instagramUrl: Type.Union([Type.String(), Type.Null()]),
   youtubeUrl: Type.Union([Type.String(), Type.Null()]),
@@ -98,6 +99,9 @@ export const UpdateSiteSettingsBodySchema = Type.Object(
     advertiseTitle: Type.Optional(nullableString(SETTINGS_PAGE_TITLE_MAX)),
     advertiseIntro: Type.Optional(nullableString(SETTINGS_PAGE_INTRO_MAX)),
     advertiseContent: Type.Optional(
+      Type.Union([ArticleContentSchema, Type.Null()]),
+    ),
+    privacyContent: Type.Optional(
       Type.Union([ArticleContentSchema, Type.Null()]),
     ),
     facebookUrl: Type.Optional(

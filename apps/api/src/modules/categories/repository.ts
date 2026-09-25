@@ -59,6 +59,7 @@ export function create(
   db: TransactionClient,
   data: {
     name: string;
+    nameKannada: string;
     description: string | null;
     isActive: boolean;
     displayOrder: number;
@@ -74,6 +75,7 @@ export function update(
   id: string,
   data: {
     name?: string;
+    nameKannada?: string;
     description?: string | null;
     isActive?: boolean;
     displayOrder?: number;

@@ -28,7 +28,7 @@ export function HeroStory({
       />
 
       <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-        <CategoryTag category={article.category} tone="solid" />
+        <CategoryTag category={article.category} locale={locale} tone="solid" />
         <h2 className="headline-xl mt-3 leading-tight font-bold text-white">
           <Link href={`/article/${article.id}`} className="clamp-3">
             <span className="absolute inset-0" />

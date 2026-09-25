@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Globe,
   Info,
+  KeyRound,
   Mail,
   Megaphone,
   Search,
@@ -15,10 +16,18 @@ import { queryKeys } from '../api/queryKeys.js';
 import { SettingsContactForm } from '../features/settings/SettingsContactForm.js';
 import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js';
 import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
+import { SettingsPrivacyForm } from '../features/settings/SettingsPrivacyForm.js';
 import { SettingsSecurityForm } from '../features/settings/SettingsSecurityForm.js';
 import { SettingsSeoForm } from '../features/settings/SettingsSeoForm.js';
 
-type Tab = 'general' | 'about' | 'contact' | 'advertise' | 'seo' | 'security';
+type Tab =
+  | 'general'
+  | 'about'
+  | 'contact'
+  | 'advertise'
+  | 'privacy'
+  | 'seo'
+  | 'security';
 
 // Each standalone page on the website gets its own tab, so an admin looking
 // for the About page's text finds it under About rather than buried in a
@@ -28,8 +37,9 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'about', label: 'About Us', icon: Info },
   { value: 'contact', label: 'Contact Us', icon: Mail },
   { value: 'advertise', label: 'Advertise', icon: Megaphone },
+  { value: 'privacy', label: 'Privacy Policy', icon: ShieldCheck },
   { value: 'seo', label: 'SEO', icon: Search },
-  { value: 'security', label: 'Password & Security', icon: ShieldCheck },
+  { value: 'security', label: 'Password & Security', icon: KeyRound },
 ];
 
 export function SettingsPage() {
@@ -57,8 +67,8 @@ export function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-ink">Settings</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Manage how your website appears, the text on its About Us, Contact Us
-          and Advertise pages, and your sign-in password.
+          Manage how your website appears, the text on its About Us, Contact Us,
+          Advertise and Privacy Policy pages, and your sign-in password.
         </p>
       </div>
 
@@ -100,6 +110,9 @@ export function SettingsPage() {
           </div>
           <div hidden={tab !== 'advertise'}>
             <SettingsPageForm settings={data} page="advertise" />
+          </div>
+          <div hidden={tab !== 'privacy'}>
+            <SettingsPrivacyForm settings={data} />
           </div>
           <div hidden={tab !== 'seo'}>
             <SettingsSeoForm settings={data} />

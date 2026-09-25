@@ -77,7 +77,7 @@ function orNull(value: string): string | null {
 }
 
 /** An empty editor still yields a document with one blank paragraph. */
-function hasText(content: ArticleContent | null): boolean {
+export function hasText(content: ArticleContent | null): boolean {
   if (!content) return false;
   const walk = (node: { text?: string; content?: unknown[] }): boolean => {
     if (typeof node.text === 'string' && node.text.trim() !== '') return true;

@@ -9,6 +9,7 @@ export { CATEGORY_NAME_MAX, CATEGORY_DESCRIPTION_MAX };
 const categoryFields = {
   id: Type.String(),
   name: Type.String(),
+  nameKannada: Type.Union([Type.String(), Type.Null()]),
   description: Type.Union([Type.String(), Type.Null()]),
   isActive: Type.Boolean(),
   displayOrder: Type.Integer(),
@@ -30,6 +31,7 @@ const NullableId = Type.Union([Type.String({ format: 'uuid' }), Type.Null()]);
 export const CreateCategoryBodySchema = Type.Object(
   {
     name: Type.String({ minLength: 1, maxLength: CATEGORY_NAME_MAX }),
+    nameKannada: Type.String({ minLength: 1, maxLength: CATEGORY_NAME_MAX }),
     description: Type.Optional(
       Type.Union([
         Type.String({ maxLength: CATEGORY_DESCRIPTION_MAX }),

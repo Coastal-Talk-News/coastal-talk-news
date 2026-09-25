@@ -119,7 +119,7 @@ export async function getSite(): Promise<PublicSiteDto> {
  * `locale` only matters to About, which can carry a separate Kannada body —
  * the API ignores it for Contact and Advertise. */
 export async function getPage(
-  page: 'about' | 'contact' | 'advertise',
+  page: 'about' | 'contact' | 'advertise' | 'privacy',
   locale?: Locale,
 ): Promise<PublicPageDto> {
   const language = locale ? ARTICLE_LANGUAGE_BY_LOCALE[locale] : undefined;

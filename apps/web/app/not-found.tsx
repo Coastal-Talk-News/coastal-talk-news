@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSite } from '../lib/api';
+import { categoryName } from '../lib/category-name';
 import { getDictionary } from '../lib/i18n/dictionaries';
 import { getLocale } from '../lib/i18n/server';
 
@@ -9,7 +10,11 @@ export default async function NotFound() {
   const locale = await getLocale();
   const dictionary = getDictionary(locale);
 
-  let categories: Array<{ id: string; name: string }> = [];
+  let categories: Array<{
+    id: string;
+    name: string;
+    nameKannada: string | null;
+  }> = [];
   try {
     categories = (await getSite()).categories;
   } catch {
@@ -47,7 +52,7 @@ export default async function NotFound() {
                 href={`/category/${category.id}`}
                 className="border-rule hover:border-brand hover:text-brand rounded-sm border px-4 py-2 text-sm font-medium transition-colors"
               >
-                {category.name}
+                {categoryName(category, locale)}
               </Link>
             ))}
           </div>
