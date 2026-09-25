@@ -29,7 +29,7 @@ export interface PublicServiceDeps {
 }
 
 const CATEGORY_PREVIEW_ARTICLES = 4;
-const HOME_LEAD_STORIES = 5;
+const HOME_LEAD_STORIES = 6;
 const HOME_FEATURED = 6;
 const HOME_TOP_STORIES = 6;
 

@@ -15,6 +15,10 @@ import { gridColumnsFor } from '../lib/layout';
 // width instead of leaving a tall empty gutter.
 const MIN_SIDEBAR_STORIES = 3;
 
+// The sidebar is shorter than the hero on tall screens, so one more story sits
+// under the hero, filling the gap, and the sidebar keeps the rest.
+const STORIES_UNDER_HERO = 1;
+
 export default async function HomePage() {
   const locale = await getLocale();
   const home = await getHome(locale);
@@ -38,27 +42,54 @@ export default async function HomePage() {
     );
   }
 
-  const [hero, ...strip] = leadStories;
-  const asSidebar = strip.length >= MIN_SIDEBAR_STORIES;
+  const [hero, ...rest] = leadStories;
+  const asSidebar = rest.length >= MIN_SIDEBAR_STORIES + STORIES_UNDER_HERO;
+  const underHero = asSidebar ? rest.slice(0, STORIES_UNDER_HERO) : [];
+  const strip = asSidebar ? rest.slice(STORIES_UNDER_HERO) : rest;
 
   return (
     <div className="flex flex-col gap-10 py-5 sm:gap-12 sm:py-6">
+      {hero && home.hasMoreLeadStories && (
+        <div className="-mb-6 flex justify-end sm:-mb-8">
+          <Link
+            href="/lead-stories"
+            className="text-brand hover:text-brand-hover text-sm font-semibold transition-colors"
+          >
+            {dictionary.home.viewAllLeadStories} <span aria-hidden>→</span>
+          </Link>
+        </div>
+      )}
+
       {hero && (
         <section aria-label={dictionary.home.leadStories}>
           <div
-            className={
-              asSidebar ? 'grid items-start gap-5 lg:grid-cols-12 lg:gap-6' : ''
-            }
+            className={asSidebar ? 'grid gap-5 lg:grid-cols-12 lg:gap-6' : ''}
           >
             <div className={asSidebar ? 'lg:col-span-8' : ''}>
               <HeroStory article={hero} locale={locale} />
+              {underHero.map((article) => (
+                <div
+                  key={article.id}
+                  className="border-rule mt-5 rounded-lg border p-4"
+                >
+                  <StoryCard
+                    article={article}
+                    layout="row"
+                    showCategory
+                    locale={locale}
+                  />
+                </div>
+              ))}
             </div>
 
             {strip.length > 0 &&
               (asSidebar ? (
                 <ul className="divide-rule flex flex-col divide-y lg:col-span-4">
                   {strip.map((article) => (
-                    <li key={article.id} className="py-3 first:pt-0 last:pb-0">
+                    <li
+                      key={article.id}
+                      className="flex flex-1 flex-col justify-center py-3 first:justify-start first:pt-0 last:justify-end last:pb-0"
+                    >
                       <StoryCard
                         article={article}
                         layout="row"
@@ -86,17 +117,6 @@ export default async function HomePage() {
                 </ul>
               ))}
           </div>
-
-          {home.hasMoreLeadStories && (
-            <div className="mt-4 flex justify-end">
-              <Link
-                href="/lead-stories"
-                className="text-brand hover:text-brand-hover text-sm font-semibold transition-colors"
-              >
-                {dictionary.home.viewAllLeadStories} <span aria-hidden>→</span>
-              </Link>
-            </div>
-          )}
         </section>
       )}
 
