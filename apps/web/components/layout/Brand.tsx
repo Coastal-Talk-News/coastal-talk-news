@@ -37,8 +37,8 @@ const GAP = {
  * sits just under the headline's (.headline-xl in globals.css).
  */
 const NAME_SIZE = {
-  md: 'min(1.375rem, 8.8cqw)',
-  lg: 'min(2rem, 8.8cqw)',
+  md: 'min(2rem, 8.8cqw)',
+  lg: 'min(2.25rem, 8.8cqw)',
 };
 
 /**

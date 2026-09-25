@@ -11,6 +11,7 @@ import { AdBand } from '../components/news/AdBand';
 import { AdColumn } from '../components/news/AdColumn';
 import { StickyRail } from '../components/news/StickyRail';
 import { SiteFooter } from '../components/layout/SiteFooter';
+import { DevToolsShortcutGuard } from '../components/layout/DevToolsShortcutGuard';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { adsForZone } from '../lib/ads';
 import { getSite } from '../lib/api';
@@ -90,6 +91,7 @@ export default async function RootLayout({
         <meta name="google" content="notranslate" />
       </head>
       <body className="grain flex min-h-screen flex-col">
+        <DevToolsShortcutGuard />
         <SiteHeader site={site} locale={locale} />
         <BreakingTicker items={site.breakingNews} locale={locale} />
         <AdBand
