@@ -3,6 +3,7 @@ import {
   ChangePasswordBodySchema,
   CmsUserSchema,
   LoginBodySchema,
+  LoginResultSchema,
   PasswordChangedSchema,
   RevokedCountSchema,
   SessionParamsSchema,
@@ -23,10 +24,12 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
       config: { rateLimit: { max: 10, timeWindow: '15 minutes' } },
       schema: {
         tags: ['auth'],
-        summary: 'Log in to the CMS',
+        summary: 'Check an email and password',
+        description:
+          'Does not sign anyone in: it starts the second step, which the response names. A session exists only after that step succeeds.',
         body: LoginBodySchema,
         response: {
-          200: SuccessResponse(CmsUserSchema),
+          200: SuccessResponse(LoginResultSchema),
           ...commonErrorResponses,
         },
       },

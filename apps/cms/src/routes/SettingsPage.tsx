@@ -18,6 +18,7 @@ import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js
 import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
 import { SettingsPrivacyForm } from '../features/settings/SettingsPrivacyForm.js';
 import { SettingsSecurityForm } from '../features/settings/SettingsSecurityForm.js';
+import { SettingsTwoFactor } from '../features/settings/SettingsTwoFactor.js';
 import { SettingsSeoForm } from '../features/settings/SettingsSeoForm.js';
 
 type Tab =
@@ -68,7 +69,7 @@ export function SettingsPage() {
         <h1 className="text-3xl font-bold tracking-tight text-ink">Settings</h1>
         <p className="mt-1 text-sm text-ink-muted">
           Manage how your website appears, the text on its About Us, Contact Us,
-          Advertise and Privacy Policy pages, and your sign-in password.
+          Advertise and Privacy Policy pages, and your sign-in security.
         </p>
       </div>
 
@@ -120,7 +121,14 @@ export function SettingsPage() {
           {/* Mounted only while open, so half-typed passwords are discarded the
               moment the admin leaves the tab rather than lingering in a form
               nobody can see. */}
-          {tab === 'security' && <SettingsSecurityForm />}
+          {tab === 'security' && (
+            <div className="space-y-10">
+              <SettingsSecurityForm />
+              <div className="border-hairline border-t pt-10">
+                <SettingsTwoFactor />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

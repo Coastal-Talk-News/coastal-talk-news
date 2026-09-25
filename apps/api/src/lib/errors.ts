@@ -41,6 +41,43 @@ export class InvalidCurrentPasswordError extends AppError {
   }
 }
 
+/** The code was wrong (or already spent). A 400, never a 401: the CMS reads a
+ *  401 as an expired session and would sign out someone who just mistyped. */
+export class InvalidTwoFactorCodeError extends AppError {
+  constructor(
+    message = 'That code is not correct.',
+    details?: Record<string, unknown>,
+  ) {
+    super(400, 'INVALID_TWO_FACTOR_CODE', message, details);
+  }
+}
+
+/** The pending sign-in is gone: expired, used up, or never started. There is no
+ *  session yet, so this is the one place a 401 is safe. */
+export class SignInExpiredError extends AppError {
+  constructor(message = 'Your sign-in expired. Sign in again.') {
+    super(401, 'SIGN_IN_EXPIRED', message);
+  }
+}
+
+export class TwoFactorLockedError extends AppError {
+  constructor() {
+    super(
+      429,
+      'TWO_FACTOR_LOCKED',
+      'Too many incorrect codes. Wait a few minutes before trying again.',
+    );
+  }
+}
+
+/** A signed-in person's setup or reset ran out. Unlike a sign-in it is a 409,
+ *  because they still have a session that must not be dropped. */
+export class TwoFactorSetupExpiredError extends AppError {
+  constructor(message = 'Your setup expired. Start again.') {
+    super(409, 'TWO_FACTOR_SETUP_EXPIRED', message);
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(resource: string) {
     super(404, 'NOT_FOUND', `${resource} not found.`);

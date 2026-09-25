@@ -15,6 +15,10 @@ const EnvSchema = Type.Object({
   DATABASE_URL: Type.String({ minLength: 1 }),
 
   SESSION_SECRET: Type.String({ minLength: 32 }),
+  // 32 random bytes, base64url. Seals every authenticator secret at rest, so
+  // it must be the same everywhere the same database is used, and losing it
+  // means every user has to set up two-factor again.
+  TOTP_ENCRYPTION_KEY: Type.String({ minLength: 43, maxLength: 44 }),
   SESSION_TTL_HOURS: Type.Integer({ default: 12, minimum: 1, maximum: 720 }),
   SESSION_IDLE_MINUTES: Type.Integer({
     default: 480,
@@ -35,7 +39,10 @@ const EnvSchema = Type.Object({
   }),
 });
 
-export type Env = Static<typeof EnvSchema> & { corsOrigins: string[] };
+export type Env = Static<typeof EnvSchema> & {
+  corsOrigins: string[];
+  totpKey: Buffer;
+};
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   const converted = Value.Convert(
@@ -59,5 +66,12 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     throw new Error('CORS_ORIGINS must list at least one origin.');
   }
 
-  return { ...parsed, corsOrigins };
+  const totpKey = Buffer.from(parsed.TOTP_ENCRYPTION_KEY, 'base64url');
+  if (totpKey.length !== 32) {
+    throw new Error(
+      'TOTP_ENCRYPTION_KEY must be 32 random bytes, base64url encoded.',
+    );
+  }
+
+  return { ...parsed, corsOrigins, totpKey };
 }

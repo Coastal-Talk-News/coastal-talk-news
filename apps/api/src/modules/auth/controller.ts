@@ -1,6 +1,7 @@
 import type {
   ChangePasswordRequest,
   LoginRequest,
+  LoginResultDto,
   SessionDto,
 } from '@coastal-talk-news/types';
 import type { FastifyReply, FastifyRequest } from 'fastify';
@@ -32,8 +33,20 @@ export async function login(
     password,
   );
 
-  request.server.issueSession(request, reply, user.id);
-  return dataEnvelope(user);
+  // A correct password does not open a session. It only says which second step
+  // is owed: a code if two-factor is set up, or setting it up if it isn't. The
+  // session is issued by whichever of those the person then completes.
+  request.server.issueChallenge(
+    request,
+    reply,
+    user.id,
+    user.twoFactorEnabled ? 'verify' : 'setup',
+  );
+  return dataEnvelope({
+    status: user.twoFactorEnabled
+      ? 'two_factor_required'
+      : 'two_factor_setup_required',
+  } satisfies LoginResultDto);
 }
 
 export async function logout(request: FastifyRequest, reply: FastifyReply) {

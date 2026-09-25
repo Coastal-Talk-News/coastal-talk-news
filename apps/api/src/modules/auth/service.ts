@@ -22,11 +22,16 @@ export interface AuthenticatedUser {
   email: string;
 }
 
+export interface SignInUser extends AuthenticatedUser {
+  /** Decides which second step they owe: a code, or setting two-factor up. */
+  twoFactorEnabled: boolean;
+}
+
 export async function authenticate(
   db: Database,
   email: string,
   password: string,
-): Promise<AuthenticatedUser> {
+): Promise<SignInUser> {
   const user = await repository.findByEmail(db, email.toLowerCase());
   const matches = await bcrypt.compare(
     password,
@@ -36,7 +41,12 @@ export async function authenticate(
   if (!user || !matches) {
     throw new UnauthorizedError('Invalid email or password.');
   }
-  return { id: user.id, name: user.name, email: user.email };
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    twoFactorEnabled: user.totpEnabledAt !== null,
+  };
 }
 
 export async function getCurrentUser(
@@ -50,21 +60,32 @@ export async function getCurrentUser(
   return user;
 }
 
-export async function changePassword(
+/**
+ * Proves the person at the keyboard still knows the password, for actions too
+ * sensitive to rest on a session cookie alone.
+ */
+export async function assertCurrentPassword(
   db: Database,
   userId: string,
-  currentPassword: string,
-  newPassword: string,
+  password: string,
 ): Promise<void> {
   const user = await repository.findPasswordHash(db, userId);
   if (!user) {
     // A live session for a user who no longer exists.
     throw new UnauthorizedError();
   }
-
-  if (!(await bcrypt.compare(currentPassword, user.passwordHash))) {
+  if (!(await bcrypt.compare(password, user.passwordHash))) {
     throw new InvalidCurrentPasswordError();
   }
+}
+
+export async function changePassword(
+  db: Database,
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  await assertCurrentPassword(db, userId, currentPassword);
 
   // Checked only after the current password is proven, so the answers below
   // can't be used to probe what the current password is.

@@ -1,14 +1,12 @@
-import { useMutation } from '@tanstack/react-query';
-import { Button } from '@coastal-talk-news/ui/button';
-import { Field } from '@coastal-talk-news/ui/field';
-import { Input } from '@coastal-talk-news/ui/input';
-import { ArrowRight, Images, Mail, Newspaper, Users } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import type { CmsUserDto } from '@coastal-talk-news/types';
+import { Images, Newspaper, Users } from 'lucide-react';
+import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { authApi } from '../api/auth.js';
-import { loginErrorMessage } from '../features/auth/loginError.js';
+import { toast } from 'sonner';
+import { CredentialsForm } from '../features/auth/CredentialsForm.js';
+import { SignInSetup } from '../features/auth/SignInSetup.js';
+import { TwoFactorChallenge } from '../features/auth/TwoFactorChallenge.js';
 import { useAuth } from '../features/auth/useAuth.js';
-import { PasswordInput } from '../components/PasswordInput.js';
 
 const HIGHLIGHTS = [
   {
@@ -28,47 +26,33 @@ const HIGHLIGHTS = [
   },
 ];
 
+/** Signing in is two steps that always run in this order. */
+type Stage = 'credentials' | 'verify' | 'setup';
+
 export function LoginPage() {
-  const { user, isLoading, setUser, signOutReason, clearSignOutReason } =
-    useAuth();
+  const { user, isLoading, setUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [stage, setStage] = useState<Stage>('credentials');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const login = useMutation({
-    mutationFn: () => authApi.login({ email: email.trim(), password }),
-    onSuccess: (loggedIn) => {
-      setUser(loggedIn);
-      const from = (location.state as { from?: string } | null)?.from;
-      navigate(from && from !== '/login' ? from : '/', { replace: true });
-    },
-  });
+  const [notice, setNotice] = useState<string | null>(null);
 
   if (!isLoading && user) {
     return <Navigate to="/" replace />;
   }
 
-  function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    if (!email.trim() || !password) return;
-    login.mutate();
+  function enter(signedIn: CmsUserDto) {
+    setUser(signedIn);
+    const from = (location.state as { from?: string } | null)?.from;
+    navigate(from && from !== '/login' ? from : '/', { replace: true });
   }
 
-  function edit(setter: (value: string) => void) {
-    return (event: { target: { value: string } }) => {
-      if (login.error) login.reset();
-      if (signOutReason) clearSignOutReason();
-      setter(event.target.value);
-    };
+  /** Sent back to the password because the pending sign-in ran out. */
+  function restart(message: string) {
+    setNotice(message);
+    setStage('credentials');
   }
-
-  const errorMessage = loginErrorMessage(login.error);
-  const expiredNotice =
-    !errorMessage && signOutReason === 'expired'
-      ? 'Your session expired. Sign in again to continue.'
-      : null;
 
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
@@ -121,67 +105,35 @@ export function LoginPage() {
 
       <section className="flex items-center justify-center p-6 lg:p-12">
         <div className="w-full max-w-md border-hairline rounded-2xl border bg-surface p-8 shadow-sm lg:p-10">
-          <h2 className="text-3xl font-bold tracking-tight text-ink">
-            Welcome back
-          </h2>
-          <p className="mt-1.5 text-sm text-ink-muted">
-            Sign in to access your newsroom.
-          </p>
+          {stage === 'credentials' && (
+            <CredentialsForm
+              notice={notice}
+              onContinue={(status, typedEmail) => {
+                setEmail(typedEmail);
+                setNotice(null);
+                setStage(status === 'two_factor_required' ? 'verify' : 'setup');
+              }}
+            />
+          )}
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5" noValidate>
-            <Field label="Email address" htmlFor="email">
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                placeholder="you@coastaltalknews.com"
-                icon={<Mail className="size-4" aria-hidden />}
-                value={email}
-                onChange={edit(setEmail)}
-                invalid={Boolean(errorMessage)}
-              />
-            </Field>
+          {stage === 'verify' && (
+            <TwoFactorChallenge
+              onSignedIn={(result) => {
+                enter(result.user);
+                if (result.usedRecoveryCode) {
+                  toast.warning('You signed in with a recovery code', {
+                    description: `${result.recoveryCodesRemaining} left. You can create new ones in Settings, under Password & Security.`,
+                  });
+                }
+              }}
+              onRestart={restart}
+              onBack={() => setStage('credentials')}
+            />
+          )}
 
-            <Field label="Password" htmlFor="password">
-              <PasswordInput
-                id="password"
-                autoComplete="current-password"
-                required
-                placeholder="Enter your password"
-                value={password}
-                onChange={edit(setPassword)}
-                invalid={Boolean(errorMessage)}
-              />
-            </Field>
-
-            {expiredNotice && (
-              <p className="bg-warn-soft text-warn-text animate-fade-in rounded-lg px-3 py-2 text-sm">
-                {expiredNotice}
-              </p>
-            )}
-
-            {errorMessage && (
-              <p
-                role="alert"
-                className="bg-danger-soft text-danger-text animate-fade-in rounded-lg px-3 py-2 text-sm"
-              >
-                {errorMessage}
-              </p>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full"
-              loading={login.isPending}
-              disabled={!email.trim() || !password}
-            >
-              Sign in
-              {!login.isPending && (
-                <ArrowRight className="size-4" aria-hidden />
-              )}
-            </Button>
-          </form>
+          {stage === 'setup' && (
+            <SignInSetup email={email} onDone={enter} onRestart={restart} />
+          )}
         </div>
       </section>
     </div>

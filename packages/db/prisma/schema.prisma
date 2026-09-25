@@ -222,10 +222,38 @@ model CmsUser {
   /// bcrypt hash. Never returned by any endpoint, never logged.
   passwordHash String @map("password_hash")
 
+  /// The authenticator secret, sealed with AES-256-GCM (see the API's
+  /// SecretBox) so a copy of this table alone can't mint codes. Written only
+  /// once the user has proved their authenticator works. Never returned.
+  totpSecret    String?   @map("totp_secret")
+  /// Null means two-factor isn't set up yet: the next sign-in enrols instead
+  /// of asking for a code. Set at the moment the first code is confirmed.
+  totpEnabledAt DateTime? @map("totp_enabled_at")
+  /// Highest 30-second time step already accepted, so a code that was used
+  /// (or sniffed) can't be replayed inside its validity window.
+  totpLastStep  Int?      @map("totp_last_step")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  recoveryCodes CmsRecoveryCode[]
+
   @@map("cms_users")
+}
+
+/// One-time codes for a lost authenticator. Only a keyed hash is stored: the
+/// code itself is shown once, at creation, and never again.
+model CmsRecoveryCode {
+  id        String    @id @default(uuid(7))
+  userId    String    @map("user_id")
+  codeHash  String    @unique @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user CmsUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("cms_recovery_codes")
 }
 
 /// Effectively a singleton — exactly one row, created by the seed.

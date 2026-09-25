@@ -9,6 +9,7 @@ import type { Env } from './config/env.js';
 import { cmsAdvertisementRoutes } from './modules/advertisements/routes.js';
 import { cmsArticleRoutes } from './modules/articles/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
+import { twoFactorRoutes } from './modules/two-factor/routes.js';
 import { MAX_UPLOAD_BYTES } from './modules/media/image.js';
 import { cmsBreakingNewsRoutes } from './modules/breaking-news/routes.js';
 import {
@@ -39,6 +40,7 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
           'req.body.password',
           'req.body.currentPassword',
           'req.body.newPassword',
+          'req.body.code',
           '*.passwordHash',
         ],
         censor: '[redacted]',
@@ -108,6 +110,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   );
 
   await app.register(authRoutes, { prefix: `${API_BASE_PATH}/cms/auth` });
+  await app.register(twoFactorRoutes, {
+    prefix: `${API_BASE_PATH}/cms/auth/2fa`,
+  });
   await app.register(cmsArticleRoutes, {
     prefix: `${API_BASE_PATH}/cms/articles`,
   });

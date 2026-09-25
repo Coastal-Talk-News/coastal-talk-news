@@ -1,6 +1,7 @@
 export const queryKeys = {
   session: ['session'] as const,
   sessions: ['sessions'] as const,
+  twoFactor: ['two-factor'] as const,
   dashboard: ['dashboard'] as const,
   categories: ['categories'] as const,
   media: ['media'] as const,
