@@ -232,6 +232,19 @@ the database is shared state in exactly the way the codebase is not:
   your own.
 - Don't introduce a second pattern for something that already has one.
 
+### 10.1 Two-factor sign-in
+
+- `POST /cms/auth/login` never opens a session for a 2FA user: it sets a short-lived
+  `ctn_2fa` challenge cookie (in-memory, like sessions), and the session is only issued
+  after `/cms/auth/2fa/verify` or `/cms/auth/2fa/setup/confirm` succeeds.
+- Wrong codes and passwords are `400`, not `401`, because the CMS treats any 401 as an
+  expired session. Codes are capped per challenge (5) and per user (10 per 15 minutes),
+  and a used TOTP step cannot be replayed.
+- TOTP secrets are AES-256-GCM sealed and recovery codes are keyed hashes, both derived
+  from `TOTP_ENCRYPTION_KEY` (required, no default; set it on Render and share it between
+  developers). Changing it invalidates every enrolled authenticator, so treat it like
+  `SESSION_SECRET`.
+
 ## 11. Verification before reporting completion
 
 For every app touched, check `package.json`/`turbo.json` for the real script names and run

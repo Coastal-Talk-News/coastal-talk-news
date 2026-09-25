@@ -31,3 +31,6 @@ export const PASSWORD_MIN_LENGTH = 8;
 /** bcrypt reads only the first 72 bytes of its input and silently ignores the
  *  rest, so a longer password would be weaker than it looks. */
 export const PASSWORD_MAX_BYTES = 72;
+
+/** Room for a six-digit code or a formatted recovery code with stray spaces. */
+export const TWO_FACTOR_CODE_MAX = 32;

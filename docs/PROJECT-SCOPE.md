@@ -145,7 +145,16 @@ Advertisements, Media Library, Settings. No separate Users/roles management in V
 
 ### Login
 
-Email + password. Only authenticated CMS users can reach the admin area.
+Email + password, then a second factor. Only authenticated CMS users can reach the admin area.
+
+- **First sign-in:** after the password, the user sets up an authenticator app (scan the QR
+  code, confirm with a 6-digit code, save 10 one-time recovery codes) and lands on the
+  dashboard. Nothing is seeded into the database; enrolment happens through this flow.
+- **Every later sign-in:** password, then a 6-digit code or a recovery code.
+- **Settings → Security:** reset the authenticator (needs password + a current code or
+  recovery code; other sessions are signed out) and generate a new set of recovery codes.
+- **Lost phone and recovery codes:** an operator runs `pnpm --filter @coastal-talk-news/db
+db:reset-2fa <email>`; the user enrols again on next sign-in.
 
 ### Dashboard
 
