@@ -37,6 +37,8 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
           'req.headers.cookie',
           'req.headers.authorization',
           'req.body.password',
+          'req.body.currentPassword',
+          'req.body.newPassword',
           '*.passwordHash',
         ],
         censor: '[redacted]',

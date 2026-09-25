@@ -11,11 +11,11 @@ import {
   SETTINGS_PAGE_INTRO_MAX,
   SETTINGS_PAGE_TITLE_MAX,
 } from '@coastal-talk-news/validation/limits';
-import { Info } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { TiptapEditor } from '../../components/TiptapEditor.js';
 import { useUpdateSettings } from './useUpdateSettings.js';
+import { SettingsNote } from './SettingsNote.js';
 
 /** About and Advertise are the same shape, so they share one form. */
 export type PageKey = 'about' | 'advertise';
@@ -144,10 +144,7 @@ export function SettingsPageForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      <div className="bg-accent-soft flex gap-3 rounded-lg p-4">
-        <Info className="text-accent mt-0.5 size-4 shrink-0" aria-hidden />
-        <p className="text-ink-muted text-sm">{copy.note}</p>
-      </div>
+      <SettingsNote>{copy.note}</SettingsNote>
 
       <Field
         label="Page heading"

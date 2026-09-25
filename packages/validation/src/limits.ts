@@ -26,3 +26,8 @@ export const SETTINGS_HOURS_MAX = 120;
 
 export const SETTINGS_SEO_TITLE_MAX = 60;
 export const SETTINGS_META_DESCRIPTION_MAX = 160;
+
+export const PASSWORD_MIN_LENGTH = 8;
+/** bcrypt reads only the first 72 bytes of its input and silently ignores the
+ *  rest, so a longer password would be weaker than it looks. */
+export const PASSWORD_MAX_BYTES = 72;

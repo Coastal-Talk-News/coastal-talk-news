@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   Globe,
   Info,
+  KeyRound,
   Mail,
   Megaphone,
   Search,
@@ -16,9 +17,17 @@ import { SettingsContactForm } from '../features/settings/SettingsContactForm.js
 import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js';
 import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
 import { SettingsPrivacyForm } from '../features/settings/SettingsPrivacyForm.js';
+import { SettingsSecurityForm } from '../features/settings/SettingsSecurityForm.js';
 import { SettingsSeoForm } from '../features/settings/SettingsSeoForm.js';
 
-type Tab = 'general' | 'about' | 'contact' | 'advertise' | 'privacy' | 'seo';
+type Tab =
+  | 'general'
+  | 'about'
+  | 'contact'
+  | 'advertise'
+  | 'privacy'
+  | 'seo'
+  | 'security';
 
 // Each standalone page on the website gets its own tab, so an admin looking
 // for the About page's text finds it under About rather than buried in a
@@ -30,6 +39,7 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'advertise', label: 'Advertise', icon: Megaphone },
   { value: 'privacy', label: 'Privacy Policy', icon: ShieldCheck },
   { value: 'seo', label: 'SEO', icon: Search },
+  { value: 'security', label: 'Password & Security', icon: KeyRound },
 ];
 
 export function SettingsPage() {
@@ -57,8 +67,8 @@ export function SettingsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-ink">Settings</h1>
         <p className="mt-1 text-sm text-ink-muted">
-          Manage how your website appears, and the text on its About Us, Contact
-          Us, Advertise and Privacy Policy pages.
+          Manage how your website appears, the text on its About Us, Contact Us,
+          Advertise and Privacy Policy pages, and your sign-in password.
         </p>
       </div>
 
@@ -78,8 +88,8 @@ export function SettingsPage() {
               onClick={() => setTab(value)}
               className={
                 tab === value
-                  ? 'flex items-center gap-2.5 rounded-lg bg-accent-soft px-3.5 py-2.5 text-left text-sm font-medium text-accent-text'
-                  : 'flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-left text-sm font-medium text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink'
+                  ? 'flex shrink-0 items-center gap-2.5 rounded-lg bg-accent-soft px-3.5 py-2.5 text-left text-sm font-medium whitespace-nowrap text-accent-text'
+                  : 'flex shrink-0 items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-left text-sm font-medium whitespace-nowrap text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink'
               }
             >
               <Icon className="size-4 shrink-0" aria-hidden />
@@ -107,6 +117,10 @@ export function SettingsPage() {
           <div hidden={tab !== 'seo'}>
             <SettingsSeoForm settings={data} />
           </div>
+          {/* Mounted only while open, so half-typed passwords are discarded the
+              moment the admin leaves the tab rather than lingering in a form
+              nobody can see. */}
+          {tab === 'security' && <SettingsSecurityForm />}
         </div>
       </div>
     </div>

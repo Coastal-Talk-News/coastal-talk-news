@@ -1,11 +1,11 @@
 import type { ArticleContent, SiteSettingsDto } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
-import { Info } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
 import { TiptapEditor } from '../../components/TiptapEditor.js';
 import { hasText } from './SettingsPageForm.js';
 import { useUpdateSettings } from './useUpdateSettings.js';
+import { SettingsNote } from './SettingsNote.js';
 
 export function SettingsPrivacyForm({
   settings,
@@ -36,14 +36,11 @@ export function SettingsPrivacyForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-      <div className="bg-accent-soft flex gap-3 rounded-lg p-4">
-        <Info className="text-accent mt-0.5 size-4 shrink-0" aria-hidden />
-        <p className="text-ink-muted text-sm">
-          This is the Privacy Policy page on your website, reached from the
-          “Privacy Policy” link in the footer. Until you write something here,
-          that page shows a short note that it hasn’t been added yet.
-        </p>
-      </div>
+      <SettingsNote>
+        This is the Privacy Policy page on your website, reached from the
+        “Privacy Policy” link in the footer. Until you write something here,
+        that page shows a short note that it hasn’t been added yet.
+      </SettingsNote>
 
       <div className="space-y-1.5">
         <span className="text-ink-muted block text-sm font-medium">

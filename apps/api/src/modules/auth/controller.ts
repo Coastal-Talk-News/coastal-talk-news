@@ -1,4 +1,8 @@
-import type { LoginRequest, SessionDto } from '@coastal-talk-news/types';
+import type {
+  ChangePasswordRequest,
+  LoginRequest,
+  SessionDto,
+} from '@coastal-talk-news/types';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { NotFoundError } from '../../lib/errors.js';
 import { dataEnvelope } from '../../lib/pagination.js';
@@ -76,4 +80,29 @@ export async function revokeOtherSessions(request: FastifyRequest) {
     request.session.id,
   );
   return dataEnvelope({ revoked });
+}
+
+export async function changePassword(
+  request: FastifyRequest<{ Body: ChangePasswordRequest }>,
+  reply: FastifyReply,
+) {
+  const { userId, id: sessionId } = request.session;
+  const { currentPassword, newPassword } = request.body;
+  const { sessions } = request.server;
+
+  await service.changePassword(
+    request.server.prisma,
+    userId,
+    currentPassword,
+    newPassword,
+  );
+
+  // Anyone holding a token from before the change loses it: every other device
+  // signs in again, and this one is handed a fresh token so a copy of the old
+  // one is worthless too.
+  const revokedSessions = sessions.revokeOthers(userId, sessionId);
+  sessions.revokeForUser(userId, sessionId);
+  request.server.issueSession(request, reply, userId);
+
+  return dataEnvelope({ revokedSessions });
 }

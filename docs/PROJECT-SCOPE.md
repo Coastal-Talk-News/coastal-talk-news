@@ -294,6 +294,16 @@ scheduled sweep in V1. The admin deletes those from the library, or triggers the
 
 - **General** — site name, tagline, description, logo, favicon, contact email/phone/address, social links (Facebook, Instagram, YouTube, X)
 - **SEO** — default SEO title, default meta description, default OG image
+- **Password & Security** — change the signed-in user's own password. Needs the current
+  password. The new one must have at least 8 characters (72 at most, bcrypt's limit) with
+  an uppercase letter, a lowercase letter, a number and a special character, and differ
+  from the current one; the rules live in one place, `packages/validation`
+  (`password-policy.ts`), so the API enforces exactly what the CMS shows as a live
+  checklist. On success the current device stays signed in and every other device is
+  signed out; the API also gives the current device a fresh session token. Five attempts
+  per user per 15 minutes. (`POST /api/v1/cms/auth/change-password`; a wrong current
+  password is a `400 INVALID_CURRENT_PASSWORD`, never a 401, so the CMS doesn't mistake a
+  typo for an expired session.)
 
 No CMS-side "Language Settings" screen is needed: the reader's UI-language choice is
 per-visitor (a cookie set by the header toggle), not a site-wide setting an admin

@@ -12,6 +12,10 @@
     "./limits": {
       "types": "./dist/limits.d.ts",
       "default": "./dist/limits.js"
+    },
+    "./password-policy": {
+      "types": "./dist/password-policy.d.ts",
+      "default": "./dist/password-policy.js"
     }
   },
   "scripts": {

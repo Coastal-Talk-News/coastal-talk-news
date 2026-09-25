@@ -1,7 +1,9 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
+  ChangePasswordBodySchema,
   CmsUserSchema,
   LoginBodySchema,
+  PasswordChangedSchema,
   RevokedCountSchema,
   SessionParamsSchema,
   SessionSchema,
@@ -9,6 +11,7 @@ import {
   commonErrorResponses,
 } from '@coastal-talk-news/validation';
 import { Type } from '@sinclair/typebox';
+import { requireStringFields } from '../../lib/request-guards.js';
 import * as controller from './controller.js';
 
 export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
@@ -57,6 +60,37 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.me,
+  );
+
+  app.post(
+    '/change-password',
+    {
+      preValidation: requireStringFields('currentPassword', 'newPassword'),
+      preHandler: app.requireAuth,
+      config: {
+        // Per user, not per IP, and after requireAuth so there is a user to
+        // key on: someone holding a stolen session must not get unlimited
+        // guesses at the current password from a spread of addresses.
+        rateLimit: {
+          max: 5,
+          timeWindow: '15 minutes',
+          hook: 'preHandler',
+          keyGenerator: (request) => request.session.userId,
+        },
+      },
+      schema: {
+        tags: ['auth'],
+        summary: 'Change your password',
+        description:
+          'Requires the current password. Signs out every other device and issues this one a new session.',
+        body: ChangePasswordBodySchema,
+        response: {
+          200: SuccessResponse(PasswordChangedSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.changePassword,
   );
 
   app.get(
