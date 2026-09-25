@@ -73,7 +73,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             habit, and dropping it would cost every other article its summary. */}
         {/* Set at the body's size: the standfirst is the article's opening
             paragraph, so anything larger reads as a second headline. */}
-        <p className="text-ink-muted mt-3 text-[1rem] leading-relaxed text-justify sm:text-[1.125rem]">
+        <p className="text-ink-muted font-article mt-3 text-[1rem] leading-relaxed text-justify sm:text-[1.125rem]">
           {article.summary}
         </p>
 

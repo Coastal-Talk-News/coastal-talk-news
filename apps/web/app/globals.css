@@ -24,6 +24,8 @@
   --font-serif:
     var(--font-headline), var(--font-headline-kannada), Georgia,
     'Times New Roman', serif;
+  --font-article:
+    var(--font-merriweather), var(--font-headline-kannada), Georgia, serif;
   --font-sans:
     var(--font-body), var(--font-body-kannada), ui-sans-serif, system-ui,
     sans-serif;
@@ -150,7 +152,7 @@
 
   /* One step of the same scale as the headline and standfirst above it. */
   .article-body {
-    @apply mt-6 font-serif text-[1rem] leading-[1.8] sm:text-[1.125rem];
+    @apply mt-6 font-article text-[1rem] leading-[1.8] sm:text-[1.125rem];
   }
 
   .article-body > * + * {
@@ -158,11 +160,11 @@
   }
 
   .article-body h2 {
-    @apply mt-8 mb-2 font-serif text-2xl font-bold;
+    @apply mt-8 mb-2 font-article text-2xl font-bold;
   }
 
   .article-body h3 {
-    @apply mt-7 mb-2 font-serif text-xl font-bold;
+    @apply mt-7 mb-2 font-article text-xl font-bold;
   }
 
   .article-body h4,
