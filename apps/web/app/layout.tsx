@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import {
+  Merriweather,
   Noto_Sans,
   Noto_Sans_Kannada,
   Noto_Serif,
@@ -26,6 +27,13 @@ const headline = Noto_Serif({
   subsets: ['latin'],
   weight: ['400', '600', '700'],
   variable: '--font-headline',
+  display: 'swap',
+});
+
+const article = Merriweather({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  variable: '--font-merriweather',
   display: 'swap',
 });
 
@@ -82,7 +90,7 @@ export default async function RootLayout({
     <html
       lang={locale}
       translate="no"
-      className={`${headline.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable}`}
+      className={`${headline.variable} ${article.variable} ${headlineKannada.variable} ${body.variable} ${bodyKannada.variable}`}
     >
       {/* Pages mix English UI with Kannada content, which makes the browser
           offer to translate on every visit. The newsroom already publishes in
