@@ -246,6 +246,10 @@ export async function getHome(
   };
 }
 
+export async function recordView({ db }: PublicServiceDeps, id: string) {
+  await repository.incrementViewCount(db, id);
+}
+
 export async function getArticlesByPriority(
   { db, toPublicUrl }: PublicServiceDeps,
   priority: 'LEAD_STORY' | 'FEATURED',

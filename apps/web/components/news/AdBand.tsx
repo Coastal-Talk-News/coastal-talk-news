@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import type { CSSProperties } from 'react';
 import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
 import { adHref, adImageTransform } from '../../lib/ads';
 import { getDictionary } from '../../lib/i18n/dictionaries';
@@ -21,7 +22,9 @@ const SLOT_ASPECT = '408 / 88';
 /**
  * A fixed height or a share of the screen, whichever is smaller — three of
  * these stacked on a phone must still leave the news in view. Capped by width
- * rather than height, since capping the height would change the shape.
+ * rather than height, since capping the height would change the shape. Only
+ * applies while the slots stack: side by side, a full row shares the whole
+ * width, so the cap would only leave wide gaps between them.
  */
 const SLOT_MAX_WIDTH = 'calc(min(5.5rem, 12vh) * 408 / 88)';
 /** Below a full row a slot stays this wide and the row centres, rather than
@@ -53,12 +56,18 @@ export function AdBand({
           {advertisements.map((ad) => (
             <li
               key={ad.id}
-              className={fillsRow ? 'w-full sm:min-w-0 sm:flex-1' : 'w-full'}
-              style={{
-                maxWidth: fillsRow
-                  ? SLOT_MAX_WIDTH
-                  : `min(${SLOT_WIDTH}, ${SLOT_MAX_WIDTH})`,
-              }}
+              className={
+                fillsRow
+                  ? 'w-full max-w-(--slot-max) sm:max-w-none sm:min-w-0 sm:flex-1'
+                  : 'w-full max-w-(--slot-max)'
+              }
+              style={
+                {
+                  '--slot-max': fillsRow
+                    ? SLOT_MAX_WIDTH
+                    : `min(${SLOT_WIDTH}, ${SLOT_MAX_WIDTH})`,
+                } as CSSProperties
+              }
             >
               <Link
                 href={adHref(ad.id)}

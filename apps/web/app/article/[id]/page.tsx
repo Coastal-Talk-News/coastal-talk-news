@@ -2,9 +2,11 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { ArticleBody } from '../../../components/news/ArticleBody';
 import { CategoryTag } from '../../../components/news/CategoryTag';
+import { ViewTracker } from '../../../components/news/ViewTracker';
 import { ShareLinks } from '../../../components/news/ShareLinks';
 import { StoryImage } from '../../../components/news/StoryImage';
 import { YoutubeEmbed } from '../../../components/news/YoutubeEmbed';
+import { estimateReadMinutes } from '@coastal-talk-news/types';
 import { formatDateTime } from '../../../lib/format';
 import { getArticle, getSite } from '../../../lib/api';
 import { getDictionary } from '../../../lib/i18n/dictionaries';
@@ -54,11 +56,19 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   const dictionary = getDictionary(locale);
   const shareUrl = `${await getOrigin()}/article/${article.id}`;
+  // Half the read time the CMS shows: the reader has to stay past this for
+  // the visit to count as a read.
+  const readThresholdSeconds = estimateReadMinutes(article.content) * 30;
 
   return (
     // A news column is capped by line length rather than by the grid: past
     // roughly 70 characters a reader starts losing their place between lines.
-    <article className="max-w-[44rem] min-[1120px]:max-w-[52rem] py-6 sm:py-8">
+    <article className="text-ink [--color-ink-muted:#000000] [--color-ink:#000000] max-w-[44rem] min-[1120px]:max-w-[52rem] py-6 sm:py-8">
+      <ViewTracker
+        articleId={article.id}
+        thresholdSeconds={readThresholdSeconds}
+      />
+
       <header>
         <CategoryTag category={article.category} locale={locale} />
 

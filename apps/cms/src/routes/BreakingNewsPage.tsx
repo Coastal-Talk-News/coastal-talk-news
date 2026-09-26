@@ -165,17 +165,17 @@ export function BreakingNewsPage() {
             message={
               error instanceof ApiError
                 ? error.message
-                : 'Could not load breaking news.'
+                : 'Could not load latest news.'
             }
             onRetry={() => void refetch()}
           />
         ) : visible.length === 0 ? (
           <EmptyState
             icon={<Bell className="size-5" aria-hidden />}
-            title={tab === 'all' ? 'No breaking news yet' : `No ${tab} items`}
+            title={tab === 'all' ? 'No latest news yet' : `No ${tab} items`}
             description={
               tab === 'all'
-                ? 'Add your first breaking news item to show it in the website ticker.'
+                ? 'Add your first latest news item to show it in the website ticker.'
                 : 'Try a different tab.'
             }
             action={
@@ -218,7 +218,7 @@ export function BreakingNewsPage() {
 
             <div className="border-hairline text-ink-muted flex items-center justify-between border-t px-4 py-3 text-xs">
               <span>
-                Showing {visible.length} of {counts.all} breaking news{' '}
+                Showing {visible.length} of {counts.all} latest news{' '}
                 {counts.all === 1 ? 'item' : 'items'}
               </span>
               <span
@@ -261,7 +261,7 @@ export function BreakingNewsPage() {
         open={pendingDelete !== null}
         onOpenChange={(open) => !open && setPendingDelete(null)}
         title={`Delete "${pendingDelete?.headline}"?`}
-        description="This permanently removes the breaking news item. It cannot be undone."
+        description="This permanently removes the latest news item. It cannot be undone."
         confirmLabel="Delete item"
         loading={mutations.remove.isPending}
         onConfirm={() => {

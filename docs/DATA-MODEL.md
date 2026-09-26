@@ -12,7 +12,10 @@ them in Prisma before building the feature that depends on them.
 `id`, `category_id` (FK → Category), `media_id` (FK → Media Asset, featured image),
 `language`, `headline`, `summary`, `content`, `youtube_url`, `tags`, `priority`,
 `status` (→ `ArticleStatus`), `publication_date`, `created_at`, `updated_at`, `seo_title`,
-`meta_description`, `og_image_id` (FK → Media Asset)
+`meta_description`, `og_image_id` (FK → Media Asset), `view_count`
+
+`view_count` is a running total of reads, incremented by the public site once a visitor has
+stayed past half the article's read time. Anonymous: no per-reader record exists.
 
 `summary` is required — shown in article listings and social previews. Distinct from
 `meta_description`, which is SEO-specific and optional.

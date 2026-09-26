@@ -60,6 +60,18 @@ export class ObjectStorage {
     await cloudinary.uploader.destroy(storageKey, { resource_type: 'image' });
   }
 
+  /** Credits used this billing period, and the plan's allowance. */
+  async creditUsage(): Promise<{ used: number; limit: number }> {
+    const usage = (await cloudinary.api.usage()) as {
+      credits?: { usage?: number; limit?: number };
+    };
+    const { usage: used, limit } = usage.credits ?? {};
+    if (typeof used !== 'number' || typeof limit !== 'number') {
+      throw new Error('Cloudinary did not report credit usage.');
+    }
+    return { used, limit };
+  }
+
   publicUrl(storageKey: string, options: TransformOptions = {}): string {
     return cloudinary.url(storageKey, {
       secure: true,

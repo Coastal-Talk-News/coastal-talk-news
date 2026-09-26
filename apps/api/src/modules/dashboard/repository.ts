@@ -4,6 +4,17 @@ const mediaSelect = {
   select: { id: true, storageKey: true, width: true, height: true },
 } as const;
 
+/**
+ * Every database on the server, not just this one: that is the figure on
+ * Supabase's own usage page. The write-ahead log is left out, as it is there.
+ */
+export async function databaseSizeBytes(db: TransactionClient) {
+  const [row] = await db.$queryRaw<Array<{ size: bigint }>>`
+    SELECT COALESCE(SUM(pg_database_size(datname)), 0) AS size FROM pg_database
+  `;
+  return Number(row?.size ?? 0);
+}
+
 export function countArticlesByStatus(db: TransactionClient) {
   return db.article.groupBy({ by: ['status'], _count: { _all: true } });
 }

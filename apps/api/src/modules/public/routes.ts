@@ -17,6 +17,7 @@ import {
   SuccessResponse,
   commonErrorResponses,
 } from '@coastal-talk-news/validation';
+import { Type } from '@sinclair/typebox';
 import * as controller from './controller.js';
 
 export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
@@ -93,6 +94,8 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
 };
 
 export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  await app.register(import('@fastify/rate-limit'), { global: false });
+
   app.get(
     '',
     {
@@ -109,6 +112,24 @@ export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.listArticlesByPriority,
+  );
+
+  app.post(
+    '/:id/view',
+    {
+      schema: {
+        tags: ['public'],
+        summary: 'Count one read of a published article',
+        description:
+          'Sent by the reader site once a reader has stayed for half the read time. Anonymous: nothing about the reader is stored. An unknown or unpublished id is ignored rather than reported.',
+        params: PublicArticleParamsSchema,
+        response: { 204: Type.Null(), ...commonErrorResponses },
+      },
+      // A view is only a counter, but nothing else stops one client from
+      // running it up.
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+    },
+    controller.recordArticleView,
   );
 
   app.get(

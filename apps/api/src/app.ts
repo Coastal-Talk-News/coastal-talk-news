@@ -8,6 +8,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import type { Env } from './config/env.js';
 import { cmsAdvertisementRoutes } from './modules/advertisements/routes.js';
 import { cmsArticleRoutes } from './modules/articles/routes.js';
+import { analyticsRoutes } from './modules/analytics/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { twoFactorRoutes } from './modules/two-factor/routes.js';
 import { MAX_UPLOAD_BYTES } from './modules/media/image.js';
@@ -124,6 +125,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   });
   await app.register(dashboardRoutes, {
     prefix: `${API_BASE_PATH}/cms/dashboard`,
+  });
+  await app.register(analyticsRoutes, {
+    prefix: `${API_BASE_PATH}/cms/analytics`,
   });
   await app.register(mediaRoutes, {
     prefix: `${API_BASE_PATH}/cms/media`,

@@ -1,5 +1,6 @@
 export * from './api.js';
 export * from './advertisement.js';
+export * from './analytics.js';
 export * from './article.js';
 export * from './auth.js';
 export * from './breaking-news.js';
@@ -7,4 +8,5 @@ export * from './category.js';
 export * from './dashboard.js';
 export * from './media.js';
 export * from './public.js';
+export * from './read-time.js';
 export * from './settings.js';

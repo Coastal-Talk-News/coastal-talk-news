@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
   DashboardSchema,
+  DashboardUsageSchema,
   SuccessResponse,
   commonErrorResponses,
 } from '@coastal-talk-news/validation';
@@ -22,5 +23,23 @@ export const dashboardRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.getDashboard,
+  );
+
+  app.get(
+    '/usage',
+    {
+      schema: {
+        tags: ['dashboard'],
+        summary:
+          'Cloudinary credits and Supabase database size against their limits',
+        description:
+          'Kept apart from the overview because it calls Cloudinary. `cloudinary` is null when that call fails.',
+        response: {
+          200: SuccessResponse(DashboardUsageSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.getUsage,
   );
 };

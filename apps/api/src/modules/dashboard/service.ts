@@ -16,6 +16,62 @@ function startOfToday(now: Date): Date {
   return start;
 }
 
+// Supabase's free plan allows 500 MB of database, and a project that goes
+// over it is put into read-only mode, so the meter turns red before that.
+const SUPABASE_LIMIT_MB = 500;
+const SUPABASE_WARN_MB = 450;
+// The free Cloudinary plan's monthly allowance.
+const CLOUDINARY_WARN_CREDITS = 20;
+// The usage figures barely move minute to minute, and the Admin API is
+// rate-limited, so a dashboard left open shouldn't ask it every time.
+const CLOUDINARY_CACHE_MS = 5 * 60 * 1000;
+
+let cachedCredits: {
+  at: number;
+  value: { used: number; limit: number };
+} | null = null;
+
+async function readCloudinary(storage: ObjectStorage, now: Date) {
+  try {
+    if (
+      !cachedCredits ||
+      now.getTime() - cachedCredits.at > CLOUDINARY_CACHE_MS
+    ) {
+      cachedCredits = { at: now.getTime(), value: await storage.creditUsage() };
+    }
+    const { used, limit } = cachedCredits.value;
+    return { used, limit, warnAt: CLOUDINARY_WARN_CREDITS };
+  } catch {
+    // A usage meter is never worth failing the dashboard for.
+    return null;
+  }
+}
+
+async function readSupabase(db: Database) {
+  try {
+    const bytes = await repository.databaseSizeBytes(db);
+    return {
+      used: Math.round(bytes / 1024 / 1024),
+      limit: SUPABASE_LIMIT_MB,
+      warnAt: SUPABASE_WARN_MB,
+    };
+  } catch {
+    // A usage meter is never worth failing the dashboard for.
+    return null;
+  }
+}
+
+export async function getUsage(
+  { db, storage }: DashboardDeps,
+  now = new Date(),
+) {
+  const [cloudinary, supabase] = await Promise.all([
+    readCloudinary(storage, now),
+    readSupabase(db),
+  ]);
+  return { cloudinary, supabase };
+}
+
 export async function getDashboard(
   { db, storage }: DashboardDeps,
   now = new Date(),
@@ -38,9 +94,6 @@ export async function getDashboard(
     repository.findRecentAdvertisements(db, PREVIEW_LIMIT),
   ]);
 
-  const countFor = (status: string) =>
-    byStatus.find((row) => row.status === status)?._count._all ?? 0;
-
   const toMedia = (
     media: {
       id: string;
@@ -62,8 +115,6 @@ export async function getDashboard(
     stats: {
       totalArticles: byStatus.reduce((sum, row) => sum + row._count._all, 0),
       publishedToday,
-      drafts: countFor('DRAFT'),
-      archived: countFor('ARCHIVED'),
       activeBreakingNews,
       activeAdvertisements,
     },

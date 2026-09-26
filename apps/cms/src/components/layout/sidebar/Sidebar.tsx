@@ -1,6 +1,6 @@
 import { cn } from '@coastal-talk-news/ui/cn';
 import { Tooltip } from '@coastal-talk-news/ui/tooltip';
-import { Keyboard, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { SIDEBAR_GUTTER, sidebarRow } from './layout.js';
 import { NAV_GROUPS, type NavChild, type NavItem } from './navigation.js';
 import { SidebarAccount } from './SidebarAccount.js';
@@ -8,7 +8,7 @@ import { SidebarBrand } from './SidebarBrand.js';
 import { SidebarLabel } from './SidebarLabel.js';
 import { SidebarNavGroupItem } from './SidebarNavGroupItem.js';
 import { SidebarNavItem } from './SidebarNavItem.js';
-import { SidebarThemeControl } from './SidebarThemeControl.js';
+import { SidebarToolsGroup } from './SidebarToolsGroup.js';
 
 function hasChildren(
   item: NavItem,
@@ -87,24 +87,10 @@ export function Sidebar({
           SIDEBAR_GUTTER,
         )}
       >
-        <SidebarThemeControl collapsed={collapsed} />
-
-        {onShowShortcuts && (
-          <Tooltip label="Keyboard shortcuts  ·  ?" side="right">
-            <button
-              type="button"
-              onClick={onShowShortcuts}
-              aria-label="Keyboard shortcuts"
-              className={sidebarRow(
-                collapsed,
-                'text-ink-subtle hover:bg-surface-sunken hover:text-ink-muted',
-              )}
-            >
-              <Keyboard className="size-5 shrink-0" aria-hidden />
-              <SidebarLabel collapsed={collapsed}>Shortcuts</SidebarLabel>
-            </button>
-          </Tooltip>
-        )}
+        <SidebarToolsGroup
+          collapsed={collapsed}
+          onShowShortcuts={onShowShortcuts}
+        />
 
         <SidebarAccount collapsed={collapsed} />
 

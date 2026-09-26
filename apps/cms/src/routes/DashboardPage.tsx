@@ -8,8 +8,9 @@ import {
 } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import {
-  Archive,
   Bell,
+  Cloud,
+  Database,
   FileText,
   Image as ImageIcon,
   Megaphone,
@@ -21,6 +22,7 @@ import { dashboardApi } from '../api/dashboard.js';
 import { queryKeys } from '../api/queryKeys.js';
 import { DashboardDate } from '../features/dashboard/DashboardDate.js';
 import { StatCard } from '../features/dashboard/StatCard.js';
+import { UsageMeter } from '../features/dashboard/UsageMeter.js';
 import { formatRelative } from '../lib/format.js';
 
 const STATUS_TONE: Record<ArticleStatus, 'green' | 'amber' | 'slate'> = {
@@ -69,6 +71,13 @@ export function DashboardPage() {
     queryFn: ({ signal }) => dashboardApi.get(signal),
   });
 
+  const usageQuery = useQuery({
+    queryKey: queryKeys.dashboardUsage,
+    queryFn: ({ signal }) => dashboardApi.usage(signal),
+    staleTime: 5 * 60_000,
+  });
+  const usage = usageQuery.data;
+
   if (isPending) return <LoadingState label="Loading your newsroom…" />;
   if (isError) {
     return (
@@ -115,24 +124,7 @@ export function DashboardPage() {
           to="/articles?status=PUBLISHED"
         />
         <StatCard
-          label="Drafts"
-          value={stats.drafts}
-          icon={FileText}
-          tone="amber"
-          to="/articles?status=DRAFT"
-        />
-        <StatCard
-          label="Archived"
-          value={stats.archived}
-          icon={Archive}
-          tone="slate"
-          to="/articles?status=ARCHIVED"
-        />
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-3">
-        <StatCard
-          label="Active Breaking News"
+          label="Active Latest News"
           value={stats.activeBreakingNews}
           icon={Bell}
           tone="red"
@@ -144,6 +136,25 @@ export function DashboardPage() {
           icon={Megaphone}
           tone="violet"
           to="/advertisements"
+        />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Shown as unavailable rather than left out while loading or on
+            failure: the dashboard is worth opening without them. */}
+        <UsageMeter
+          label="Cloudinary credits"
+          icon={Cloud}
+          usage={usage ? usage.cloudinary : null}
+          unit="credits"
+          pending={usageQuery.isPending}
+        />
+        <UsageMeter
+          label="Storage"
+          icon={Database}
+          usage={usage ? usage.supabase : null}
+          unit="MB"
+          pending={usageQuery.isPending}
         />
 
         <div className="border-accent-soft bg-accent-soft rounded-card border p-5">
@@ -243,8 +254,8 @@ export function DashboardPage() {
             {breakingNews.length === 0 ? (
               <EmptyState
                 icon={<Bell className="size-5" aria-hidden />}
-                title="Nothing breaking"
-                description="Scheduled breaking news will show up here."
+                title="No latest news"
+                description="Scheduled latest news will show up here."
               />
             ) : (
               <ul className="divide-hairline divide-y">
