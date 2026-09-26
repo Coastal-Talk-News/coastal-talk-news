@@ -82,9 +82,10 @@ export function Brand({
           name inside it. */}
       <span className="@container min-w-0 flex-1 leading-none">
         {/* One line at every width: a masthead that wraps or is cut off
-            mid-word reads as broken. */}
+            mid-word reads as broken. The pull to the left cancels the large
+            capital's side gap, so the name starts level with the tagline. */}
         <span
-          className={`${nameColor} block font-serif leading-tight font-bold whitespace-nowrap uppercase`}
+          className={`${nameColor} -ml-[0.04em] block font-serif leading-tight font-bold whitespace-nowrap uppercase`}
           style={{ fontSize: NAME_SIZE[size] }}
         >
           {siteName}
@@ -92,7 +93,7 @@ export function Brand({
         {tagline && (
           // Two lines on a phone rather than moving out of the lockup.
           <span
-            className={`${taglineColor} ${TAGLINE_CLAMP[size]} mt-1 font-serif text-[11px] font-semibold`}
+            className={`${taglineColor} ${TAGLINE_CLAMP[size]} mt-1 font-serif text-[16px] font-semibold`}
           >
             {tagline}
           </span>

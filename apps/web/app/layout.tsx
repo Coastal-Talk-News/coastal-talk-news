@@ -98,7 +98,7 @@ export default async function RootLayout({
       <head>
         <meta name="google" content="notranslate" />
       </head>
-      <body className="grain flex min-h-screen flex-col">
+      <body className="flex min-h-screen flex-col">
         <DevToolsShortcutGuard />
         <SiteHeader site={site} locale={locale} />
         <BreakingTicker items={site.breakingNews} locale={locale} />

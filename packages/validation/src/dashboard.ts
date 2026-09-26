@@ -7,8 +7,6 @@ const NullableMedia = Type.Union([MediaSummarySchema, Type.Null()]);
 export const DashboardStatsSchema = Type.Object({
   totalArticles: Type.Integer(),
   publishedToday: Type.Integer(),
-  drafts: Type.Integer(),
-  archived: Type.Integer(),
   activeBreakingNews: Type.Integer(),
   activeAdvertisements: Type.Integer(),
 });
@@ -42,6 +40,17 @@ export const DashboardAdvertisementSchema = Type.Object({
   endAt: IsoDateTime,
   isActive: Type.Boolean(),
   image: NullableMedia,
+});
+
+const UsageMeterSchema = Type.Object({
+  used: Type.Number(),
+  limit: Type.Number(),
+  warnAt: Type.Number(),
+});
+
+export const DashboardUsageSchema = Type.Object({
+  cloudinary: Type.Union([UsageMeterSchema, Type.Null()]),
+  supabase: Type.Union([UsageMeterSchema, Type.Null()]),
 });
 
 export const DashboardSchema = Type.Object({

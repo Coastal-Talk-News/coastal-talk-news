@@ -197,7 +197,7 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
         />
 
         <div
-          className={`bg-paper grain absolute inset-y-0 left-0 flex w-[86vw] max-w-sm flex-col shadow-2xl transition-transform duration-300 ease-out ${
+          className={`bg-paper absolute inset-y-0 left-0 flex w-[86vw] max-w-sm flex-col shadow-2xl transition-transform duration-300 ease-out ${
             open ? 'translate-x-0' : '-translate-x-full'
           }`}
         >

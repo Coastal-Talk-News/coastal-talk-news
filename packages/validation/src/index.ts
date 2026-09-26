@@ -4,6 +4,7 @@ export * from './article.js';
 export * from './auth.js';
 export * from './breaking-news.js';
 export * from './category.js';
+export * from './analytics.js';
 export * from './dashboard.js';
 export * from './media.js';
 export * from './public.js';

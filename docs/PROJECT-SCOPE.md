@@ -159,8 +159,28 @@ db:reset-2fa <email>`; the user enrols again on next sign-in.
 ### Dashboard
 
 A light overview with shortcuts: create news, manage news, scheduled/recent items,
-breaking news, advertisements, media, categories. No analytics dashboard — no Most
-Viewed, Most Read, or reader traffic analytics of any kind.
+breaking news, advertisements, media, categories. Reader analytics live on their own
+Analytics page (below), not here. The stat row counts total
+articles, articles published today, and active latest news and advertisements. Two usage
+bars sit beside Quick Actions: Cloudinary credits used (of the plan's 25) and Storage, the
+database size in MB (of the free plan's 500), counted the way Supabase does: every database
+on the server. Each turns red at 20 credits and 450 MB, and a bar reads
+"Unavailable" if its figure can't be fetched.
+
+### Analytics
+
+A CMS tab after Settings. It shows the newsroom counts (total articles, published today,
+active latest news, active advertisements, drafts, archived) and a total of reads, then a
+paginated table of every article with its status, category, read time and number of reads,
+most read first.
+
+A **read** is counted by the reader site: once a visitor has spent more than half of the
+article's estimated read time (the same "N min read" the CMS shows) on the page with the tab
+in view, it sends one anonymous count for that article. A browser tab counts an article once,
+so a refresh does not add another. Nothing about the reader is stored — no IP address, no
+identifier — only a running total on the article. This is the only reader analytics: no
+per-day history, referrers, devices or locations, and no Most Read section on the public site.
+The privacy policy text (edited in the CMS) should say that reads are counted anonymously.
 
 ### News (list/manage)
 
@@ -346,7 +366,8 @@ search no-results, mobile menu behavior, image responsiveness.
 - Reader accounts, reader login, comments, likes, bookmarks, following, notifications
 - Reporter accounts, reporter approval workflows
 - CMS user roles/permissions (single-tier admin access)
-- Complex analytics dashboard, Most Read / Most Viewed, any reader traffic analytics
+- Reader traffic analytics beyond the per-article read count (history, referrers, devices,
+  locations), and any Most Read / Most Viewed section on the public site
 - Automatic article translation (the UI-language toggle — see decisions table above —
   translates chrome text only; it never translates or machine-translates article content)
 - A separate "Videos" content type or section

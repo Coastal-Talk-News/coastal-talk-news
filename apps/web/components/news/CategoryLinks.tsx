@@ -61,7 +61,7 @@ export function SubcategoryGrid({
                 // wall of bold monograms would shout over the few that do.
                 <span
                   aria-hidden
-                  className="bg-paper-sunken text-ink-subtle/40 grain grid aspect-video w-full place-items-center font-serif text-4xl font-bold"
+                  className="bg-paper-sunken text-ink-subtle/40 grid aspect-video w-full place-items-center font-serif text-4xl font-bold"
                 >
                   {[...categoryName(category, locale)][0]}
                 </span>

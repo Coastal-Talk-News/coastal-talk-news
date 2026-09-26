@@ -31,7 +31,7 @@ export function SiteHeader({
   ];
 
   return (
-    <header className="border-rule bg-paper grain border-b">
+    <header className="border-rule bg-paper border-b">
       {/* The utility row keeps the masthead's company down to the width
           where the nav collapses into the menu button, not just on the
           widest screens. */}

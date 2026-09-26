@@ -124,6 +124,10 @@ model Article {
   seoTitle        String? @map("seo_title")
   metaDescription String? @map("meta_description")
 
+  /// Reads counted by the public site: one per visit, once the reader has
+  /// stayed for half the article's estimated read time.
+  viewCount Int @default(0) @map("view_count")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -8,7 +8,8 @@ interface StatCardProps {
   value: number;
   icon: LucideIcon;
   tone: 'blue' | 'green' | 'amber' | 'slate' | 'red' | 'violet';
-  to: string;
+  /** Without a destination the card is a plain figure, not a link. */
+  to?: string;
   caption?: string;
 }
 
@@ -29,11 +30,8 @@ export function StatCard({
   to,
   caption,
 }: StatCardProps) {
-  return (
-    <Link
-      to={to}
-      className="group flex items-center gap-4 border-hairline rounded-card border bg-surface p-5 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-    >
+  const body = (
+    <>
       <span
         className={cn(
           'grid size-11 shrink-0 place-items-center rounded-xl',
@@ -51,10 +49,29 @@ export function StatCard({
           <span className="block text-xs text-ink-subtle">{caption}</span>
         )}
       </span>
-      <ChevronRight
-        className="size-4 shrink-0 text-ink-subtle transition group-hover:text-ink"
-        aria-hidden
-      />
+      {to && (
+        <ChevronRight
+          className="size-4 shrink-0 text-ink-subtle transition group-hover:text-ink"
+          aria-hidden
+        />
+      )}
+    </>
+  );
+
+  const cardClass =
+    'group flex items-center gap-4 border-hairline rounded-card border bg-surface p-5 shadow-sm';
+
+  if (!to) return <div className={cardClass}>{body}</div>;
+
+  return (
+    <Link
+      to={to}
+      className={cn(
+        cardClass,
+        'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+      )}
+    >
+      {body}
     </Link>
   );
 }

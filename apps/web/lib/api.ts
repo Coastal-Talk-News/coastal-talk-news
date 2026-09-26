@@ -141,6 +141,21 @@ export async function getHome(locale: Locale): Promise<PublicHomeDto> {
   };
 }
 
+/** Best effort: a failed count must never reach the reader. */
+export async function recordArticleView(
+  id: string,
+  forwardedFor: string | null,
+): Promise<void> {
+  try {
+    await fetch(`${BASE_URL}/api/v1/public/articles/${id}/view`, {
+      method: 'POST',
+      headers: forwardedFor ? { 'x-forwarded-for': forwardedFor } : {},
+    });
+  } catch {
+    // See above.
+  }
+}
+
 /**
  * Null when there is no such published article — either the id doesn't
  * resolve (404) or it isn't a well-formed id at all (400, from the route's

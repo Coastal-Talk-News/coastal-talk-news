@@ -3,6 +3,9 @@ export const queryKeys = {
   sessions: ['sessions'] as const,
   twoFactor: ['two-factor'] as const,
   dashboard: ['dashboard'] as const,
+  // Apart from `dashboard`, so saving an article does not refetch it: the
+  // figures only move on a scale of minutes.
+  dashboardUsage: ['dashboard-usage'] as const,
   categories: ['categories'] as const,
   media: ['media'] as const,
   mediaList: (params: Record<string, unknown>) => ['media', params] as const,
@@ -21,4 +24,6 @@ export const queryKeys = {
   advertisementList: (params: Record<string, unknown>) =>
     ['advertisements', params] as const,
   settings: ['settings'] as const,
+  analytics: ['analytics'] as const,
+  analyticsArticles: (page: number) => ['analytics', 'articles', page] as const,
 } as const;

@@ -6,8 +6,6 @@ export type ArticleStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 export interface DashboardStatsDto {
   totalArticles: number;
   publishedToday: number;
-  drafts: number;
-  archived: number;
   activeBreakingNews: number;
   activeAdvertisements: number;
 }
@@ -37,6 +35,21 @@ export interface DashboardAdvertisementDto {
   endAt: IsoDateTime;
   isActive: boolean;
   image: MediaSummaryDto | null;
+}
+
+/** One usage figure against its plan limit, in whatever unit the meter shows. */
+export interface UsageMeterDto {
+  used: number;
+  limit: number;
+  /** The reading at which the CMS should flag the meter as running out. */
+  warnAt: number;
+}
+
+export interface DashboardUsageDto {
+  /** Credits this billing period; null when Cloudinary could not be reached. */
+  cloudinary: UsageMeterDto | null;
+  /** Size of the Supabase database in MB; null when it could not be read. */
+  supabase: UsageMeterDto | null;
 }
 
 export interface DashboardDto {

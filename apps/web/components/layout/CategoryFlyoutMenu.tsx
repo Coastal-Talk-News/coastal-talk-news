@@ -39,7 +39,7 @@ export function CategoryFlyoutList({
   const [openId, setOpenId] = useState<string | null>(null);
 
   return (
-    <ul className="border-rule bg-paper grain w-52 rounded-sm border py-1 shadow-lg">
+    <ul className="border-rule bg-paper w-52 rounded-sm border py-1 shadow-lg">
       {categories.map((category) => {
         const hasChildren = category.children.length > 0;
         const active = category.id === activeCategoryId;

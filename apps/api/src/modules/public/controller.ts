@@ -1,5 +1,5 @@
 import type { Language } from '@coastal-talk-news/db';
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
 import type { PublicServiceDeps } from './service.js';
 import * as service from './service.js';
@@ -45,6 +45,14 @@ export async function getArticle(
   return dataEnvelope(
     await service.getArticle(deps(request), request.params.id),
   );
+}
+
+export async function recordArticleView(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply,
+) {
+  await service.recordView(deps(request), request.params.id);
+  return reply.status(204).send(null);
 }
 
 export async function getAdvertisement(

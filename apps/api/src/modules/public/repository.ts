@@ -53,6 +53,14 @@ export function findPublishedArticle(db: TransactionClient, id: string) {
   });
 }
 
+/** Only a published article can be read, so a draft's id learns nothing. */
+export function incrementViewCount(db: TransactionClient, id: string) {
+  return db.article.updateMany({
+    where: { ...publishedWhere, id },
+    data: { viewCount: { increment: 1 } },
+  });
+}
+
 export type ArticleDetailRow = NonNullable<
   Awaited<ReturnType<typeof findPublishedArticle>>
 >;
