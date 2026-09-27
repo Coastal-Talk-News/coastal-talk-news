@@ -154,6 +154,7 @@ export const PublicPageParamsSchema = Type.Object({
     Type.Literal('contact'),
     Type.Literal('advertise'),
     Type.Literal('privacy'),
+    Type.Literal('terms'),
   ]),
 });
 

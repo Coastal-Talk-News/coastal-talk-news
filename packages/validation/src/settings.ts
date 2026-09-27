@@ -61,6 +61,7 @@ export const SiteSettingsSchema = Type.Object({
   advertiseIntro: Type.Union([Type.String(), Type.Null()]),
   advertiseContent: Type.Union([ArticleContentSchema, Type.Null()]),
   privacyContent: Type.Union([ArticleContentSchema, Type.Null()]),
+  termsContent: Type.Union([ArticleContentSchema, Type.Null()]),
   facebookUrl: Type.Union([Type.String(), Type.Null()]),
   instagramUrl: Type.Union([Type.String(), Type.Null()]),
   youtubeUrl: Type.Union([Type.String(), Type.Null()]),
@@ -102,6 +103,9 @@ export const UpdateSiteSettingsBodySchema = Type.Object(
       Type.Union([ArticleContentSchema, Type.Null()]),
     ),
     privacyContent: Type.Optional(
+      Type.Union([ArticleContentSchema, Type.Null()]),
+    ),
+    termsContent: Type.Optional(
       Type.Union([ArticleContentSchema, Type.Null()]),
     ),
     facebookUrl: Type.Optional(

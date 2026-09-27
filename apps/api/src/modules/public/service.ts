@@ -91,7 +91,8 @@ export async function getSite({
   };
 }
 
-export type PublicPageKey = 'about' | 'contact' | 'advertise' | 'privacy';
+export type PublicPageKey =
+  'about' | 'contact' | 'advertise' | 'privacy' | 'terms';
 
 /** A standalone page's own copy, plus the one set of contact details every
  * page shares. */
@@ -117,13 +118,15 @@ export async function getPage(
     };
   }
 
-  // A body and nothing else: the Privacy Policy has no editable heading,
+  // A body and nothing else: neither page has an editable heading,
   // introduction or contact block.
-  if (page === 'privacy') {
+  if (page === 'privacy' || page === 'terms') {
     return {
       title: null,
       intro: null,
-      content: toPageContent(settings.privacyContent),
+      content: toPageContent(
+        page === 'privacy' ? settings.privacyContent : settings.termsContent,
+      ),
       email: null,
       phone: null,
       address: null,

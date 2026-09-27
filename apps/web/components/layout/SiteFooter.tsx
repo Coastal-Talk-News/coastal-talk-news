@@ -166,6 +166,14 @@ export function SiteFooter({
                 {dictionary.common.privacyPolicy}
               </Link>
             </li>
+            <li>
+              <Link
+                href="/terms-and-conditions"
+                className="font-serif font-semibold text-white transition-colors hover:text-white/80"
+              >
+                {dictionary.common.termsAndConditions}
+              </Link>
+            </li>
           </ul>
         </nav>
 

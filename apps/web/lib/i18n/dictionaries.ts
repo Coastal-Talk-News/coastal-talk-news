@@ -13,6 +13,7 @@ const en = {
     contact: 'Contact',
     advertise: 'Advertise',
     privacyPolicy: 'Privacy Policy',
+    termsAndConditions: 'Terms and Conditions',
     advertisement: 'Advertisement',
     backToHomepage: 'Back to homepage',
     goToHomepage: 'Go to homepage',
@@ -133,6 +134,11 @@ const en = {
     noContentDescription:
       'The newsroom hasn’t written a privacy policy in Settings yet.',
   },
+  terms: {
+    noContentTitle: 'Terms and conditions not added yet',
+    noContentDescription:
+      'The newsroom hasn’t written terms and conditions in Settings yet.',
+  },
   contact: {
     title: 'Contact',
     heading: 'Contact',
@@ -179,6 +185,7 @@ const kn: typeof en = {
     contact: 'ಸಂಪರ್ಕಿಸಿ',
     advertise: 'ಜಾಹೀರಾತುಗಳಿಗಾಗಿ',
     privacyPolicy: 'Privacy Policy',
+    termsAndConditions: 'Terms and Conditions',
     advertisement: 'ಜಾಹೀರಾತು',
     backToHomepage: 'ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ',
     goToHomepage: 'ಮುಖಪುಟಕ್ಕೆ ಹೋಗಿ',
@@ -295,6 +302,11 @@ const kn: typeof en = {
     noContentTitle: 'ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಇನ್ನೂ ಸೇರಿಸಿಲ್ಲ',
     noContentDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಇನ್ನೂ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಬರೆದಿಲ್ಲ.',
+  },
+  terms: {
+    noContentTitle: 'ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳನ್ನು ಇನ್ನೂ ಸೇರಿಸಿಲ್ಲ',
+    noContentDescription:
+      'ಸುದ್ದಿ ವಿಭಾಗವು ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಇನ್ನೂ ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳನ್ನು ಬರೆದಿಲ್ಲ.',
   },
   contact: {
     title: 'ಸಂಪರ್ಕಿಸಿ',
