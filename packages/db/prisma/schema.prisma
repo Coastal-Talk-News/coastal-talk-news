@@ -297,6 +297,7 @@ model SiteSettings {
   /// The Privacy Policy page's body, a Tiptap document like the page bodies
   /// above. Only a body: the page's heading is fixed, not editable.
   privacyContent Json? @map("privacy_content")
+  termsContent   Json? @map("terms_content")
 
   facebookUrl  String? @map("facebook_url")
   instagramUrl String? @map("instagram_url")

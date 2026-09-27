@@ -51,6 +51,14 @@ const TAGLINE_CLAMP = {
   lg: 'line-clamp-2 sm:line-clamp-1',
 };
 
+/** The footer's tagline sits under a much bigger name than the header's
+    fixed-height row allows, so left alone it reads oversized next to it;
+    the header's stays as it was. */
+const TAGLINE_SIZE = {
+  md: 'text-[13px]',
+  lg: 'text-[16px]',
+};
+
 export function Brand({
   siteName,
   tagline,
@@ -93,7 +101,7 @@ export function Brand({
         {tagline && (
           // Two lines on a phone rather than moving out of the lockup.
           <span
-            className={`${taglineColor} ${TAGLINE_CLAMP[size]} mt-1 font-serif text-[16px] font-semibold`}
+            className={`${taglineColor} ${TAGLINE_CLAMP[size]} ${TAGLINE_SIZE[size]} mt-1 font-serif font-semibold`}
           >
             {tagline}
           </span>

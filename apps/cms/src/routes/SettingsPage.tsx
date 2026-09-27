@@ -1,6 +1,7 @@
 import { ErrorState, LoadingState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import {
+  FileCheck,
   Globe,
   Info,
   KeyRound,
@@ -17,6 +18,7 @@ import { SettingsContactForm } from '../features/settings/SettingsContactForm.js
 import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js';
 import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
 import { SettingsPrivacyForm } from '../features/settings/SettingsPrivacyForm.js';
+import { SettingsTermsForm } from '../features/settings/SettingsTermsForm.js';
 import { SettingsSecurityForm } from '../features/settings/SettingsSecurityForm.js';
 import { SettingsTwoFactor } from '../features/settings/SettingsTwoFactor.js';
 import { SettingsSeoForm } from '../features/settings/SettingsSeoForm.js';
@@ -27,6 +29,7 @@ type Tab =
   | 'contact'
   | 'advertise'
   | 'privacy'
+  | 'terms'
   | 'seo'
   | 'security';
 
@@ -39,6 +42,7 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'contact', label: 'Contact Us', icon: Mail },
   { value: 'advertise', label: 'Advertise', icon: Megaphone },
   { value: 'privacy', label: 'Privacy Policy', icon: ShieldCheck },
+  { value: 'terms', label: 'Terms and Conditions', icon: FileCheck },
   { value: 'seo', label: 'SEO', icon: Search },
   { value: 'security', label: 'Password & Security', icon: KeyRound },
 ];
@@ -114,6 +118,9 @@ export function SettingsPage() {
           </div>
           <div hidden={tab !== 'privacy'}>
             <SettingsPrivacyForm settings={data} />
+          </div>
+          <div hidden={tab !== 'terms'}>
+            <SettingsTermsForm settings={data} />
           </div>
           <div hidden={tab !== 'seo'}>
             <SettingsSeoForm settings={data} />

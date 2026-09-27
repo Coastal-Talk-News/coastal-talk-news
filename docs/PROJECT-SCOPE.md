@@ -133,6 +133,11 @@ a single rich-text body, no editable heading or introduction. It is reached from
 "Privacy Policy" link under the footer's Contact details, at `/privacy-policy`, and shows a
 short "not added yet" note until the newsroom writes it.
 
+**Terms and Conditions** (added 2026-09-27) is a fifth standalone page, same shape as Privacy
+Policy: a single rich-text body, its own Settings tab directly below Privacy Policy's, and a
+"Terms and Conditions" footer link right under the Privacy Policy one, at
+`/terms-and-conditions`. It shows the same short "not added yet" note until written.
+
 ### Website states
 
 404 (with a clear way back), search no-results, empty category, loading state. Pure

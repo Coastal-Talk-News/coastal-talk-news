@@ -25,6 +25,7 @@ export interface SiteSettingsEntity {
   advertiseIntro: string | null;
   advertiseContent: unknown;
   privacyContent: unknown;
+  termsContent: unknown;
   facebookUrl: string | null;
   instagramUrl: string | null;
   youtubeUrl: string | null;
@@ -83,6 +84,7 @@ export function toSiteSettingsDto(
     advertiseIntro: settings.advertiseIntro,
     advertiseContent: toContent(settings.advertiseContent),
     privacyContent: toContent(settings.privacyContent),
+    termsContent: toContent(settings.termsContent),
     facebookUrl: settings.facebookUrl,
     instagramUrl: settings.instagramUrl,
     youtubeUrl: settings.youtubeUrl,
