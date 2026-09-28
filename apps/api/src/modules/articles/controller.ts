@@ -1,6 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
 import { toArticleDto } from './mapper.js';
+import { buildPreview, type ArticlePreviewInput } from './preview.js';
 import type { ListFilters } from './repository.js';
 import type {
   ArticleServiceDeps,
@@ -88,4 +89,13 @@ export async function remove(
 ) {
   await service.remove(deps(request), request.params.id);
   return reply.status(204).send(null);
+}
+
+export async function preview(
+  request: FastifyRequest<{ Body: ArticlePreviewInput }>,
+) {
+  const { prisma, storage, previews } = request.server;
+  const page = await buildPreview({ db: prisma, storage }, request.body);
+  const { token, expiresAt } = previews.add(page);
+  return dataEnvelope({ token, expiresAt: expiresAt.toISOString() });
 }

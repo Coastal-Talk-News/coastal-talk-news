@@ -61,6 +61,8 @@ model MediaAsset {
   categories          Category[]
   advertisements      Advertisement[] @relation("AdvertisementImage")
   detailForAds        Advertisement[] @relation("AdvertisementDetailImage")
+  articleUses         ArticleMedia[]
+  pageUses            SitePageMedia[]
   logoForSettings     SiteSettings[]  @relation("SettingsLogo")
   faviconForSettings  SiteSettings[]  @relation("SettingsFavicon")
   ogImageForSettings  SiteSettings[]  @relation("SettingsDefaultOgImage")
@@ -111,6 +113,9 @@ model Article {
   /// Tiptap document JSON, not HTML. The public site renders it
   /// programmatically, so stored content cannot inject markup.
   content     Json
+  /// How the featured image is framed on the article page: only what differs
+  /// from the default (full width, centred, uncropped), so most rows hold `{}`.
+  featuredImageLayout Json @default("{}") @map("featured_image_layout")
   /// Flattened plain text of content, maintained by the API for search.
   contentText String   @map("content_text")
   youtubeUrl  String?  @map("youtube_url")
@@ -137,12 +142,48 @@ model Article {
   category Category?   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
   media    MediaAsset? @relation("ArticleFeaturedImage", fields: [mediaId], references: [id], onDelete: Restrict)
   ogImage  MediaAsset? @relation("ArticleOgImage", fields: [ogImageId], references: [id], onDelete: Restrict)
+  images   ArticleMedia[]
 
   @@index([status, publicationDate(sort: Desc)])
   @@index([categoryId, status, publicationDate(sort: Desc)])
   @@index([status, priority, publicationDate(sort: Desc)])
   @@index([language])
   @@map("articles")
+}
+
+/// The images placed inside an article's body, kept in step with `content` by
+/// the API so a picture in use cannot be deleted from the media library.
+model ArticleMedia {
+  articleId String @map("article_id")
+  mediaId   String @map("media_id")
+
+  article Article    @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  media   MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([articleId, mediaId])
+  @@index([mediaId])
+  @@map("article_media")
+}
+
+enum SitePage {
+  ABOUT
+  ADVERTISE
+  PRIVACY
+
+  @@map("site_page")
+}
+
+/// The same for the rich-text pages held in site settings. A page is named,
+/// not referenced, because settings is a single row.
+model SitePageMedia {
+  page    SitePage
+  mediaId String     @map("media_id")
+
+  media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@id([page, mediaId])
+  @@index([mediaId])
+  @@map("site_page_media")
 }
 
 /// articleUrl is a plain URL, deliberately not an FK — breaking news can point

@@ -4,12 +4,18 @@ import type {
   Database,
   Language,
 } from '@coastal-talk-news/db';
+import type { ImageLayoutDto } from '@coastal-talk-news/types';
 import type { FastifyBaseLogger } from 'fastify';
 import { BadRequestError, NotFoundError } from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
 import { extractPlainText } from '../../lib/tiptap-text.js';
-import { releaseMedia } from '../media/reference.js';
+import { releaseMedia, syncArticleMedia } from '../media/reference.js';
+import {
+  hydrateContent,
+  prepareContent,
+  toStoredLayout,
+} from '../media/rich-text.js';
 import { purgeStorageObjects } from '../media/service.js';
 import type { ObjectStorage } from '../media/storage.js';
 import * as repository from './repository.js';
@@ -32,6 +38,7 @@ export interface CreateArticleInput {
   priority?: ArticlePriority;
   status?: Exclude<ArticleStatus, 'ARCHIVED'>;
   featuredImageId?: string | null;
+  featuredImageLayout?: ImageLayoutDto;
   ogImageId?: string | null;
   seoTitle?: string | null;
   metaDescription?: string | null;
@@ -92,18 +99,52 @@ export async function getStatusCounts(
   return counts;
 }
 
-export async function getForCms({ db }: ArticleServiceDeps, id: string) {
-  const article = await repository.findById(db, id);
+/** The editor needs each picture's URL, which the stored document leaves out. */
+async function forEditor<T extends { content: unknown }>(
+  { db, storage }: ArticleServiceDeps,
+  article: T,
+): Promise<T> {
+  return {
+    ...article,
+    content: await hydrateContent(db, storage, article.content, 'editor'),
+  };
+}
+
+/**
+ * The frame belongs to one picture, so it is dropped when the picture is
+ * removed or swapped, and otherwise only changes when the editor sent one.
+ */
+function resolveLayout(
+  input: UpdateArticleInput,
+  existing: { mediaId: string | null },
+) {
+  const replaced =
+    input.featuredImageId !== undefined &&
+    input.featuredImageId !== existing.mediaId;
+  if (
+    input.featuredImageId === null ||
+    (replaced && !input.featuredImageLayout)
+  ) {
+    return {};
+  }
+  return input.featuredImageLayout
+    ? toStoredLayout(input.featuredImageLayout)
+    : undefined;
+}
+
+export async function getForCms(deps: ArticleServiceDeps, id: string) {
+  const article = await repository.findById(deps.db, id);
   if (!article) {
     throw new NotFoundError('Article');
   }
-  return article;
+  return forEditor(deps, article);
 }
 
 export async function create(
-  { db }: ArticleServiceDeps,
+  deps: ArticleServiceDeps,
   input: CreateArticleInput,
 ) {
+  const { db } = deps;
   await assertCategoryAssignable(db, input.categoryId);
   if (input.featuredImageId) {
     await assertMediaExists(db, input.featuredImageId, 'featuredImageId');
@@ -113,14 +154,16 @@ export async function create(
   }
 
   const status = input.status ?? 'DRAFT';
+  const { content, mediaIds } = await prepareContent(db, input.content);
 
-  return repository.create(db, {
+  // One write: the article and its picture links land together or not at all.
+  const article = await repository.create(db, {
     categoryId: input.categoryId,
     language: input.language,
     headline: input.headline.trim(),
     summary: input.summary.trim(),
-    content: input.content,
-    contentText: extractPlainText(input.content),
+    content,
+    contentText: extractPlainText(content),
     youtubeUrl: input.youtubeUrl?.trim() || null,
     tags: input.tags ?? [],
     priority: input.priority ?? 'NORMAL',
@@ -128,10 +171,17 @@ export async function create(
     // Stamped once, on the first publish.
     publicationDate: status === 'PUBLISHED' ? new Date() : null,
     mediaId: input.featuredImageId ?? null,
+    featuredImageLayout:
+      input.featuredImageId && input.featuredImageLayout
+        ? toStoredLayout(input.featuredImageLayout)
+        : {},
     ogImageId: input.ogImageId ?? null,
     seoTitle: input.seoTitle?.trim() || null,
     metaDescription: input.metaDescription?.trim() || null,
+    imageIds: mediaIds,
   });
+
+  return forEditor(deps, article);
 }
 
 export async function update(
@@ -168,6 +218,12 @@ export async function update(
   const publicationDate =
     willBePublished && !existing.publicationDate ? new Date() : undefined;
 
+  const body =
+    input.content !== undefined
+      ? await prepareContent(db, input.content)
+      : undefined;
+  const featuredImageLayout = resolveLayout(input, existing);
+
   const { article, orphanedKeys } = await db.$transaction(async (tx) => {
     const article = await repository.update(tx, id, {
       ...(input.categoryId !== undefined
@@ -178,12 +234,10 @@ export async function update(
         ? { headline: input.headline.trim() }
         : {}),
       ...(input.summary !== undefined ? { summary: input.summary.trim() } : {}),
-      ...(input.content !== undefined
-        ? {
-            content: input.content,
-            contentText: extractPlainText(input.content),
-          }
+      ...(body
+        ? { content: body.content, contentText: extractPlainText(body.content) }
         : {}),
+      ...(featuredImageLayout !== undefined ? { featuredImageLayout } : {}),
       ...(input.youtubeUrl !== undefined
         ? { youtubeUrl: input.youtubeUrl?.trim() || null }
         : {}),
@@ -204,6 +258,10 @@ export async function update(
     });
 
     const orphanedKeys: string[] = [];
+    if (body) {
+      const dropped = await syncArticleMedia(tx, id, body.mediaIds);
+      orphanedKeys.push(...(await releaseMedia(tx, dropped)));
+    }
     if (mediaChanged) {
       orphanedKeys.push(...(await releaseMedia(tx, [existing.mediaId])));
     }
@@ -215,7 +273,7 @@ export async function update(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
-  return article;
+  return forEditor(deps, article);
 }
 
 export async function remove(
@@ -230,8 +288,16 @@ export async function remove(
   }
 
   const orphanedKeys = await db.$transaction(async (tx) => {
+    const inBody = await tx.articleMedia.findMany({
+      where: { articleId: id },
+      select: { mediaId: true },
+    });
     await repository.remove(tx, id);
-    return releaseMedia(tx, [existing.mediaId, existing.ogImageId]);
+    return releaseMedia(tx, [
+      existing.mediaId,
+      existing.ogImageId,
+      ...inBody.map((row) => row.mediaId),
+    ]);
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);

@@ -1,6 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
-import { MediaSummarySchema } from './media.js';
+import { ImageLayoutSchema, MediaSummarySchema } from './media.js';
 import {
   ARTICLE_HEADLINE_MAX,
   ARTICLE_SUMMARY_MAX,
@@ -72,6 +72,7 @@ const articleFields = {
   seoTitle: Type.Union([Type.String(), Type.Null()]),
   metaDescription: Type.Union([Type.String(), Type.Null()]),
   featuredImage: Type.Union([MediaSummarySchema, Type.Null()]),
+  featuredImageLayout: ImageLayoutSchema,
   ogImage: Type.Union([MediaSummarySchema, Type.Null()]),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
@@ -89,6 +90,7 @@ const writableArticleFields = {
   tags: TagsSchema,
   priority: ArticlePrioritySchema,
   featuredImageId: NullableId,
+  featuredImageLayout: ImageLayoutSchema,
   ogImageId: NullableId,
   seoTitle: Type.Union([
     Type.String({ maxLength: ARTICLE_SEO_TITLE_MAX }),
@@ -112,6 +114,9 @@ export const CreateArticleBodySchema = Type.Object(
     priority: Type.Optional(writableArticleFields.priority),
     status: Type.Optional(CreatableArticleStatusSchema),
     featuredImageId: Type.Optional(writableArticleFields.featuredImageId),
+    featuredImageLayout: Type.Optional(
+      writableArticleFields.featuredImageLayout,
+    ),
     ogImageId: Type.Optional(writableArticleFields.ogImageId),
     seoTitle: Type.Optional(writableArticleFields.seoTitle),
     metaDescription: Type.Optional(writableArticleFields.metaDescription),
@@ -158,4 +163,35 @@ export const ArticleStatusCountsSchema = Type.Object({
   draft: Type.Integer(),
   published: Type.Integer(),
   archived: Type.Integer(),
+});
+
+/**
+ * A preview is a draft as it stands in the form, so nothing is required: an
+ * article with no headline yet can still be looked at.
+ */
+export const ArticlePreviewBodySchema = Type.Object(
+  {
+    categoryId: Type.Optional(NullableId),
+    language: Type.Optional(LanguageSchema),
+    headline: Type.Optional(Type.String({ maxLength: ARTICLE_HEADLINE_MAX })),
+    summary: Type.Optional(Type.String({ maxLength: ARTICLE_SUMMARY_MAX })),
+    content: Type.Optional(ArticleContentSchema),
+    youtubeUrl: Type.Optional(
+      Type.Union([Type.String({ maxLength: 2048 }), Type.Null()]),
+    ),
+    tags: Type.Optional(TagsSchema),
+    featuredImageId: Type.Optional(NullableId),
+    featuredImageLayout: Type.Optional(ImageLayoutSchema),
+  },
+  { additionalProperties: false },
+);
+
+export const ArticlePreviewSchema = Type.Object({
+  token: Type.String(),
+  expiresAt: IsoDateTime,
+});
+
+/** 32 random bytes, base64url: the length is fixed, so anything else is not one of ours. */
+export const PreviewTokenParamsSchema = Type.Object({
+  token: Type.String({ pattern: '^[A-Za-z0-9_-]{43}$' }),
 });

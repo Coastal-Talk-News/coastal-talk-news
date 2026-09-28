@@ -1,7 +1,7 @@
 import type { Id, IsoDateTime, RichTextContent } from './api.js';
 import type { AdImageCrop, AdPlacement } from './advertisement.js';
 import type { ArticleContent, Language } from './article.js';
-import type { MediaSummaryDto } from './media.js';
+import type { ImageLayoutDto, MediaSummaryDto } from './media.js';
 
 export interface PublicCategoryRefDto {
   id: Id;
@@ -21,10 +21,23 @@ export interface PublicArticleCardDto {
   publicationDate: IsoDateTime;
 }
 
+export interface PublicCoverImageDto extends Pick<
+  ImageLayoutDto,
+  'widthPercent' | 'placement'
+> {
+  /** Already cropped; `width` and `height` are the cropped picture's. */
+  url: string;
+  width: number;
+  height: number;
+}
+
 /** `content` is a Tiptap document, not HTML: the reader site renders each node itself. */
 export interface PublicArticleDto extends PublicArticleCardDto {
+  /** The lead picture as the editor framed it: cropped, sized and placed. */
+  coverImage: PublicCoverImageDto | null;
   content: ArticleContent;
   youtubeUrl: string | null;
+  tags: string[];
   seoTitle: string | null;
   metaDescription: string | null;
   ogImage: MediaSummaryDto | null;

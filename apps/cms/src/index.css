@@ -4,6 +4,11 @@
 /* Shared primitives live outside this app, so their classes must be scanned. */
 @source '../../../packages/ui/src';
 
+@theme {
+  /* The reader site's article face (see its layout.tsx), loaded in index.html. */
+  --font-article: 'Merriweather', 'Noto Serif Kannada', Georgia, serif;
+}
+
 @layer base {
   body {
     @apply bg-canvas text-ink antialiased;
@@ -121,8 +126,4 @@
 
 .tiptap-content hr {
   @apply border-hairline my-4;
-}
-
-.tiptap-content img {
-  @apply my-3 max-w-full rounded-lg;
 }

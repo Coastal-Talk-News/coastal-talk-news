@@ -5,13 +5,18 @@ import { iconButtonClass } from '@coastal-talk-news/ui/icon-button';
 import {
   Archive,
   ArchiveRestore,
+  Check,
+  Copy,
+  ExternalLink,
   ImageIcon,
   Pencil,
   Send,
   Trash2,
   Undo2,
 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { publicArticleUrl } from '../../config.js';
 import { formatDate, formatTime } from '../../lib/format.js';
 import { PRIORITY_LABELS, PRIORITY_TONES } from './priority.js';
 import { estimateReadMinutes } from './readTime.js';
@@ -28,6 +33,44 @@ interface ArticleRowProps {
   onUnpublish: (article: ArticleDto) => void;
 }
 
+/** Copies its own url and shows a brief tick, matching CopyButton's timing. */
+function CopyLinkAction({ url, label }: { url: string; label: string }) {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
+
+  return (
+    <Tooltip label={copied ? 'Copied' : label}>
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+          } catch {
+            return;
+          }
+          setCopied(true);
+          if (timer.current) clearTimeout(timer.current);
+          timer.current = setTimeout(() => setCopied(false), 2000);
+        }}
+        aria-label={label}
+        className={iconButtonClass()}
+      >
+        {copied ? (
+          <Check className="text-success-text size-4" aria-hidden />
+        ) : (
+          <Copy className="size-4" aria-hidden />
+        )}
+      </button>
+    </Tooltip>
+  );
+}
+
 export function ArticleRow({
   article,
   onDelete,
@@ -38,6 +81,7 @@ export function ArticleRow({
 }: ArticleRowProps) {
   const readMinutes = estimateReadMinutes(article.content);
   const { status } = article;
+  const liveUrl = status === 'PUBLISHED' ? publicArticleUrl(article.id) : null;
 
   return (
     <tr className="group hover:bg-surface-sunken align-middle transition-colors">
@@ -108,6 +152,26 @@ export function ArticleRow({
 
       <td className="py-3 pr-4">
         <div className="flex items-center justify-end gap-1.5 opacity-65 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          {liveUrl && (
+            <>
+              <Tooltip label="View the live article">
+                <a
+                  href={liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`View ${article.headline} on the website`}
+                  className={iconButtonClass()}
+                >
+                  <ExternalLink className="size-4" aria-hidden />
+                </a>
+              </Tooltip>
+              <CopyLinkAction
+                url={liveUrl}
+                label={`Copy the link to ${article.headline}`}
+              />
+            </>
+          )}
+
           <Tooltip label="Edit">
             <Link
               to={`/articles/${article.id}/edit`}

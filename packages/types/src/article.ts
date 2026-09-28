@@ -1,6 +1,6 @@
 import type { Id, IsoDateTime, RichTextContent } from './api.js';
 import type { ArticleStatus } from './dashboard.js';
-import type { MediaSummaryDto } from './media.js';
+import type { ImageLayoutDto, MediaSummaryDto } from './media.js';
 
 export type Language = 'ENGLISH' | 'KANNADA';
 export type ArticlePriority = 'LEAD_STORY' | 'FEATURED' | 'NORMAL';
@@ -24,6 +24,7 @@ export interface ArticleDto {
   seoTitle: string | null;
   metaDescription: string | null;
   featuredImage: MediaSummaryDto | null;
+  featuredImageLayout: ImageLayoutDto;
   ogImage: MediaSummaryDto | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
@@ -45,6 +46,7 @@ export interface CreateArticleRequest {
   priority?: ArticlePriority;
   status?: CreatableArticleStatus;
   featuredImageId?: Id | null;
+  featuredImageLayout?: ImageLayoutDto;
   ogImageId?: Id | null;
   seoTitle?: string | null;
   metaDescription?: string | null;
@@ -72,4 +74,23 @@ export interface ArticleListParams {
   priority?: ArticlePriority;
   search?: string;
   sort?: 'newest' | 'oldest';
+}
+
+/** The form as it stands, complete or not, to be shown as the reader page. */
+export interface ArticlePreviewRequest {
+  categoryId?: Id | null;
+  language?: Language;
+  headline?: string;
+  summary?: string;
+  content?: ArticleContent;
+  youtubeUrl?: string | null;
+  tags?: string[];
+  featuredImageId?: Id | null;
+  featuredImageLayout?: ImageLayoutDto;
+}
+
+export interface ArticlePreviewDto {
+  /** Opens the preview on the reader site: `/preview/<token>`. */
+  token: string;
+  expiresAt: IsoDateTime;
 }

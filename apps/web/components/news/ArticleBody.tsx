@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import { Fragment, type ReactNode } from 'react';
 import type { ArticleContent } from '@coastal-talk-news/types';
+import { ArticleFigure } from './ArticleFigure';
 
 interface Mark {
   type?: string;
@@ -40,6 +41,13 @@ function safeUrl(value: unknown, allowRelative = true): string | null {
 function attr(node: Node, name: string): string | undefined {
   const value = node.attrs?.[name];
   return typeof value === 'string' ? value : undefined;
+}
+
+function numberAttr(node: Node, name: string): number | undefined {
+  const value = node.attrs?.[name];
+  return typeof value === 'number' && Number.isFinite(value) && value > 0
+    ? value
+    : undefined;
 }
 
 /**
@@ -151,8 +159,13 @@ function renderNode(node: Node, key: string): ReactNode {
     case 'image': {
       const src = safeUrl(attr(node, 'src'), false);
       if (!src) return null;
+      const caption = attr(node, 'title');
       return (
-        <figure key={key}>
+        <ArticleFigure
+          key={key}
+          placement={node.attrs?.['placement']}
+          widthPercent={node.attrs?.['widthPercent']}
+        >
           {/* An author can paste any URL into the editor's image button, so a
               body image's host is unknowable and cannot be listed in
               next.config.js — and an unconfigured host makes next/image throw,
@@ -161,22 +174,21 @@ function renderNode(node: Node, key: string): ReactNode {
               image directly, so no-referrer keeps the reader's article URL from
               leaking to whatever third-party host it turns out to be.
 
-              The editor stores only a src, so there are no real dimensions to
-              reserve space with; height:auto lets the true ratio take over once
-              the image loads. */}
+              Library pictures arrive with their real size (cropped, when the
+              editor cropped them), which reserves the right space; an outside
+              one has none, so height:auto lets its true ratio take over once
+              it loads. */}
           <Image
             src={src}
-            alt={attr(node, 'alt') ?? ''}
-            width={1280}
-            height={720}
+            alt={attr(node, 'alt') ?? caption ?? ''}
+            width={numberAttr(node, 'naturalWidth') ?? 1280}
+            height={numberAttr(node, 'naturalHeight') ?? 720}
             unoptimized
             referrerPolicy="no-referrer"
             className="h-auto w-full rounded-sm"
           />
-          {attr(node, 'title') && (
-            <figcaption>{attr(node, 'title')}</figcaption>
-          )}
-        </figure>
+          {caption && <figcaption>{caption}</figcaption>}
+        </ArticleFigure>
       );
     }
 

@@ -1,5 +1,7 @@
 import type {
   ArticleDto,
+  ArticlePreviewDto,
+  ArticlePreviewRequest,
   ArticleListParams,
   ArticleStatusCountsDto,
   CreateArticleRequest,
@@ -29,6 +31,9 @@ export const articlesApi = {
 
   update: (id: string, body: UpdateArticleRequest) =>
     api.patch<ArticleDto>(`${BASE}/${id}`, body),
+
+  preview: (body: ArticlePreviewRequest) =>
+    api.post<ArticlePreviewDto>(`${BASE}/preview`, body),
 
   remove: (id: string) => api.send(`${BASE}/${id}`, 'DELETE'),
 };

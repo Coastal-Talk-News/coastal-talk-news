@@ -58,15 +58,23 @@ export function toArticleCard(
   };
 }
 
+/** An article page's source: a stored row, or a draft standing in for one. */
+export type ArticleDetailSource = Omit<
+  ArticleDetailRow,
+  'content' | 'featuredImageLayout'
+> & { content: unknown; featuredImageLayout: unknown };
+
 export function toArticleDetail(
-  article: ArticleDetailRow,
+  article: ArticleDetailSource,
   toPublicUrl: ToPublicUrl,
+  { content, coverImage }: Pick<PublicArticleDto, 'content' | 'coverImage'>,
 ): PublicArticleDto {
   return {
     ...toArticleCard(article, toPublicUrl),
-    // Prisma widens a Json column; the response schema re-checks the shape.
-    content: article.content as unknown as ArticleContent,
+    coverImage,
+    content,
     youtubeUrl: article.youtubeUrl,
+    tags: article.tags,
     seoTitle: article.seoTitle,
     metaDescription: article.metaDescription,
     ogImage: toMedia(article.ogImage, toPublicUrl),

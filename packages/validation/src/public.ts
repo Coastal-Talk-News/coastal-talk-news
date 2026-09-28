@@ -6,7 +6,11 @@ import {
 } from './advertisement.js';
 import { ArticleContentSchema, LanguageSchema } from './article.js';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
-import { MediaSummarySchema } from './media.js';
+import {
+  ImagePlacementSchema,
+  ImageWidthPercentSchema,
+  MediaSummarySchema,
+} from './media.js';
 
 const PublicCategoryRefSchema = Type.Object({
   id: Type.String(),
@@ -104,8 +108,19 @@ export const PublicNavCategorySchema = Type.Recursive((Self) =>
 export const PublicArticleSchema = Type.Composite([
   PublicArticleCardSchema,
   Type.Object({
+    coverImage: Type.Union([
+      Type.Object({
+        url: Type.String(),
+        width: Type.Integer(),
+        height: Type.Integer(),
+        widthPercent: ImageWidthPercentSchema,
+        placement: ImagePlacementSchema,
+      }),
+      Type.Null(),
+    ]),
     content: ArticleContentSchema,
     youtubeUrl: Nullable(Type.String()),
+    tags: Type.Array(Type.String()),
     seoTitle: Nullable(Type.String()),
     metaDescription: Nullable(Type.String()),
     ogImage: Type.Union([MediaSummarySchema, Type.Null()]),

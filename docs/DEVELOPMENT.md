@@ -102,8 +102,9 @@ from `apps/api/src/lib/pagination.ts` — don't hand-roll the object literal.
 This is a cross-cutting rule, not a per-feature one — get it wrong once and it's wrong in
 three different places.
 
-**Media reference check.** A Media Asset can be referenced by an Article (`media_id` or
-`og_image_id`), a Category, an Advertisement, or Site Settings, all at once. Build **one**
+**Media reference check.** A Media Asset can be referenced by an Article (`media_id`,
+`og_image_id`, or a picture inside its body via `article_media`), a Category, an Advertisement,
+or Site Settings (including the rich-text pages, via `site_page_media`), all at once. Build **one**
 backend function that answers "is this Media Asset still referenced by anything?" — every
 delete or update path that could orphan a media reference must call it, rather than each
 resource re-implementing its own check. Only delete the Media Asset (DB row + stored image)
@@ -231,6 +232,13 @@ the database is shared state in exactly the way the codebase is not:
   Advertisement, that's drift from a documented decision, not a new decision to make on
   your own.
 - Don't introduce a second pattern for something that already has one.
+
+### 10.2 Database transactions
+
+The Prisma client is created with a 30-second interactive-transaction timeout (`createPrismaClient`).
+Prisma's 5-second default is easy to exceed with a few round trips to a remote pooler, which turns a
+good save into a 500. Prefer a single nested write over a transaction where the rows go together
+(article + its picture links).
 
 ### 10.1 Two-factor sign-in
 

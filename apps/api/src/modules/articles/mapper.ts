@@ -4,6 +4,7 @@ import type {
   Language,
 } from '@coastal-talk-news/db';
 import type { ArticleContent, ArticleDto } from '@coastal-talk-news/types';
+import { toLayout } from '../media/rich-text.js';
 
 interface MediaRow {
   id: string;
@@ -19,6 +20,7 @@ export interface ArticleEntity {
   headline: string;
   summary: string;
   content: unknown;
+  featuredImageLayout: unknown;
   youtubeUrl: string | null;
   tags: string[];
   priority: ArticlePriority;
@@ -66,6 +68,7 @@ export function toArticleDto(
     seoTitle: article.seoTitle,
     metaDescription: article.metaDescription,
     featuredImage: toMediaSummary(article.media, toPublicUrl),
+    featuredImageLayout: toLayout(article.featuredImageLayout),
     ogImage: toMediaSummary(article.ogImage, toPublicUrl),
     createdAt: article.createdAt.toISOString(),
     updatedAt: article.updatedAt.toISOString(),
