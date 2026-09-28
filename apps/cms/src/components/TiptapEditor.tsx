@@ -442,6 +442,11 @@ export function TiptapEditor({
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(next, { emitUpdate: false });
+          // ProseMirror maps the old selection through the new document by
+          // position; on a full content swap that can land it inside an
+          // image, which selects it and pops the image toolbar open with
+          // nobody having clicked anything.
+          editor.commands.setTextSelection(0);
         }
       });
     }
