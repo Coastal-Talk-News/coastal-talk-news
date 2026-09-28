@@ -12,10 +12,19 @@ them in Prisma before building the feature that depends on them.
 `id`, `category_id` (FK → Category), `media_id` (FK → Media Asset, featured image),
 `language`, `headline`, `summary`, `content`, `youtube_url`, `tags`, `priority`,
 `status` (→ `ArticleStatus`), `publication_date`, `created_at`, `updated_at`, `seo_title`,
-`meta_description`, `og_image_id` (FK → Media Asset), `view_count`
+`meta_description`, `og_image_id` (FK → Media Asset), `view_count`, `featured_image_layout`
 
 `view_count` is a running total of reads, incremented by the public site once a visitor has
 stayed past half the article's read time. Anonymous: no per-reader record exists.
+
+`featured_image_layout` is how the featured image is framed on the article page, as JSON:
+`widthPercent` (10–100, share of the article column), `placement` (`left` | `center` |
+`right` | `float-left` | `float-right`, where `float-*` lets the text wrap around it) and an
+optional `crop` (`x`, `y`, `width`, `height`, each a 0–1 fraction of the original). Only what
+differs from the default (full width, centred, uncropped) is stored, so most rows hold `{}`;
+the column is `NOT NULL DEFAULT '{}'`. Cropping is non-destructive: the original stays in
+Cloudinary and the crop is applied on delivery. It belongs to one picture, so the API resets
+it when the featured image is removed or replaced.
 
 `summary` is required — shown in article listings and social previews. Distinct from
 `meta_description`, which is SEO-specific and optional.
@@ -23,6 +32,9 @@ stayed past half the article's read time. Anonymous: no per-reader record exists
 `tags` is a plain string array, entered freely by the author. Not a controlled vocabulary
 and not a separate entity — no `Tag` table, no foreign key. No filtering/search by tag in
 V1; if that's needed later, revisit whether a real entity is warranted then.
+
+`tags` is shown on the public article page as plain labels, not links — there is no tag
+page to link to. Not returned on article cards/listings, only on the full article.
 
 No `slug` field exists. Public article URLs are not yet scoped — this is a known gap, not
 an oversight; revisit before the public article page is built.
@@ -171,7 +183,8 @@ site — it is **not** a Category row and never appears in category navigation.
 
 ### Media Asset
 
-`id`, `filename`, `storage_key` (the stored image key), `mime_type`, `file_size`, `created_at`
+`id`, `filename`, `storage_key` (the stored image key), `mime_type`, `file_size`, `width`,
+`height`, `created_at`
 
 Binary image data is **never** stored in PostgreSQL — only this reference row.
 
@@ -227,6 +240,12 @@ schema change was needed for it.
 
 - `Article.category_id → Category.id`
 - `Article.media_id`, `Article.og_image_id → MediaAsset.id`
+- `ArticleMedia (article_id, media_id)` — the pictures placed inside an article's body.
+  `article_id → Article.id` is `CASCADE`; `media_id → MediaAsset.id` is `RESTRICT`. Composite
+  primary key, every column `NOT NULL`.
+- `SitePageMedia (page, media_id)` — the same for the About, Advertise and Privacy bodies in
+  Site Settings (`page` is the `SitePage` enum; About's English and Kannada bodies share one
+  page). `media_id → MediaAsset.id` is `RESTRICT`.
 - `Category.media_id → MediaAsset.id`
 - `Advertisement.media_id → MediaAsset.id`
 - `Advertisement.detail_media_id → MediaAsset.id` (nullable)
@@ -238,6 +257,29 @@ schema change was needed for it.
 The diagram is product-level and doesn't specify SQL/Prisma types. Always confirm exact
 types, enum identifiers, and nullability against `packages/db/prisma/schema.prisma` before
 writing TypeBox validation schemas or API DTOs — don't infer types from this document.
+
+## Pictures inside rich text
+
+An image node in `Article.content` (and the Site Settings page bodies) is stored as
+`{ type: 'image', attrs: { mediaId, alt?, title?, widthPercent?, placement?, crop? } }`. The
+URL is **not** stored: the API derives it from the asset on the way out, so articles stay small
+and a storage change cannot leave dead links. `title` is the caption.
+
+- On every save the API rebuilds the document from a whitelist (`prepareContent`), validates
+  the layout attributes strictly, drops unknown attributes, and syncs `article_media` /
+  `site_page_media` in the same transaction as the write. Images saved before ids existed
+  (URL only) are matched to their asset by the URL and upgraded when the article is next saved.
+- On every read the API puts `src`, `naturalWidth` and `naturalHeight` back (`hydrateContent`).
+  The editor gets the whole original and draws the crop itself; readers get the already-cropped
+  file. Missing width/placement are filled with the default (60%, centred).
+- Because the database restricts deletion of a referenced asset, an image in use cannot be
+  removed from the Media Library, and "delete unused" never touches it.
+- Pictures from outside the library (an external URL) stay URL-only: they render, but are not
+  tracked or croppable.
+- **Known gap:** the Terms and Conditions page's body (`terms_content`) is cleaned through the
+  same whitelist but has no `SitePage` entry yet, so its pictures aren't protected by
+  `article_media`/`site_page_media` — an image used only there can still be deleted from the
+  Media Library. Add a `TERMS` value to the `SitePage` enum (needs a migration) to close this.
 
 ## Article deletion & media reference integrity
 

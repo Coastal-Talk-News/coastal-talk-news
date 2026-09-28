@@ -1,5 +1,6 @@
 import type { Database, Language } from '@coastal-talk-news/db';
 import type {
+  ArticleContent,
   PublicAdvertisementDetailDto,
   PublicArticleDto,
   PublicHomeDto,
@@ -15,16 +16,20 @@ import {
   toAdvertisementDetail,
   toArticleCard,
   toArticleDetail,
+  type ArticleDetailSource,
   toNavCategory,
   toPageContent,
   toSettings,
   withNavChildren,
   type ToPublicUrl,
 } from './mapper.js';
+import { deliverImage, hydrateContent, toLayout } from '../media/rich-text.js';
+import type { ObjectStorage } from '../media/storage.js';
 import * as repository from './repository.js';
 
 export interface PublicServiceDeps {
   db: Database;
+  storage: ObjectStorage;
   toPublicUrl: ToPublicUrl;
 }
 
@@ -36,15 +41,40 @@ const HOME_TOP_STORIES = 6;
 // A rolling window, not a calendar day, to sidestep picking a timezone.
 const TOP_STORIES_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * The one place an article becomes a reader page, so a preview of a draft goes
+ * through exactly the steps a published article does.
+ */
+export async function presentArticle(
+  { db, storage, toPublicUrl }: PublicServiceDeps,
+  article: ArticleDetailSource,
+): Promise<PublicArticleDto> {
+  const layout = toLayout(article.featuredImageLayout);
+  const coverImage = article.media
+    ? {
+        ...deliverImage(storage, article.media, layout.crop),
+        widthPercent: layout.widthPercent,
+        placement: layout.placement,
+      }
+    : null;
+  const content = await hydrateContent(
+    db,
+    storage,
+    article.content as ArticleContent,
+    'reader',
+  );
+  return toArticleDetail(article, toPublicUrl, { content, coverImage });
+}
+
 export async function getArticle(
-  { db, toPublicUrl }: PublicServiceDeps,
+  deps: PublicServiceDeps,
   id: string,
 ): Promise<PublicArticleDto> {
-  const article = await repository.findPublishedArticle(db, id);
+  const article = await repository.findPublishedArticle(deps.db, id);
   if (!article) {
     throw new NotFoundError('Article');
   }
-  return toArticleDetail(article, toPublicUrl);
+  return presentArticle(deps, article);
 }
 
 export async function getAdvertisement(
@@ -94,10 +124,15 @@ export async function getSite({
 export type PublicPageKey =
   'about' | 'contact' | 'advertise' | 'privacy' | 'terms';
 
+async function readable(db: Database, storage: ObjectStorage, value: unknown) {
+  const content = toPageContent(value);
+  return content ? hydrateContent(db, storage, content, 'reader') : null;
+}
+
 /** A standalone page's own copy, plus the one set of contact details every
  * page shares. */
 export async function getPage(
-  { db }: PublicServiceDeps,
+  { db, storage }: PublicServiceDeps,
   page: PublicPageKey,
   language?: Language,
 ): Promise<PublicPageDto> {
@@ -124,7 +159,9 @@ export async function getPage(
     return {
       title: null,
       intro: null,
-      content: toPageContent(
+      content: await readable(
+        db,
+        storage,
         page === 'privacy' ? settings.privacyContent : settings.termsContent,
       ),
       email: null,
@@ -144,7 +181,11 @@ export async function getPage(
   return {
     title: isAbout ? settings.aboutTitle : settings.advertiseTitle,
     intro: isAbout ? settings.aboutIntro : settings.advertiseIntro,
-    content: toPageContent(isAbout ? aboutContent : settings.advertiseContent),
+    content: await readable(
+      db,
+      storage,
+      isAbout ? aboutContent : settings.advertiseContent,
+    ),
     email: settings.contactEmail,
     phone: settings.contactPhone,
     address: null,

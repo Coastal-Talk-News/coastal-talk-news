@@ -52,7 +52,12 @@ export function createPrismaClient(
   options: PrismaClientOptions = {},
 ): PrismaClient {
   const connection = buildConnection(connectionString, options.sslCa);
-  return new PrismaClient({ adapter: new PrismaPg(connection) });
+  return new PrismaClient({
+    adapter: new PrismaPg(connection),
+    // Prisma's default is 5 seconds, which a handful of round trips to a remote
+    // pooler can exceed on a slow moment, turning a good save into a 500.
+    transactionOptions: { maxWait: 10_000, timeout: 30_000 },
+  });
 }
 
 export type Database = PrismaClient;

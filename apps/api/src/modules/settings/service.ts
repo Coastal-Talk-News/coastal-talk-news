@@ -1,8 +1,9 @@
-import type { Database } from '@coastal-talk-news/db';
+import type { Database, SitePage } from '@coastal-talk-news/db';
 import type { ArticleContent } from '@coastal-talk-news/types';
 import type { FastifyBaseLogger } from 'fastify';
 import { BadRequestError, NotFoundError } from '../../lib/errors.js';
-import { releaseMedia } from '../media/reference.js';
+import { releaseMedia, syncPageMedia } from '../media/reference.js';
+import { hydrateContent, prepareContent } from '../media/rich-text.js';
 import { purgeStorageObjects } from '../media/service.js';
 import type { ObjectStorage } from '../media/storage.js';
 import * as repository from './repository.js';
@@ -56,12 +57,103 @@ async function assertMediaExists(
   }
 }
 
-export async function getForCms({ db }: SettingsServiceDeps) {
-  const settings = await repository.findFirst(db);
+/** Each rich-text page and the settings fields that hold its body. */
+const PAGE_FIELDS = {
+  ABOUT: ['aboutContent', 'aboutContentKannada'],
+  ADVERTISE: ['advertiseContent'],
+  PRIVACY: ['privacyContent'],
+} as const satisfies Record<
+  SitePage,
+  ReadonlyArray<keyof UpdateSiteSettingsInput>
+>;
+
+type ContentField = (typeof PAGE_FIELDS)[SitePage][number];
+type ContentPatch = Partial<
+  Record<ContentField | 'termsContent', object | null>
+>;
+
+/**
+ * Cleans the bodies of every page this update touches. A page is handled as a
+ * whole, so the field that was not sent is read back from what is stored: the
+ * page's set of pictures is one list, and it would lose the other language's
+ * pictures if only one side were looked at.
+ */
+async function preparePages(
+  db: Database,
+  existing: Record<ContentField, unknown>,
+  input: UpdateSiteSettingsInput,
+) {
+  const patch: ContentPatch = {};
+  const mediaByPage = new Map<SitePage, string[]>();
+
+  for (const [page, fields] of Object.entries(PAGE_FIELDS) as Array<
+    [SitePage, ReadonlyArray<ContentField>]
+  >) {
+    if (fields.every((field) => input[field] === undefined)) continue;
+
+    const ids = new Set<string>();
+    for (const field of fields) {
+      const doc = input[field] === undefined ? existing[field] : input[field];
+      if (!doc) {
+        patch[field] = null;
+        continue;
+      }
+      const prepared = await prepareContent(db, doc);
+      patch[field] = prepared.content;
+      prepared.mediaIds.forEach((id) => ids.add(id));
+    }
+    mediaByPage.set(page, [...ids]);
+  }
+
+  // Terms has no SitePage entry (see PAGE_FIELDS), so its pictures aren't
+  // protected from "delete unused" the way the other pages' are — flagged in
+  // docs/DATA-MODEL.md. Still cleaned through the same whitelist, since it's
+  // rendered publicly like any other rich-text field.
+  if (input.termsContent !== undefined && input.termsContent) {
+    patch.termsContent = (await prepareContent(db, input.termsContent)).content;
+  } else if (input.termsContent === null) {
+    patch.termsContent = null;
+  }
+
+  return { patch, mediaByPage };
+}
+
+/** The editor needs each picture's URL, which the stored bodies leave out. */
+async function forEditor(
+  { db, storage }: SettingsServiceDeps,
+  settings: NonNullable<Awaited<ReturnType<typeof repository.findFirst>>>,
+) {
+  const [
+    aboutContent,
+    aboutContentKannada,
+    advertiseContent,
+    privacyContent,
+    termsContent,
+  ] = await Promise.all(
+    [
+      settings.aboutContent,
+      settings.aboutContentKannada,
+      settings.advertiseContent,
+      settings.privacyContent,
+      settings.termsContent,
+    ].map((doc) => (doc ? hydrateContent(db, storage, doc, 'editor') : doc)),
+  );
+  return {
+    ...settings,
+    aboutContent,
+    aboutContentKannada,
+    advertiseContent,
+    privacyContent,
+    termsContent,
+  };
+}
+
+export async function getForCms(deps: SettingsServiceDeps) {
+  const settings = await repository.findFirst(deps.db);
   if (!settings) {
     throw new NotFoundError('Site settings');
   }
-  return settings;
+  return forEditor(deps, settings);
 }
 
 export async function update(
@@ -74,6 +166,7 @@ export async function update(
   if (!existing) {
     throw new NotFoundError('Site settings');
   }
+  const { patch, mediaByPage } = await preparePages(db, existing, input);
 
   if (input.logoMediaId) {
     await assertMediaExists(db, input.logoMediaId, 'logoMediaId');
@@ -97,6 +190,7 @@ export async function update(
 
   const { settings, orphanedKeys } = await db.$transaction(async (tx) => {
     const settings = await repository.update(tx, existing.id, {
+      ...patch,
       ...(input.siteName !== undefined
         ? { siteName: input.siteName.trim() }
         : {}),
@@ -124,12 +218,6 @@ export async function update(
       ...(input.aboutIntro !== undefined
         ? { aboutIntro: input.aboutIntro?.trim() || null }
         : {}),
-      ...(input.aboutContent !== undefined
-        ? { aboutContent: input.aboutContent }
-        : {}),
-      ...(input.aboutContentKannada !== undefined
-        ? { aboutContentKannada: input.aboutContentKannada }
-        : {}),
       ...(input.contactTitle !== undefined
         ? { contactTitle: input.contactTitle?.trim() || null }
         : {}),
@@ -145,15 +233,8 @@ export async function update(
       ...(input.advertiseIntro !== undefined
         ? { advertiseIntro: input.advertiseIntro?.trim() || null }
         : {}),
-      ...(input.advertiseContent !== undefined
-        ? { advertiseContent: input.advertiseContent }
-        : {}),
-      ...(input.privacyContent !== undefined
-        ? { privacyContent: input.privacyContent }
-        : {}),
-      ...(input.termsContent !== undefined
-        ? { termsContent: input.termsContent }
-        : {}),
+      // advertiseContent/privacyContent/termsContent all go through `patch`
+      // above, which cleans the pictures each one places.
       ...(input.facebookUrl !== undefined
         ? { facebookUrl: input.facebookUrl?.trim() || null }
         : {}),
@@ -184,7 +265,13 @@ export async function update(
         : {}),
     });
 
+    const droppedFromPages: string[] = [];
+    for (const [page, mediaIds] of mediaByPage) {
+      droppedFromPages.push(...(await syncPageMedia(tx, page, mediaIds)));
+    }
+
     const orphanedKeys = await releaseMedia(tx, [
+      ...droppedFromPages,
       logoChanged ? existing.logoMediaId : null,
       faviconChanged ? existing.faviconMediaId : null,
       ogImageChanged ? existing.defaultOgImageId : null,
@@ -194,5 +281,5 @@ export async function update(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
-  return settings;
+  return forEditor(deps, settings);
 }

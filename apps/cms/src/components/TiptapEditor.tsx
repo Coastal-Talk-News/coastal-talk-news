@@ -1,10 +1,9 @@
 import type { RichTextContent } from '@coastal-talk-news/types';
+import { IMAGE_DEFAULT_WIDTH_PERCENT } from '@coastal-talk-news/validation/limits';
 import { Button } from '@coastal-talk-news/ui/button';
 import { cn } from '@coastal-talk-news/ui/cn';
 import { Input } from '@coastal-talk-news/ui/input';
 import { Select } from '@coastal-talk-news/ui/select';
-import { Tooltip } from '@coastal-talk-news/ui/tooltip';
-import ImageExtension from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import TextAlign from '@tiptap/extension-text-align';
 import {
@@ -35,69 +34,16 @@ import {
   Underline as UnderlineIcon,
   Undo2,
 } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MediaPickerDialog } from '../features/media/MediaPickerDialog.js';
+import { ImageBar } from './editor/ImageBar.js';
+import { FramedImage } from './editor/imageExtension.js';
+import { Divider, MOD, ToolbarButton } from './editor/ToolbarButton.js';
 
 interface TiptapEditorProps {
   content: RichTextContent | null;
   onChange: (content: RichTextContent) => void;
   placeholder?: string;
-}
-
-/** Ctrl on Windows and Linux, ⌘ on a Mac — the editor binds both. */
-const MOD =
-  typeof navigator !== 'undefined' && /Mac|iP(hone|ad)/.test(navigator.platform)
-    ? '⌘'
-    : 'Ctrl';
-
-function ToolbarButton({
-  active,
-  disabled,
-  label,
-  shortcut,
-  onClick,
-  children,
-}: {
-  active?: boolean;
-  disabled?: boolean;
-  label: string;
-  shortcut?: string;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <Tooltip
-      label={
-        <span className="flex items-center gap-2">
-          {label}
-          {shortcut && (
-            <span className="text-ink-subtle font-normal">{shortcut}</span>
-          )}
-        </span>
-      }
-    >
-      <button
-        type="button"
-        aria-label={label}
-        aria-pressed={active}
-        disabled={disabled}
-        onClick={onClick}
-        className={cn(
-          'grid size-8 place-items-center rounded-md transition-colors',
-          'disabled:pointer-events-none disabled:opacity-40',
-          active
-            ? 'bg-accent-soft text-accent-text'
-            : 'text-ink-muted hover:bg-surface-sunken hover:text-ink',
-        )}
-      >
-        {children}
-      </button>
-    </Tooltip>
-  );
-}
-
-function Divider() {
-  return <span className="bg-hairline mx-1 h-5 w-px" aria-hidden />;
 }
 
 function countWords(text: string): number {
@@ -423,6 +369,7 @@ function Toolbar({
       {linkOpen && !preview && (
         <LinkBar editor={editor} onClose={() => setLinkOpen(false)} />
       )}
+      {!preview && editor.isActive('image') && <ImageBar editor={editor} />}
 
       <MediaPickerDialog
         open={pickerOpen}
@@ -433,7 +380,17 @@ function Toolbar({
             editor
               .chain()
               .focus()
-              .setImage({ src: asset.url, alt: asset.filename })
+              .insertContent({
+                type: 'image',
+                attrs: {
+                  mediaId: asset.id,
+                  src: asset.url,
+                  naturalWidth: asset.width,
+                  naturalHeight: asset.height,
+                  widthPercent: IMAGE_DEFAULT_WIDTH_PERCENT,
+                  placement: 'center',
+                },
+              })
               .run();
           }
           setPickerOpen(false);
@@ -455,7 +412,7 @@ export function TiptapEditor({
       StarterKit.configure({
         link: { openOnClick: false, autolink: true },
       }),
-      ImageExtension,
+      FramedImage,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Placeholder.configure({ placeholder }),
     ],
@@ -467,7 +424,7 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class:
-          'tiptap-content text-ink min-h-48 px-4 py-3 text-sm focus:outline-none',
+          'tiptap-content text-ink min-h-48 flow-root px-4 py-3 text-sm focus:outline-none',
       },
     },
   });
@@ -480,7 +437,13 @@ export function TiptapEditor({
     const next = (content ?? '') as Content;
     const current = editor.getJSON();
     if (JSON.stringify(current) !== JSON.stringify(next)) {
-      editor.commands.setContent(next, { emitUpdate: false });
+      // Deferred: picture nodes render as React components, and React refuses
+      // the synchronous flush the editor does when they are created mid-effect.
+      queueMicrotask(() => {
+        if (!editor.isDestroyed) {
+          editor.commands.setContent(next, { emitUpdate: false });
+        }
+      });
     }
   }, [editor, content]);
 
@@ -491,6 +454,9 @@ export function TiptapEditor({
     // and on a saved article that fires before the loaded body has been put
     // in, so the form would overwrite the article with an empty document.
     editor.setEditable(!preview, false);
+    // Picture nodes draw their controls from the editable flag, and setEditable
+    // without an update announces nothing they could react to.
+    editor.view.dispatch(editor.state.tr);
   }, [editor, preview]);
 
   if (!editor) return null;
@@ -503,7 +469,7 @@ export function TiptapEditor({
       <div
         className={cn(
           preview &&
-            '[&_.ProseMirror]:font-serif [&_.ProseMirror]:text-[1.0625rem] [&_.ProseMirror]:leading-[1.8]',
+            '[&_.ProseMirror]:font-article [&_.ProseMirror]:text-[1.125rem] [&_.ProseMirror]:leading-[1.8]',
         )}
       >
         <EditorContent editor={editor} />

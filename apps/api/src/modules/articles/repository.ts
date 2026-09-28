@@ -175,11 +175,15 @@ export async function countByStatus(
 }
 
 export interface ArticleWriteData {
+  /** Library pictures placed in the body, tracked in the same write. */
+  imageIds?: string[];
   categoryId: string;
   language: Language;
   headline: string;
   summary: string;
   content: object;
+  /** Sparse: only what differs from the default frame. */
+  featuredImageLayout: object;
   contentText: string;
   youtubeUrl: string | null;
   tags: string[];
@@ -192,8 +196,17 @@ export interface ArticleWriteData {
   metaDescription: string | null;
 }
 
-export function create(db: TransactionClient, data: ArticleWriteData) {
-  return db.article.create({ data, include: withRelations });
+export function create(
+  db: TransactionClient,
+  { imageIds = [], ...data }: ArticleWriteData,
+) {
+  return db.article.create({
+    data: {
+      ...data,
+      images: { create: imageIds.map((mediaId) => ({ mediaId })) },
+    },
+    include: withRelations,
+  });
 }
 
 export function update(

@@ -93,6 +93,26 @@ full content, optional YouTube video (single embed inline — no separate video 
 type), social sharing, article SEO (title/meta/OG image, set per-article in the CMS), and
 ads in article-specific placements. Clean typography, responsive.
 
+Pictures are framed by the editor, not left to the file's own size: the featured image (Media
+section of the article form) and every image in the body have a width (any percentage of the
+column, by dragging the edge or typing it), a placement (left, centre, right, or left/right with
+the text wrapping around it) and an optional non-destructive crop, plus a caption in the body.
+The reader site draws them exactly as set.
+
+**Preview.** The Publish card has a Preview article button that opens the whole article page (site
+header, ads, footer and all) in a new tab, built from the form as it stands, so unsaved edits and
+brand-new articles preview too. Nothing is saved. `POST /cms/articles/preview` turns the draft into
+the same page a reader gets and returns a 30-minute token; the reader site shows it at
+`/preview/<token>` (`GET /public/articles/previews/<token>`), marked noindex, no-store, with a
+"Preview" banner. The link is the only credential, so it is 256 random bits and short-lived. The CMS
+needs `VITE_WEB_URL` (the reader site's address) to open it. The site pins a 1280px layout on phones, so sizes
+scale with the page; in a window narrower than 640px pictures never wrap text and keep at least
+half the column.
+
+**View / copy link.** For a published article, the Publish card and the article list row both
+get a View live article link (opens the real `/article/<id>` page) and a Copy link button. Draft
+and archived articles get neither, since there is no live URL yet.
+
 ### Category page
 
 One page per active category: name, optional cover image, optional description, its

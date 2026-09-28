@@ -10,7 +10,14 @@ import { ConfirmDialog } from '@coastal-talk-news/ui/confirm-dialog';
 import type { SelectOption } from '@coastal-talk-news/ui/select';
 import { ErrorState, LoadingState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
-import { ArchiveRestore, ArrowLeft, Send, Undo2 } from 'lucide-react';
+import {
+  ArchiveRestore,
+  ArrowLeft,
+  ExternalLink,
+  Eye,
+  Send,
+  Undo2,
+} from 'lucide-react';
 import {
   useEffect,
   useRef,
@@ -30,13 +37,21 @@ import {
 } from '../features/categories/tree.js';
 import { ArticleMediaFields } from '../features/articles/ArticleMediaFields.js';
 import { ArticleSeoFields } from '../features/articles/ArticleSeoFields.js';
-import { toValues, type FormValues } from '../features/articles/formValues.js';
+import {
+  toPreviewRequest,
+  toValues,
+  type FormValues,
+} from '../features/articles/formValues.js';
 import { hasText } from '../features/articles/readTime.js';
 import { TagsInput } from '../features/articles/TagsInput.js';
 import { TiptapEditor } from '../components/TiptapEditor.js';
 import { STATUS_LABELS, STATUS_TONES } from '../features/articles/status.js';
 import { useArticleMutations } from '../features/articles/useArticleMutations.js';
+import { useArticlePreview } from '../features/articles/useArticlePreview.js';
+import { DEFAULT_LAYOUT } from '../features/media/imageFrame.js';
 import { MediaPickerDialog } from '../features/media/MediaPickerDialog.js';
+import { CopyButton } from '../components/CopyButton.js';
+import { publicArticleUrl } from '../config.js';
 import { formatDate, formatTime } from '../lib/format.js';
 
 type PublishChoice = 'PUBLISHED' | 'DRAFT';
@@ -59,7 +74,9 @@ export function ArticleFormPage() {
   });
 
   const mutations = useArticleMutations();
+  const preview = useArticlePreview();
   const article = articleQuery.data ?? null;
+  const liveUrl = article ? publicArticleUrl(article.id) : null;
 
   const [values, setValues] = useState<FormValues>(() => toValues(null));
   const [touched, setTouched] = useState(false);
@@ -150,6 +167,7 @@ export function ArticleFormPage() {
       summary: trimmedSummary,
       content,
       featuredImageId: values.featuredImage?.id ?? null,
+      featuredImageLayout: values.featuredImageLayout,
       ogImageId: values.ogImage?.id ?? null,
       // Cleared fields must be sent as null, not undefined: undefined drops
       // out of the JSON body, which the API reads as "leave unchanged", so an
@@ -397,6 +415,38 @@ export function ArticleFormPage() {
                 </>
               )}
 
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                loading={preview.pending}
+                disabled={!preview.available}
+                title={
+                  preview.available
+                    ? 'Open the whole article page in a new tab'
+                    : 'Set VITE_WEB_URL to enable previews'
+                }
+                onClick={() => void preview.open(toPreviewRequest(values))}
+              >
+                <Eye className="size-4" aria-hidden />
+                Preview article
+              </Button>
+
+              {status === 'PUBLISHED' && article && liveUrl && (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => window.open(liveUrl, '_blank', 'noopener')}
+                  >
+                    <ExternalLink className="size-4" aria-hidden />
+                    View live article
+                  </Button>
+                  <CopyButton text={liveUrl} label="Copy link" />
+                </div>
+              )}
+
               {/* Status-only, so they never quietly save half-finished edits. */}
               {editing && article && status === 'PUBLISHED' && (
                 <Button
@@ -471,7 +521,15 @@ export function ArticleFormPage() {
         selectedId={values.featuredImage?.id ?? null}
         onOpenChange={setImagePickerOpen}
         onSelect={(asset) => {
-          setValues((current) => ({ ...current, featuredImage: asset }));
+          setValues((current) => ({
+            ...current,
+            featuredImage: asset,
+            // A frame belongs to one picture: keep it only if the same one is chosen again.
+            featuredImageLayout:
+              asset?.id === current.featuredImage?.id
+                ? current.featuredImageLayout
+                : DEFAULT_LAYOUT,
+          }));
           setImagePickerOpen(false);
         }}
       />

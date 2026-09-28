@@ -33,6 +33,9 @@ const headline = Noto_Serif({
 const article = Merriweather({
   subsets: ['latin'],
   weight: ['400', '700'],
+  // Emphasis and quotations are common in articles; without the real italic
+  // the browser slants the upright letters instead.
+  style: ['normal', 'italic'],
   variable: '--font-merriweather',
   display: 'swap',
 });

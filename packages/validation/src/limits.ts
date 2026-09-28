@@ -34,3 +34,14 @@ export const PASSWORD_MAX_BYTES = 72;
 
 /** Room for a six-digit code or a formatted recovery code with stray spaces. */
 export const TWO_FACTOR_CODE_MAX = 32;
+
+/** An image narrower than this is too small to be worth placing. */
+export const IMAGE_WIDTH_MIN_PERCENT = 10;
+export const IMAGE_WIDTH_MAX_PERCENT = 100;
+/** Smallest crop side, as a fraction of the picture, so a stray click on the
+ *  crop tool cannot leave a sliver. */
+export const IMAGE_CROP_MIN_FRACTION = 0.05;
+export const IMAGE_CAPTION_MAX = 300;
+/** Width for a picture the editor has not sized, and for older body images
+ *  that were saved before sizes existed. */
+export const IMAGE_DEFAULT_WIDTH_PERCENT = 60;

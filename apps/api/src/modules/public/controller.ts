@@ -1,5 +1,6 @@
 import type { Language } from '@coastal-talk-news/db';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import { NotFoundError } from '../../lib/errors.js';
 import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
 import type { PublicServiceDeps } from './service.js';
 import * as service from './service.js';
@@ -8,6 +9,7 @@ function deps(request: FastifyRequest): PublicServiceDeps {
   const { prisma, storage } = request.server;
   return {
     db: prisma,
+    storage,
     toPublicUrl: (storageKey) => storage.publicUrl(storageKey),
   };
 }
@@ -102,4 +104,17 @@ export async function listArticlesByPriority(
     pagination,
   );
   return listEnvelope(rows, pagination, total);
+}
+
+export async function getArticlePreview(
+  request: FastifyRequest<{ Params: { token: string } }>,
+  reply: FastifyReply,
+) {
+  const page = request.server.previews.get(request.params.token);
+  if (!page) {
+    throw new NotFoundError('Preview');
+  }
+  // A draft must never be kept by a cache or a search engine.
+  reply.header('Cache-Control', 'no-store').header('X-Robots-Tag', 'noindex');
+  return dataEnvelope(page);
 }

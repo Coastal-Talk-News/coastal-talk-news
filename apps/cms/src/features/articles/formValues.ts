@@ -1,10 +1,13 @@
 import type {
   ArticleContent,
   ArticleDto,
+  ArticlePreviewRequest,
   ArticlePriority,
+  ImageLayoutDto,
   Language,
   MediaSummaryDto,
 } from '@coastal-talk-news/types';
+import { DEFAULT_LAYOUT } from '../media/imageFrame.js';
 
 export interface FormValues {
   language: Language | '';
@@ -14,6 +17,7 @@ export interface FormValues {
   summary: string;
   content: ArticleContent | null;
   featuredImage: MediaSummaryDto | null;
+  featuredImageLayout: ImageLayoutDto;
   youtubeUrl: string;
   tags: string[];
   seoTitle: string;
@@ -33,6 +37,7 @@ export function toValues(article: ArticleDto | null): FormValues {
       summary: '',
       content: null,
       featuredImage: null,
+      featuredImageLayout: DEFAULT_LAYOUT,
       youtubeUrl: '',
       tags: [],
       seoTitle: '',
@@ -48,10 +53,26 @@ export function toValues(article: ArticleDto | null): FormValues {
     summary: article.summary,
     content: article.content,
     featuredImage: article.featuredImage,
+    featuredImageLayout: article.featuredImageLayout,
     youtubeUrl: article.youtubeUrl ?? '',
     tags: article.tags,
     seoTitle: article.seoTitle ?? '',
     metaDescription: article.metaDescription ?? '',
     ogImage: article.ogImage,
+  };
+}
+
+/** The form as it stands, unfinished parts and all, for the reader-page preview. */
+export function toPreviewRequest(values: FormValues): ArticlePreviewRequest {
+  return {
+    categoryId: values.categoryId || null,
+    ...(values.language ? { language: values.language } : {}),
+    headline: values.headline,
+    summary: values.summary,
+    ...(values.content ? { content: values.content } : {}),
+    youtubeUrl: values.youtubeUrl.trim() || null,
+    tags: values.tags,
+    featuredImageId: values.featuredImage?.id ?? null,
+    featuredImageLayout: values.featuredImageLayout,
   };
 }

@@ -9,8 +9,19 @@ function describeUploadError(error: unknown): string {
   return 'Upload failed.';
 }
 
+export interface PixelRegion {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface TransformOptions {
+  /** Longest width to deliver; smaller pictures are never enlarged. */
   width?: number;
+  /** The part of the original to keep. Cropping happens on delivery, so the
+   *  stored original is untouched and the crop can be changed later. */
+  region?: PixelRegion;
 }
 
 export class ObjectStorage {
@@ -76,6 +87,7 @@ export class ObjectStorage {
     return cloudinary.url(storageKey, {
       secure: true,
       transformation: [
+        ...(options.region ? [{ crop: 'crop', ...options.region }] : []),
         {
           fetch_format: 'auto',
           quality: 'auto',

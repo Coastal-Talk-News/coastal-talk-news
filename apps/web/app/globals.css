@@ -181,7 +181,7 @@
   }
 
   .article-body blockquote {
-    @apply border-brand text-ink-muted my-6 border-l-2 pl-5 font-serif text-xl italic;
+    @apply border-brand text-ink-muted my-6 border-l-2 pl-5 font-article text-xl italic;
   }
 
   .article-body pre {
@@ -200,8 +200,49 @@
     @apply border-rule my-7;
   }
 
-  .article-body figure {
+  /* Floated pictures are contained at the end of the body, but the body is not
+     a block formatting context: the cover can float too, and the text has to
+     wrap around it rather than sit in a narrower box. */
+  .article-body::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+
+  /* A picture is sized by --frame-width and placed by data-placement, both
+     validated in ArticleFigure. On a phone it keeps at least half the column
+     and never floats: text squeezed beside a small picture is unreadable. */
+  .article-figure {
     @apply my-6;
+    width: max(var(--frame-width), 50%);
+  }
+
+  .article-figure[data-placement='center'] {
+    @apply mx-auto;
+  }
+
+  .article-figure[data-placement='left'],
+  .article-figure[data-placement='float-left'] {
+    @apply mr-auto;
+  }
+
+  .article-figure[data-placement='right'],
+  .article-figure[data-placement='float-right'] {
+    @apply ml-auto;
+  }
+
+  @media (min-width: 640px) {
+    .article-figure {
+      width: var(--frame-width);
+    }
+
+    .article-figure[data-placement='float-left'] {
+      @apply float-left mt-1 mr-6 mb-3 ml-0;
+    }
+
+    .article-figure[data-placement='float-right'] {
+      @apply float-right mt-1 mr-0 mb-3 ml-6;
+    }
   }
 
   .article-body figcaption {

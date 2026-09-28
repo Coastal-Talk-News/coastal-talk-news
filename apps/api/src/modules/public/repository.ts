@@ -25,7 +25,9 @@ export const cardSelect = {
 const detailSelect = {
   ...cardSelect,
   content: true,
+  featuredImageLayout: true,
   youtubeUrl: true,
+  tags: true,
   seoTitle: true,
   metaDescription: true,
   ogImage: mediaSelect,

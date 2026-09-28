@@ -1,29 +1,34 @@
-import type { TransactionClient } from '@coastal-talk-news/db';
+import type { SitePage, TransactionClient } from '@coastal-talk-news/db';
 
 async function countReferences(
   tx: TransactionClient,
   mediaId: string,
 ): Promise<number> {
-  const [articles, categories, advertisements, settings] = await Promise.all([
-    tx.article.count({
-      where: { OR: [{ mediaId }, { ogImageId: mediaId }] },
-    }),
-    tx.category.count({ where: { mediaId } }),
-    tx.advertisement.count({
-      where: { OR: [{ mediaId }, { detailMediaId: mediaId }] },
-    }),
-    tx.siteSettings.count({
-      where: {
-        OR: [
-          { logoMediaId: mediaId },
-          { faviconMediaId: mediaId },
-          { defaultOgImageId: mediaId },
-        ],
-      },
-    }),
-  ]);
+  const [articles, inArticles, inPages, categories, advertisements, settings] =
+    await Promise.all([
+      tx.article.count({
+        where: { OR: [{ mediaId }, { ogImageId: mediaId }] },
+      }),
+      tx.articleMedia.count({ where: { mediaId } }),
+      tx.sitePageMedia.count({ where: { mediaId } }),
+      tx.category.count({ where: { mediaId } }),
+      tx.advertisement.count({
+        where: { OR: [{ mediaId }, { detailMediaId: mediaId }] },
+      }),
+      tx.siteSettings.count({
+        where: {
+          OR: [
+            { logoMediaId: mediaId },
+            { faviconMediaId: mediaId },
+            { defaultOgImageId: mediaId },
+          ],
+        },
+      }),
+    ]);
 
-  return articles + categories + advertisements + settings;
+  return (
+    articles + inArticles + inPages + categories + advertisements + settings
+  );
 }
 
 export async function isMediaReferenced(
@@ -86,6 +91,8 @@ export async function findUnreferencedMedia(
       logoForSettings: { none: {} },
       faviconForSettings: { none: {} },
       ogImageForSettings: { none: {} },
+      articleUses: { none: {} },
+      pageUses: { none: {} },
     },
     select: { id: true, storageKey: true },
   });
@@ -113,41 +120,59 @@ export async function countUsage(
     return usage;
   }
 
-  const [featured, ogImages, categories, advertisements, adDetails, settings] =
-    await Promise.all([
-      tx.article.groupBy({
-        by: ['mediaId'],
-        where: { mediaId: { in: mediaIds } },
-        _count: { _all: true },
-      }),
-      tx.article.groupBy({
-        by: ['ogImageId'],
-        where: { ogImageId: { in: mediaIds } },
-        _count: { _all: true },
-      }),
-      tx.category.groupBy({
-        by: ['mediaId'],
-        where: { mediaId: { in: mediaIds } },
-        _count: { _all: true },
-      }),
-      tx.advertisement.groupBy({
-        by: ['mediaId'],
-        where: { mediaId: { in: mediaIds } },
-        _count: { _all: true },
-      }),
-      tx.advertisement.groupBy({
-        by: ['detailMediaId'],
-        where: { detailMediaId: { in: mediaIds } },
-        _count: { _all: true },
-      }),
-      tx.siteSettings.findMany({
-        select: {
-          logoMediaId: true,
-          faviconMediaId: true,
-          defaultOgImageId: true,
-        },
-      }),
-    ]);
+  const [
+    featured,
+    ogImages,
+    inBodies,
+    categories,
+    advertisements,
+    adDetails,
+    settings,
+    inPages,
+  ] = await Promise.all([
+    tx.article.groupBy({
+      by: ['mediaId'],
+      where: { mediaId: { in: mediaIds } },
+      _count: { _all: true },
+    }),
+    tx.article.groupBy({
+      by: ['ogImageId'],
+      where: { ogImageId: { in: mediaIds } },
+      _count: { _all: true },
+    }),
+    tx.articleMedia.groupBy({
+      by: ['mediaId'],
+      where: { mediaId: { in: mediaIds } },
+      _count: { _all: true },
+    }),
+    tx.category.groupBy({
+      by: ['mediaId'],
+      where: { mediaId: { in: mediaIds } },
+      _count: { _all: true },
+    }),
+    tx.advertisement.groupBy({
+      by: ['mediaId'],
+      where: { mediaId: { in: mediaIds } },
+      _count: { _all: true },
+    }),
+    tx.advertisement.groupBy({
+      by: ['detailMediaId'],
+      where: { detailMediaId: { in: mediaIds } },
+      _count: { _all: true },
+    }),
+    tx.siteSettings.findMany({
+      select: {
+        logoMediaId: true,
+        faviconMediaId: true,
+        defaultOgImageId: true,
+      },
+    }),
+    tx.sitePageMedia.groupBy({
+      by: ['mediaId'],
+      where: { mediaId: { in: mediaIds } },
+      _count: { _all: true },
+    }),
+  ]);
 
   const add = (
     id: string | null,
@@ -163,6 +188,8 @@ export async function countUsage(
 
   for (const row of featured) add(row.mediaId, 'articles', row._count._all);
   for (const row of ogImages) add(row.ogImageId, 'articles', row._count._all);
+  for (const row of inBodies) add(row.mediaId, 'articles', row._count._all);
+  for (const row of inPages) add(row.mediaId, 'settings', row._count._all);
   for (const row of categories) add(row.mediaId, 'categories', row._count._all);
   for (const row of advertisements)
     add(row.mediaId, 'advertisements', row._count._all);
@@ -175,4 +202,74 @@ export async function countUsage(
   }
 
   return usage;
+}
+
+/**
+ * Makes the rows say exactly which pictures a document places, and returns the
+ * ones it no longer does so the caller can release them once unused.
+ */
+function diffIds(
+  current: string[],
+  next: string[],
+): { added: string[]; removed: string[] } {
+  const keep = new Set(next);
+  const had = new Set(current);
+  return {
+    added: next.filter((id) => !had.has(id)),
+    removed: current.filter((id) => !keep.has(id)),
+  };
+}
+
+export async function syncArticleMedia(
+  tx: TransactionClient,
+  articleId: string,
+  mediaIds: string[],
+): Promise<string[]> {
+  const current = await tx.articleMedia.findMany({
+    where: { articleId },
+    select: { mediaId: true },
+  });
+  const { added, removed } = diffIds(
+    current.map((row) => row.mediaId),
+    mediaIds,
+  );
+  if (removed.length) {
+    await tx.articleMedia.deleteMany({
+      where: { articleId, mediaId: { in: removed } },
+    });
+  }
+  if (added.length) {
+    await tx.articleMedia.createMany({
+      data: added.map((mediaId) => ({ articleId, mediaId })),
+      skipDuplicates: true,
+    });
+  }
+  return removed;
+}
+
+export async function syncPageMedia(
+  tx: TransactionClient,
+  page: SitePage,
+  mediaIds: string[],
+): Promise<string[]> {
+  const current = await tx.sitePageMedia.findMany({
+    where: { page },
+    select: { mediaId: true },
+  });
+  const { added, removed } = diffIds(
+    current.map((row) => row.mediaId),
+    mediaIds,
+  );
+  if (removed.length) {
+    await tx.sitePageMedia.deleteMany({
+      where: { page, mediaId: { in: removed } },
+    });
+  }
+  if (added.length) {
+    await tx.sitePageMedia.createMany({
+      data: added.map((mediaId) => ({ page, mediaId })),
+      skipDuplicates: true,
+    });
+  }
+  return removed;
 }

@@ -1,6 +1,8 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
   ArticleParamsSchema,
+  ArticlePreviewBodySchema,
+  ArticlePreviewSchema,
   ArticleSchema,
   ArticleStatusCountsSchema,
   CmsArticleCountsQuerySchema,
@@ -15,6 +17,7 @@ import { Type } from '@sinclair/typebox';
 import * as controller from './controller.js';
 
 export const cmsArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  await app.register(import('@fastify/rate-limit'), { global: false });
   app.addHook('preHandler', app.requireAuth);
 
   app.get(
@@ -49,6 +52,26 @@ export const cmsArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.counts,
+  );
+
+  app.post(
+    '/preview',
+    {
+      // Each call reads the database and stores a page in memory.
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+      schema: {
+        tags: ['articles'],
+        summary: 'Preview a draft as the reader page',
+        description:
+          'Nothing is saved. Returns a short-lived token; the reader site shows the draft at `/preview/<token>`.',
+        body: ArticlePreviewBodySchema,
+        response: {
+          200: SuccessResponse(ArticlePreviewSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.preview,
   );
 
   app.get(
