@@ -101,11 +101,12 @@ The reader site draws them exactly as set.
 
 **Preview.** The Publish card has a Preview article button that opens the whole article page (site
 header, ads, footer and all) in a new tab, built from the form as it stands, so unsaved edits and
-brand-new articles preview too. Nothing is saved. `POST /cms/articles/preview` turns the draft into
-the same page a reader gets and returns a 30-minute token; the reader site shows it at
-`/preview/<token>` (`GET /public/articles/previews/<token>`), marked noindex, no-store, with a
-"Preview" banner. The link is the only credential, so it is 256 random bits and short-lived. The CMS
-needs `VITE_WEB_URL` (the reader site's address) to open it. The site pins a 1280px layout on phones, so sizes
+brand-new articles preview too. Nothing is saved or stored anywhere, not even briefly: `POST
+/cms/articles/preview` turns the draft into the same page a reader gets and returns it directly in
+the response; the CMS hands that response straight to the already-open tab over `postMessage`,
+which renders it at `/preview`, marked noindex, no-store, with a "Preview" banner. No token, no
+server-side store, no second request - the built page exists only in the two tabs' memory for as
+long as they stay open. The CMS needs `VITE_WEB_URL` (the reader site's address) to open it. The site pins a 1280px layout on phones, so sizes
 scale with the page; in a window narrower than 640px pictures never wrap text and keep at least
 half the column.
 

@@ -185,13 +185,3 @@ export const ArticlePreviewBodySchema = Type.Object(
   },
   { additionalProperties: false },
 );
-
-export const ArticlePreviewSchema = Type.Object({
-  token: Type.String(),
-  expiresAt: IsoDateTime,
-});
-
-/** 32 random bytes, base64url: the length is fixed, so anything else is not one of ours. */
-export const PreviewTokenParamsSchema = Type.Object({
-  token: Type.String({ pattern: '^[A-Za-z0-9_-]{43}$' }),
-});

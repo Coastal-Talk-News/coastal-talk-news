@@ -175,23 +175,6 @@ export async function getArticle(id: string): Promise<PublicArticleDto | null> {
   }
 }
 
-/** Null once the preview's token has expired, or if it never existed. */
-export async function getArticlePreview(
-  token: string,
-): Promise<PublicArticleDto | null> {
-  try {
-    return await fetchPublic<PublicArticleDto>(`/articles/previews/${token}`);
-  } catch (error) {
-    if (
-      error instanceof ApiClientError &&
-      (error.status === 404 || error.status === 400)
-    ) {
-      return null;
-    }
-    throw error;
-  }
-}
-
 /**
  * Null when no advertisement with this id is currently running - it never
  * started, its run is over, or the id is malformed. All of them mean the same

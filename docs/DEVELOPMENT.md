@@ -199,16 +199,14 @@ premature optimizations without a concrete, current bottleneck.
 
 Both of you run Claude Code against the same repository and the same `CLAUDE.md`/`docs/`.
 
-**CMS sessions live in the API process.** Sign-in state is an in-memory store, not
-JWTs and not a table, so a session can be revoked from the Signed-in devices screen.
-Two consequences to keep in mind, and to keep out of the CMS interface:
-
-- Every deploy or restart signs everyone out. That is expected, not a bug.
-- The API cannot run more than one instance; a session created on one would not
-  exist on another.
-
-Surface this to developers here, never in the UI. The client only needs the
-sign-in page's "Your session expired" message when it actually happens.
+**CMS sessions live in the `cms_sessions` table.** Not JWTs - a session can be revoked
+from the Signed-in devices screen, which a self-contained token can't be. Only the
+SHA-256 hash of the token is ever stored; the plaintext lives solely in the signed,
+httpOnly cookie. A session expires a week after sign-in (`SESSION_TTL_HOURS`) or after
+`SESSION_IDLE_MINUTES` of inactivity, whichever comes first - `verify()` deletes a lapsed
+session on the spot, and a periodic sweep in `plugins/auth.ts` catches whatever a reader
+never comes back to redeem. A deploy or restart no longer signs anyone out, and the API
+can run more than one instance.
 
 **Shared development database.** Both developers point at the same Supabase project, so
 the database is shared state in exactly the way the codebase is not:
@@ -242,9 +240,9 @@ good save into a 500. Prefer a single nested write over a transaction where the 
 
 ### 10.1 Two-factor sign-in
 
-- `POST /cms/auth/login` never opens a session for a 2FA user: it sets a short-lived
-  `ctn_2fa` challenge cookie (in-memory, like sessions), and the session is only issued
-  after `/cms/auth/2fa/verify` or `/cms/auth/2fa/setup/confirm` succeeds.
+- `POST /cms/auth/login` never opens a session for a 2FA user: it sets a short-lived,
+  in-memory `ctn_2fa` challenge cookie, and the session (DB-backed, unlike the challenge)
+  is only issued after `/cms/auth/2fa/verify` or `/cms/auth/2fa/setup/confirm` succeeds.
 - Wrong codes and passwords are `400`, not `401`, because the CMS treats any 401 as an
   expired session. Codes are capped per challenge (5) and per user (10 per 15 minutes),
   and a used TOTP step cannot be replayed.

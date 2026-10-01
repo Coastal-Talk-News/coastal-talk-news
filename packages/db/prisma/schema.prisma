@@ -302,8 +302,35 @@ model CmsUser {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   recoveryCodes CmsRecoveryCode[]
+  sessions      CmsSession[]
 
   @@map("cms_users")
+}
+
+/// A signed-in device. Only the SHA-256 hash of the session token is stored
+/// (as the primary key), never the token itself, so a copy of this table
+/// can't be replayed as a cookie. A session past `expiresAt` is deleted
+/// outright by the API's periodic sweep rather than flagged inactive - there
+/// is no reason to keep it around.
+model CmsSession {
+  id         String   @id @map("token_hash")
+  userId     String   @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  /// Bumped on every authenticated request; the idle timeout is measured
+  /// from this, separately from the absolute `expiresAt`.
+  lastSeenAt DateTime @map("last_seen_at")
+  expiresAt  DateTime @map("expires_at")
+  userAgent  String?  @map("user_agent")
+  ipAddress  String?  @map("ip_address")
+
+  user CmsUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Serves both the per-user session list (newest first) and the per-user
+  // cap eviction, which also orders by lastSeenAt.
+  @@index([userId, lastSeenAt])
+  // Serves the periodic sweep's DELETE WHERE expires_at <= now().
+  @@index([expiresAt])
+  @@map("cms_sessions")
 }
 
 /// One-time codes for a lost authenticator. Only a keyed hash is stored: the
