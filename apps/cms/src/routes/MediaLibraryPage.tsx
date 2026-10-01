@@ -23,16 +23,22 @@ export function MediaLibraryPage() {
 
   const {
     listQuery,
+    assets,
+    total,
     pending,
     enqueueFiles,
     retryUpload,
     dismissUpload,
     remove,
     cleanup,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
   } = useMediaLibrary(debouncedSearch);
-  const { data, isPending, isError, error, refetch } = listQuery;
+  const { isPending, isError, error, refetch } = listQuery;
 
-  const assets = data?.data ?? [];
+  // Only counts what's loaded so far — an exact figure would mean fetching
+  // the whole library up front, the very cost infinite scroll avoids.
   const unusedCount = assets.filter((asset) => asset.usage.total === 0).length;
 
   return (
@@ -68,10 +74,10 @@ export function MediaLibraryPage() {
                 icon={<Search className="size-4" aria-hidden />}
               />
             </div>
-            {data && (
+            {!isPending && (
               <p className="text-ink-muted text-xs">
-                {data.meta.total} image{data.meta.total === 1 ? '' : 's'}
-                {unusedCount > 0 && ` · ${unusedCount} unused`}
+                {total} image{total === 1 ? '' : 's'}
+                {unusedCount > 0 && ` · ${unusedCount} unused so far`}
               </p>
             )}
           </div>
@@ -109,6 +115,9 @@ export function MediaLibraryPage() {
                 onRetryPending={retryUpload}
                 onDismissPending={dismissUpload}
                 onDelete={setPendingDelete}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={() => void fetchNextPage()}
               />
             )}
           </div>

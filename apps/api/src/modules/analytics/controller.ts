@@ -7,6 +7,10 @@ export async function getStats(request: FastifyRequest) {
   return dataEnvelope(await service.getStats(request.server.prisma));
 }
 
+export async function getStorage(request: FastifyRequest) {
+  return dataEnvelope(await service.getStorage(request.server.prisma));
+}
+
 export async function getDailyViews(request: FastifyRequest) {
   return dataEnvelope(await service.getDailyViews(request.server.prisma));
 }

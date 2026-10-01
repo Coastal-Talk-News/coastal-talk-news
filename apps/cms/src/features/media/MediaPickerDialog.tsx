@@ -27,11 +27,21 @@ export function MediaPickerDialog({
 }: MediaPickerDialogProps) {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounced(search, SEARCH_DEBOUNCE_MS);
-  const { listQuery, pending, enqueueFiles, retryUpload, dismissUpload } =
-    useMediaLibrary(debouncedSearch);
-  const { data, isPending, isError, error, refetch } = listQuery;
-
-  const assets = data?.data ?? [];
+  // A ref alone wouldn't re-render once the panel mounts; the sentinel needs
+  // the actual element to scope "near the end" to this panel, not the page.
+  const [scrollPanel, setScrollPanel] = useState<HTMLDivElement | null>(null);
+  const {
+    listQuery,
+    assets,
+    pending,
+    enqueueFiles,
+    retryUpload,
+    dismissUpload,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useMediaLibrary(debouncedSearch);
+  const { isPending, isError, error, refetch } = listQuery;
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -55,7 +65,10 @@ export function MediaPickerDialog({
             </Dialog.Close>
           </div>
 
-          <div className="space-y-4 overflow-y-auto px-6 py-5">
+          <div
+            ref={setScrollPanel}
+            className="space-y-4 overflow-y-auto px-6 py-5"
+          >
             <UploadZone
               onFiles={(files) =>
                 enqueueFiles(files, (asset) => onSelect(asset))
@@ -103,6 +116,10 @@ export function MediaPickerDialog({
                 onDismissPending={dismissUpload}
                 selectedId={selectedId}
                 onSelect={onSelect}
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={() => void fetchNextPage()}
+                scrollRoot={scrollPanel}
               />
             )}
           </div>

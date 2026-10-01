@@ -1,4 +1,5 @@
 import { Type } from '@sinclair/typebox';
+import { UsageMeterSchema } from './dashboard.js';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 
 export const AnalyticsStatsSchema = Type.Object({
@@ -67,4 +68,17 @@ export const AnalyticsArticlesQuerySchema = Type.Object({
   order: Type.Union([Type.Literal('asc'), Type.Literal('desc')], {
     default: 'desc',
   }),
+});
+
+export const DatabaseTableUsageSchema = Type.Object({
+  table: Type.String(),
+  bytes: Type.Integer(),
+  rowEstimate: Type.Integer(),
+  percent: Type.Number(),
+});
+
+export const DatabaseStorageSchema = Type.Object({
+  total: UsageMeterSchema,
+  tables: Type.Array(DatabaseTableUsageSchema),
+  otherBytes: Type.Integer(),
 });

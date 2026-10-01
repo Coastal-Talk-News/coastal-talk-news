@@ -27,6 +27,7 @@ export const queryKeys = {
   analytics: ['analytics'] as const,
   analyticsArticles: (params: Record<string, unknown>) =>
     ['analytics', 'articles', params] as const,
+  analyticsStorage: ['analytics', 'storage'] as const,
   analyticsDailyViews: ['analytics', 'views', 'daily'] as const,
   analyticsWeeklyViews: ['analytics', 'views', 'weekly'] as const,
   analyticsMonthlyViews: (year: number) =>

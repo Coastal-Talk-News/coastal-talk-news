@@ -8,6 +8,7 @@ import {
   AnalyticsStatsSchema,
   AnalyticsWeeklyViewsSchema,
   AnalyticsYearRangeSchema,
+  DatabaseStorageSchema,
   ListResponse,
   SuccessResponse,
   commonErrorResponses,
@@ -31,6 +32,21 @@ export const analyticsRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.getStats,
+  );
+
+  app.get(
+    '/storage',
+    {
+      schema: {
+        tags: ['analytics'],
+        summary: 'Database size broken down by table',
+        response: {
+          200: SuccessResponse(DatabaseStorageSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.getStorage,
   );
 
   app.get(

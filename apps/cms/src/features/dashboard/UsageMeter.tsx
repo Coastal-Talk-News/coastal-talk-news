@@ -39,7 +39,21 @@ export function UsageMeter({
           <Icon className="size-5" aria-hidden />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm text-ink-muted">{label}</span>
+          <span className="flex items-center justify-between gap-2">
+            <span className="block truncate text-sm text-ink-muted">
+              {label}
+            </span>
+            {usage && (
+              <span
+                className={cn(
+                  'shrink-0 text-xs font-semibold tabular-nums',
+                  isHigh ? 'text-danger-text' : 'text-ink-subtle',
+                )}
+              >
+                {percent}%
+              </span>
+            )}
+          </span>
           <span className="block text-2xl font-bold tracking-tight text-ink">
             {usage ? (
               <>

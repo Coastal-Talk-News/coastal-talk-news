@@ -6,6 +6,7 @@ import type {
   AnalyticsStatsDto,
   AnalyticsWeeklyViewsDto,
   AnalyticsYearRangeDto,
+  DatabaseStorageDto,
   SortOrder,
 } from '@coastal-talk-news/types';
 import { api, buildQuery } from './client.js';
@@ -13,6 +14,8 @@ import { api, buildQuery } from './client.js';
 export const analyticsApi = {
   stats: (signal?: AbortSignal) =>
     api.get<AnalyticsStatsDto>('/api/v1/cms/analytics', signal),
+  storage: (signal?: AbortSignal) =>
+    api.get<DatabaseStorageDto>('/api/v1/cms/analytics/storage', signal),
   articles: (
     params: {
       page: number;

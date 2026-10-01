@@ -42,7 +42,7 @@ export const DashboardAdvertisementSchema = Type.Object({
   image: NullableMedia,
 });
 
-const UsageMeterSchema = Type.Object({
+export const UsageMeterSchema = Type.Object({
   used: Type.Number(),
   limit: Type.Number(),
   warnAt: Type.Number(),
