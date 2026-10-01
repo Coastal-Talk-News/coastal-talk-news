@@ -4,14 +4,7 @@ import { Input } from '@coastal-talk-news/ui/input';
 import { Select, type SelectOption } from '@coastal-talk-news/ui/select';
 import { EmptyState, ErrorState } from '@coastal-talk-news/ui/states';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import {
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  Newspaper,
-  Plus,
-  Search,
-} from 'lucide-react';
+import { ArrowUpDown, Newspaper, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -19,6 +12,7 @@ import { articlesApi } from '../api/articles.js';
 import { ApiError } from '../api/client.js';
 import { categoriesApi } from '../api/categories.js';
 import { queryKeys } from '../api/queryKeys.js';
+import { Pagination } from '../components/Pagination.js';
 import { PageHeader } from '../components/layout/PageHeader.js';
 import { ArticleRow } from '../features/articles/ArticleRow.js';
 import { ArticlesTableSkeleton } from '../features/articles/ArticlesTableSkeleton.js';
@@ -28,6 +22,7 @@ import {
   leafCategories,
 } from '../features/categories/tree.js';
 import { SEARCH_DEBOUNCE_MS, useDebounced } from '../lib/useDebounced.js';
+import { usePageSize } from '../lib/usePageSize.js';
 
 type StatusTab = 'all' | 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
 type SortOrder = 'newest' | 'oldest';
@@ -46,7 +41,7 @@ const COUNT_KEY = {
   ARCHIVED: 'archived',
 } as const;
 
-const PAGE_LIMIT = 20;
+const DEFAULT_PAGE_LIMIT = 5;
 
 function toStatusTab(raw: string | null): StatusTab {
   return TABS.some((tab) => tab.value === raw) ? (raw as StatusTab) : 'all';
@@ -81,6 +76,7 @@ const primaryLinkClass =
 export function ArticlesPage() {
   const tabListKeys = useTabListKeys();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = usePageSize('articles', DEFAULT_PAGE_LIMIT);
   const [searchParams, setSearchParams] = useSearchParams();
   const statusTab = toStatusTab(searchParams.get('status'));
   const [categoryId, setCategoryId] = useState('');
@@ -142,7 +138,7 @@ export function ArticlesPage() {
   const listParams: ArticleListParams = {
     ...baseFilters,
     page,
-    limit: PAGE_LIMIT,
+    limit,
     status: statusTab === 'all' ? undefined : statusTab,
     sort,
   };
@@ -330,37 +326,15 @@ export function ArticlesPage() {
               </table>
             </div>
 
-            <div className="border-hairline text-ink-muted flex items-center justify-between border-t px-4 py-3 text-xs">
-              <span>
-                Showing {(page - 1) * PAGE_LIMIT + 1}–
-                {(page - 1) * PAGE_LIMIT + articles.length} of{' '}
-                {meta?.total ?? 0} articles
-                {isFetching && ' · Syncing…'}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={!meta?.hasPreviousPage}
-                  onClick={() => setPage((current) => current - 1)}
-                  aria-label="Previous page"
-                  className="ring-hairline grid size-8 place-items-center rounded-lg ring-1 transition-colors hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronLeft className="size-4" aria-hidden />
-                </button>
-                <span className="tabular-nums">
-                  Page {meta?.page ?? 1} of {meta?.totalPages ?? 1}
-                </span>
-                <button
-                  type="button"
-                  disabled={!meta?.hasNextPage}
-                  onClick={() => setPage((current) => current + 1)}
-                  aria-label="Next page"
-                  className="ring-hairline grid size-8 place-items-center rounded-lg ring-1 transition-colors hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronRight className="size-4" aria-hidden />
-                </button>
-              </div>
-            </div>
+            <Pagination
+              meta={meta}
+              itemCount={articles.length}
+              itemLabel="articles"
+              limit={limit}
+              onLimitChange={setLimit}
+              onPageChange={setPage}
+              isFetching={isFetching}
+            />
           </>
         )}
       </section>

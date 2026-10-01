@@ -8,8 +8,7 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   Archive,
   Bell,
-  ChevronLeft,
-  ChevronRight,
+  Database,
   Eye,
   FileText,
   Megaphone,
@@ -20,24 +19,35 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { analyticsApi } from '../api/analytics.js';
 import { queryKeys } from '../api/queryKeys.js';
+import { Pagination } from '../components/Pagination.js';
 import { PageHeader } from '../components/layout/PageHeader.js';
 import { STATUS_LABELS, STATUS_TONES } from '../features/articles/status.js';
 import { StatCard } from '../features/dashboard/StatCard.js';
-import { formatDate } from '../lib/format.js';
+import { UsageMeter } from '../features/dashboard/UsageMeter.js';
+import { formatBytes, formatDate } from '../lib/format.js';
+import { usePageSize } from '../lib/usePageSize.js';
 
-const PAGE_LIMIT = 20;
+const DEFAULT_PAGE_LIMIT = 5;
 
 export function AnalyticsPage() {
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = usePageSize('analytics-reads', DEFAULT_PAGE_LIMIT);
 
   const stats = useQuery({
     queryKey: queryKeys.analytics,
     queryFn: ({ signal }) => analyticsApi.stats(signal),
   });
   const articles = useQuery({
-    queryKey: queryKeys.analyticsArticles(page),
-    queryFn: ({ signal }) => analyticsApi.articles(page, PAGE_LIMIT, signal),
+    queryKey: queryKeys.analyticsArticles(page, limit),
+    queryFn: ({ signal }) => analyticsApi.articles(page, limit, signal),
     placeholderData: keepPreviousData,
+  });
+  // The figures barely move minute to minute, so a page left open shouldn't
+  // refetch every time it's focused.
+  const storage = useQuery({
+    queryKey: queryKeys.analyticsStorage,
+    queryFn: ({ signal }) => analyticsApi.storage(signal),
+    staleTime: 5 * 60_000,
   });
 
   if (stats.isPending) return <LoadingState label="Loading analytics…" />;
@@ -118,6 +128,81 @@ export function AnalyticsPage() {
 
       <section className="border-hairline rounded-card border bg-surface shadow-sm">
         <div className="border-hairline border-b px-5 py-4">
+          <h2 className="font-semibold text-ink">Database Storage</h2>
+          <p className="mt-0.5 text-xs text-ink-muted">
+            What the total on the Dashboard is made up of.
+          </p>
+        </div>
+
+        {storage.isError ? (
+          <ErrorState
+            message="Could not load database storage."
+            onRetry={() => void storage.refetch()}
+          />
+        ) : (
+          <div className="p-5">
+            <UsageMeter
+              label="Database size"
+              icon={Database}
+              usage={storage.data?.total ?? null}
+              unit="MB"
+              pending={storage.isPending}
+            />
+          </div>
+        )}
+
+        {storage.data && (
+          <div className="overflow-x-auto border-hairline border-t">
+            <table className="w-full min-w-176 text-left">
+              <thead>
+                <tr className="text-ink-subtle border-hairline bg-surface-sunken border-b text-[11px] font-semibold tracking-[0.08em] uppercase">
+                  <th className="py-3 pr-4 pl-4">Table</th>
+                  <th className="py-3 pr-4 text-right">Rows</th>
+                  <th className="py-3 pr-4 text-right">Size</th>
+                  <th className="py-3 pr-5 text-right">Share</th>
+                </tr>
+              </thead>
+              <tbody className="divide-hairline divide-y text-sm">
+                {storage.data.tables.map((table) => (
+                  <tr key={table.table}>
+                    <td className="py-2.5 pr-4 pl-4 font-mono text-xs text-ink">
+                      {table.table}
+                    </td>
+                    <td className="py-2.5 pr-4 text-right text-ink-muted tabular-nums">
+                      {table.rowEstimate.toLocaleString()}
+                    </td>
+                    <td className="py-2.5 pr-4 text-right text-ink tabular-nums">
+                      {formatBytes(table.bytes)}
+                    </td>
+                    <td className="py-2.5 pr-5 text-right text-ink-subtle tabular-nums">
+                      {table.percent}%
+                    </td>
+                  </tr>
+                ))}
+                {storage.data.otherBytes > 0 && (
+                  <tr>
+                    <td className="py-2.5 pr-4 pl-4 text-ink-subtle italic">
+                      Other (Supabase platform tables, other databases)
+                    </td>
+                    <td className="py-2.5 pr-4 text-right text-ink-subtle">
+                      —
+                    </td>
+                    <td className="py-2.5 pr-4 text-right text-ink-subtle tabular-nums">
+                      {formatBytes(storage.data.otherBytes)}
+                    </td>
+                    <td className="py-2.5 pr-5 text-right text-ink-subtle">
+                      —
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="border-hairline rounded-card border bg-surface shadow-sm">
+        <div className="border-hairline border-b px-5 py-4">
           <h2 className="font-semibold text-ink">Reads per article</h2>
           <p className="mt-0.5 text-xs text-ink-muted">
             A read is counted once per visit, when the reader stays on the
@@ -186,35 +271,15 @@ export function AnalyticsPage() {
               </table>
             </div>
 
-            <div className="border-hairline text-ink-muted flex items-center justify-between border-t px-4 py-3 text-xs">
-              <span>
-                {meta?.total ?? 0} articles
-                {articles.isFetching && ' · Syncing…'}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={!meta?.hasPreviousPage}
-                  onClick={() => setPage((current) => current - 1)}
-                  aria-label="Previous page"
-                  className="ring-hairline grid size-8 place-items-center rounded-lg ring-1 transition-colors hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronLeft className="size-4" aria-hidden />
-                </button>
-                <span className="tabular-nums">
-                  Page {meta?.page ?? 1} of {meta?.totalPages ?? 1}
-                </span>
-                <button
-                  type="button"
-                  disabled={!meta?.hasNextPage}
-                  onClick={() => setPage((current) => current + 1)}
-                  aria-label="Next page"
-                  className="ring-hairline grid size-8 place-items-center rounded-lg ring-1 transition-colors hover:bg-surface-sunken disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ChevronRight className="size-4" aria-hidden />
-                </button>
-              </div>
-            </div>
+            <Pagination
+              meta={meta}
+              itemCount={rows.length}
+              itemLabel="articles"
+              limit={limit}
+              onLimitChange={setLimit}
+              onPageChange={setPage}
+              isFetching={articles.isFetching}
+            />
           </>
         )}
       </section>

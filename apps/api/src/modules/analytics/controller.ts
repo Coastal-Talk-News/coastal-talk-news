@@ -6,6 +6,10 @@ export async function getStats(request: FastifyRequest) {
   return dataEnvelope(await service.getStats(request.server.prisma));
 }
 
+export async function getStorage(request: FastifyRequest) {
+  return dataEnvelope(await service.getStorage(request.server.prisma));
+}
+
 export async function listArticles(
   request: FastifyRequest<{ Querystring: { page: number; limit: number } }>,
 ) {

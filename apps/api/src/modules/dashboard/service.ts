@@ -18,8 +18,16 @@ function startOfToday(now: Date): Date {
 
 // Supabase's free plan allows 500 MB of database, and a project that goes
 // over it is put into read-only mode, so the meter turns red before that.
-const SUPABASE_LIMIT_MB = 500;
-const SUPABASE_WARN_MB = 450;
+// Exported so the Analytics page's detailed storage view uses the exact same
+// limit as this meter, rather than a second copy that could drift from it.
+export const SUPABASE_LIMIT_MB = 500;
+export const SUPABASE_WARN_MB = 450;
+
+/** Decimal MB (10^6 bytes), matching what Supabase's own dashboard reports —
+ *  dividing by 1024*1024 instead reads as a smaller, wrong number here. */
+export function bytesToMB(bytes: number): number {
+  return Math.round(bytes / 1_000_000);
+}
 // The free Cloudinary plan's monthly allowance.
 const CLOUDINARY_WARN_CREDITS = 20;
 // The usage figures barely move minute to minute, and the Admin API is
@@ -51,7 +59,7 @@ async function readSupabase(db: Database) {
   try {
     const bytes = await repository.databaseSizeBytes(db);
     return {
-      used: Math.round(bytes / 1024 / 1024),
+      used: bytesToMB(bytes),
       limit: SUPABASE_LIMIT_MB,
       warnAt: SUPABASE_WARN_MB,
     };

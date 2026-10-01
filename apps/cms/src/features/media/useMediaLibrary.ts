@@ -1,12 +1,24 @@
 import type { ApiListSuccess, MediaAssetDto } from '@coastal-talk-news/types';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ApiError } from '../../api/client.js';
 import { mediaApi } from '../../api/media.js';
 import { queryKeys } from '../../api/queryKeys.js';
 
-type MediaList = ApiListSuccess<MediaAssetDto>;
+type MediaPage = ApiListSuccess<MediaAssetDto>;
+interface MediaPages {
+  pages: MediaPage[];
+  pageParams: number[];
+}
+
+/** Small on purpose: loading the whole library in one request is exactly the
+ *  slow-page, wasted-bandwidth problem infinite scroll exists to avoid. */
+const PAGE_SIZE = 10;
 
 export interface PendingUpload {
   key: string;
@@ -21,18 +33,43 @@ function messageFor(error: unknown, fallback: string): string {
   return error instanceof ApiError ? error.message : fallback;
 }
 
+/** Every page rebuilt with `map` applied to its assets, and a fresh total. */
+function withMappedAssets(
+  data: MediaPages | undefined,
+  map: (assets: MediaAssetDto[]) => MediaAssetDto[],
+): MediaPages | undefined {
+  if (!data) return data;
+  const pages = data.pages.map((page) => ({ ...page, data: map(page.data) }));
+  const total = pages.reduce((sum, page) => sum + page.data.length, 0);
+  return {
+    ...data,
+    pages: pages.map((page, index) =>
+      index === 0 ? { ...page, meta: { ...page.meta, total } } : page,
+    ),
+  };
+}
+
 export function useMediaLibrary(search: string) {
   const queryClient = useQueryClient();
   const [pending, setPending] = useState<PendingUpload[]>([]);
   const pendingRef = useRef(pending);
   pendingRef.current = pending;
 
-  const params = { limit: 60, ...(search ? { search } : {}) };
-  const listKey = queryKeys.mediaList(params);
-  const listQuery = useQuery({
+  const listKey = queryKeys.mediaList({ search: search || undefined });
+  const listQuery = useInfiniteQuery({
     queryKey: listKey,
-    queryFn: ({ signal }) => mediaApi.list(params, signal),
+    queryFn: ({ pageParam, signal }) =>
+      mediaApi.list(
+        { page: pageParam, limit: PAGE_SIZE, ...(search ? { search } : {}) },
+        signal,
+      ),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.meta.hasNextPage ? lastPage.meta.page + 1 : undefined,
   });
+
+  const assets = listQuery.data?.pages.flatMap((page) => page.data) ?? [];
+  const total = listQuery.data?.pages[0]?.meta.total ?? 0;
 
   const invalidate = useCallback(() => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.media });
@@ -62,16 +99,26 @@ export function useMediaLibrary(search: string) {
             if (upload) URL.revokeObjectURL(upload.previewUrl);
             return current.filter((item) => item.key !== key);
           });
+          // A fresh upload belongs at the front of an unfiltered library; a
+          // search in progress may not even match it, so it's left for the
+          // next real fetch rather than guessed at here.
           if (!search) {
-            queryClient.setQueryData<MediaList>(listKey, (current) =>
-              current
-                ? {
-                    ...current,
-                    data: [asset, ...current.data],
-                    meta: { ...current.meta, total: current.meta.total + 1 },
-                  }
-                : current,
-            );
+            queryClient.setQueryData<MediaPages>(listKey, (current) => {
+              if (!current || current.pages.length === 0) return current;
+              const [first, ...rest] = current.pages;
+              if (!first) return current;
+              return {
+                ...current,
+                pages: [
+                  {
+                    ...first,
+                    data: [asset, ...first.data],
+                    meta: { ...first.meta, total: first.meta.total + 1 },
+                  },
+                  ...rest,
+                ],
+              };
+            });
           }
           invalidate();
           toast.success(`${asset.filename} uploaded.`);
@@ -137,18 +184,11 @@ export function useMediaLibrary(search: string) {
     mutationFn: (asset: MediaAssetDto) => mediaApi.remove(asset.id),
     onMutate: async (asset) => {
       await queryClient.cancelQueries({ queryKey: listKey });
-      const previous = queryClient.getQueryData<MediaList>(listKey);
-      queryClient.setQueryData<MediaList>(listKey, (current) =>
-        current
-          ? {
-              ...current,
-              data: current.data.filter((item) => item.id !== asset.id),
-              meta: {
-                ...current.meta,
-                total: Math.max(0, current.meta.total - 1),
-              },
-            }
-          : current,
+      const previous = queryClient.getQueryData<MediaPages>(listKey);
+      queryClient.setQueryData<MediaPages>(listKey, (current) =>
+        withMappedAssets(current, (items) =>
+          items.filter((item) => item.id !== asset.id),
+        ),
       );
       return { previous };
     },
@@ -165,16 +205,12 @@ export function useMediaLibrary(search: string) {
     mutationFn: () => mediaApi.cleanup(),
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: listKey });
-      const previous = queryClient.getQueryData<MediaList>(listKey);
-      queryClient.setQueryData<MediaList>(listKey, (current) => {
-        if (!current) return current;
-        const kept = current.data.filter((item) => item.usage.total > 0);
-        return {
-          ...current,
-          data: kept,
-          meta: { ...current.meta, total: kept.length },
-        };
-      });
+      const previous = queryClient.getQueryData<MediaPages>(listKey);
+      queryClient.setQueryData<MediaPages>(listKey, (current) =>
+        withMappedAssets(current, (items) =>
+          items.filter((item) => item.usage.total > 0),
+        ),
+      );
       return { previous };
     },
     onSuccess: ({ removed }) => {
@@ -194,11 +230,16 @@ export function useMediaLibrary(search: string) {
 
   return {
     listQuery,
+    assets,
+    total,
     pending,
     enqueueFiles,
     retryUpload,
     dismissUpload,
     remove,
     cleanup,
+    hasNextPage: listQuery.hasNextPage,
+    isFetchingNextPage: listQuery.isFetchingNextPage,
+    fetchNextPage: listQuery.fetchNextPage,
   };
 }

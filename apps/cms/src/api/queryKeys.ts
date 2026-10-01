@@ -25,5 +25,7 @@ export const queryKeys = {
     ['advertisements', params] as const,
   settings: ['settings'] as const,
   analytics: ['analytics'] as const,
-  analyticsArticles: (page: number) => ['analytics', 'articles', page] as const,
+  analyticsArticles: (page: number, limit: number) =>
+    ['analytics', 'articles', page, limit] as const,
+  analyticsStorage: ['analytics', 'storage'] as const,
 } as const;
