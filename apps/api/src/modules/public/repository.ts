@@ -55,12 +55,22 @@ export function findPublishedArticle(db: TransactionClient, id: string) {
   });
 }
 
-/** Only a published article can be read, so a draft's id learns nothing. */
-export function incrementViewCount(db: TransactionClient, id: string) {
-  return db.article.updateMany({
+/**
+ * Only a published article can be read, so a draft's id learns nothing: the
+ * running total and the dated log row are written together, and only when
+ * the article actually exists and is published.
+ */
+export async function recordArticleView(
+  db: TransactionClient,
+  id: string,
+): Promise<void> {
+  const updated = await db.article.updateMany({
     where: { ...publishedWhere, id },
     data: { viewCount: { increment: 1 } },
   });
+  if (updated.count > 0) {
+    await db.articleView.create({ data: { articleId: id } });
+  }
 }
 
 export type ArticleDetailRow = NonNullable<

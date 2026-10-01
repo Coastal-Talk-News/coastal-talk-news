@@ -25,5 +25,11 @@ export const queryKeys = {
     ['advertisements', params] as const,
   settings: ['settings'] as const,
   analytics: ['analytics'] as const,
-  analyticsArticles: (page: number) => ['analytics', 'articles', page] as const,
+  analyticsArticles: (params: Record<string, unknown>) =>
+    ['analytics', 'articles', params] as const,
+  analyticsDailyViews: ['analytics', 'views', 'daily'] as const,
+  analyticsWeeklyViews: ['analytics', 'views', 'weekly'] as const,
+  analyticsMonthlyViews: (year: number) =>
+    ['analytics', 'views', 'monthly', year] as const,
+  analyticsYearRange: ['analytics', 'views', 'years'] as const,
 } as const;

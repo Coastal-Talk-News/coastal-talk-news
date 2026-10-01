@@ -195,16 +195,20 @@ on the server. Each turns red at 20 credits and 450 MB, and a bar reads
 ### Analytics
 
 A CMS tab after Settings. It shows the newsroom counts (total articles, published today,
-active latest news, active advertisements, drafts, archived) and a total of reads, then a
-paginated table of every article with its status, category, read time and number of reads,
-most read first.
+active latest news, active advertisements, drafts, archived), the same Cloudinary and
+Storage usage bars as the Dashboard, four read totals (Today, This Week, This Month, This
+Year — the last three are rolling 7/30/365-day windows, not calendar week/month/year), and a
+paginated table of every article with its status, category, read time and number of reads.
+The table sorts by views, publication date or category (click a column heading; click again
+to flip direction); sorting by category or date still lists most-viewed first within ties.
 
 A **read** is counted by the reader site: once a visitor has spent more than half of the
 article's estimated read time (the same "N min read" the CMS shows) on the page with the tab
 in view, it sends one anonymous count for that article. A browser tab counts an article once,
 so a refresh does not add another. Nothing about the reader is stored — no IP address, no
-identifier — only a running total on the article. This is the only reader analytics: no
-per-day history, referrers, devices or locations, and no Most Read section on the public site.
+identifier, just a running total on the article and a timestamp (for the four read totals
+above). This is the only reader analytics: no referrers, devices or locations, and no Most
+Read section on the public site.
 The privacy policy text (edited in the CMS) should say that reads are counted anonymously.
 
 ### News (list/manage)
