@@ -1,3 +1,4 @@
+import type { AnalyticsSort, SortOrder } from '@coastal-talk-news/types';
 import { Badge } from '@coastal-talk-news/ui/badge';
 import {
   EmptyState,
@@ -8,6 +9,10 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import {
   Archive,
   Bell,
+  Calendar,
+  CalendarDays,
+  CalendarRange,
+  Cloud,
   Database,
   Eye,
   FileText,
@@ -18,28 +23,71 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { analyticsApi } from '../api/analytics.js';
+import { dashboardApi } from '../api/dashboard.js';
 import { queryKeys } from '../api/queryKeys.js';
 import { Pagination } from '../components/Pagination.js';
 import { PageHeader } from '../components/layout/PageHeader.js';
 import { STATUS_LABELS, STATUS_TONES } from '../features/articles/status.js';
+import { SortHeader } from '../features/dashboard/SortHeader.js';
 import { StatCard } from '../features/dashboard/StatCard.js';
 import { UsageMeter } from '../features/dashboard/UsageMeter.js';
+import {
+  ViewsDetailSheet,
+  type ViewsDetailKind,
+} from '../features/dashboard/ViewsDetailSheet.js';
 import { formatBytes, formatDate } from '../lib/format.js';
 import { usePageSize } from '../lib/usePageSize.js';
 
 const DEFAULT_PAGE_LIMIT = 5;
 
+// Where a column starts when first chosen: most viewed and newest first, and
+// categories from A. Within a category the articles are most viewed first.
+const DEFAULT_ORDER: Record<AnalyticsSort, SortOrder> = {
+  views: 'desc',
+  published: 'desc',
+  category: 'asc',
+};
+
 export function AnalyticsPage() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = usePageSize('analytics-reads', DEFAULT_PAGE_LIMIT);
+  const [viewsDetail, setViewsDetail] = useState<ViewsDetailKind>(null);
+  const [sorting, setSorting] = useState<{
+    sort: AnalyticsSort;
+    order: SortOrder;
+  }>({ sort: 'views', order: 'desc' });
+
+  // A second click on the same column flips it; a different column starts at
+  // its own default. Either way the list goes back to its first page.
+  function sortBy(sort: AnalyticsSort) {
+    setSorting((current) => ({
+      sort,
+      order:
+        current.sort === sort
+          ? current.order === 'asc'
+            ? 'desc'
+            : 'asc'
+          : DEFAULT_ORDER[sort],
+    }));
+    setPage(1);
+  }
 
   const stats = useQuery({
     queryKey: queryKeys.analytics,
     queryFn: ({ signal }) => analyticsApi.stats(signal),
   });
+  // Shared with the Dashboard's query key, so visiting both pages makes one
+  // Cloudinary/Supabase call between them rather than one each.
+  const usageQuery = useQuery({
+    queryKey: queryKeys.dashboardUsage,
+    queryFn: ({ signal }) => dashboardApi.usage(signal),
+    staleTime: 5 * 60_000,
+  });
+  const usage = usageQuery.data;
   const articles = useQuery({
-    queryKey: queryKeys.analyticsArticles(page, limit),
-    queryFn: ({ signal }) => analyticsApi.articles(page, limit, signal),
+    queryKey: queryKeys.analyticsArticles({ page, limit, ...sorting }),
+    queryFn: ({ signal }) =>
+      analyticsApi.articles({ page, limit, ...sorting }, signal),
     placeholderData: keepPreviousData,
   });
   // The figures barely move minute to minute, so a page left open shouldn't
@@ -118,13 +166,61 @@ export function AnalyticsPage() {
           tone="slate"
           to="/articles?status=ARCHIVED"
         />
+        {/* Shown as unavailable rather than left out while loading or on
+            failure: the page is worth opening without them. */}
+        <UsageMeter
+          label="Cloudinary credits"
+          icon={Cloud}
+          usage={usage ? usage.cloudinary : null}
+          unit="credits"
+          pending={usageQuery.isPending}
+        />
+        <UsageMeter
+          label="Storage"
+          icon={Database}
+          usage={usage ? usage.supabase : null}
+          unit="MB"
+          pending={usageQuery.isPending}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Total Reads"
-          value={counts.totalViews}
+          label="Views Today"
+          value={counts.viewsToday}
           icon={Eye}
           tone="blue"
         />
+        <StatCard
+          label="Views This Week"
+          value={counts.viewsThisWeek}
+          icon={Calendar}
+          tone="green"
+          caption="Last 7 days · click for the daily breakdown"
+          onClick={() => setViewsDetail('week')}
+        />
+        <StatCard
+          label="Views This Month"
+          value={counts.viewsThisMonth}
+          icon={CalendarDays}
+          tone="violet"
+          caption="Last 30 days · click for the weekly breakdown"
+          onClick={() => setViewsDetail('month')}
+        />
+        <StatCard
+          label="Views This Year"
+          value={counts.viewsThisYear}
+          icon={CalendarRange}
+          tone="amber"
+          caption="Last 365 days · click for the monthly breakdown"
+          onClick={() => setViewsDetail('year')}
+        />
       </div>
+
+      <ViewsDetailSheet
+        kind={viewsDetail}
+        onClose={() => setViewsDetail(null)}
+      />
 
       <section className="border-hairline rounded-card border bg-surface shadow-sm">
         <div className="border-hairline border-b px-5 py-4">
@@ -203,7 +299,7 @@ export function AnalyticsPage() {
 
       <section className="border-hairline rounded-card border bg-surface shadow-sm">
         <div className="border-hairline border-b px-5 py-4">
-          <h2 className="font-semibold text-ink">Reads per article</h2>
+          <h2 className="font-semibold text-ink">Views per article</h2>
           <p className="mt-0.5 text-xs text-ink-muted">
             A read is counted once per visit, when the reader stays on the
             article for more than half of its read time.
@@ -230,11 +326,27 @@ export function AnalyticsPage() {
                 <thead>
                   <tr className="text-ink-subtle border-hairline bg-surface-sunken border-b text-[11px] font-semibold tracking-[0.08em] uppercase">
                     <th className="py-3 pr-4 pl-4">Article</th>
-                    <th className="py-3 pr-4">Category</th>
+                    <SortHeader
+                      label="Category"
+                      active={sorting.sort === 'category'}
+                      order={sorting.order}
+                      onSort={() => sortBy('category')}
+                    />
                     <th className="py-3 pr-4">Status</th>
                     <th className="py-3 pr-4">Read time</th>
-                    <th className="py-3 pr-4">Published At</th>
-                    <th className="py-3 pr-4 text-right">Reads</th>
+                    <SortHeader
+                      label="Published At"
+                      active={sorting.sort === 'published'}
+                      order={sorting.order}
+                      onSort={() => sortBy('published')}
+                    />
+                    <SortHeader
+                      label="Views"
+                      align="right"
+                      active={sorting.sort === 'views'}
+                      order={sorting.order}
+                      onSort={() => sortBy('views')}
+                    />
                   </tr>
                 </thead>
                 <tbody className="divide-hairline divide-y text-sm">

@@ -17,6 +17,16 @@ them in Prisma before building the feature that depends on them.
 `view_count` is a running total of reads, incremented by the public site once a visitor has
 stayed past half the article's read time. Anonymous: no per-reader record exists.
 
+### Article View
+
+`id`, `article_id` (FK → Article, cascade on delete), `viewed_at`
+
+One row per counted read — the same event `Article.view_count` already totals, just
+timestamped, written in the same transaction as the increment. Its only purpose is the
+Analytics page's Today/This Week/This Month/This Year figures (`SELECT count(*) ... WHERE
+viewed_at >= :since`); it carries nothing about the reader. Deleting an article deletes its
+rows here with it.
+
 `featured_image_layout` is how the featured image is framed on the article page, as JSON:
 `widthPercent` (10–100, share of the article column), `placement` (`left` | `center` |
 `right` | `float-left` | `float-right`, where `float-*` lets the text wrap around it) and an

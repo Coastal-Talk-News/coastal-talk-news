@@ -291,7 +291,9 @@ export async function getHome(
 }
 
 export async function recordView({ db }: PublicServiceDeps, id: string) {
-  await repository.incrementViewCount(db, id);
+  // Both writes (the running total and the dated log row) succeed or fail
+  // together, so a crash mid-write can never leave the two disagreeing.
+  await db.$transaction((tx) => repository.recordArticleView(tx, id));
 }
 
 export async function getArticlesByPriority(

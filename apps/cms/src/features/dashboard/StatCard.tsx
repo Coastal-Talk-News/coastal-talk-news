@@ -8,8 +8,9 @@ interface StatCardProps {
   value: number;
   icon: LucideIcon;
   tone: 'blue' | 'green' | 'amber' | 'slate' | 'red' | 'violet';
-  /** Without a destination the card is a plain figure, not a link. */
+  /** Without a destination or a click handler, the card is a plain figure. */
   to?: string;
+  onClick?: () => void;
   caption?: string;
 }
 
@@ -28,6 +29,7 @@ export function StatCard({
   icon: Icon,
   tone,
   to,
+  onClick,
   caption,
 }: StatCardProps) {
   const body = (
@@ -49,7 +51,7 @@ export function StatCard({
           <span className="block text-xs text-ink-subtle">{caption}</span>
         )}
       </span>
-      {to && (
+      {(to || onClick) && (
         <ChevronRight
           className="size-4 shrink-0 text-ink-subtle transition group-hover:text-ink"
           aria-hidden
@@ -61,17 +63,34 @@ export function StatCard({
   const cardClass =
     'group flex items-center gap-4 border-hairline rounded-card border bg-surface p-5 shadow-sm';
 
-  if (!to) return <div className={cardClass}>{body}</div>;
+  if (to) {
+    return (
+      <Link
+        to={to}
+        className={cn(
+          cardClass,
+          'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+        )}
+      >
+        {body}
+      </Link>
+    );
+  }
 
-  return (
-    <Link
-      to={to}
-      className={cn(
-        cardClass,
-        'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
-      )}
-    >
-      {body}
-    </Link>
-  );
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          cardClass,
+          'text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md',
+        )}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  return <div className={cardClass}>{body}</div>;
 }
