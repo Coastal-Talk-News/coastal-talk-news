@@ -19,7 +19,7 @@ const EnvSchema = Type.Object({
   // it must be the same everywhere the same database is used, and losing it
   // means every user has to set up two-factor again.
   TOTP_ENCRYPTION_KEY: Type.String({ minLength: 43, maxLength: 44 }),
-  SESSION_TTL_HOURS: Type.Integer({ default: 12, minimum: 1, maximum: 720 }),
+  SESSION_TTL_HOURS: Type.Integer({ default: 168, minimum: 1, maximum: 720 }),
   SESSION_IDLE_MINUTES: Type.Integer({
     default: 480,
     minimum: 5,

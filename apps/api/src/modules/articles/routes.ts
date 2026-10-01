@@ -2,13 +2,13 @@ import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
   ArticleParamsSchema,
   ArticlePreviewBodySchema,
-  ArticlePreviewSchema,
   ArticleSchema,
   ArticleStatusCountsSchema,
   CmsArticleCountsQuerySchema,
   CmsArticleListQuerySchema,
   CreateArticleBodySchema,
   ListResponse,
+  PublicArticleSchema,
   SuccessResponse,
   UpdateArticleBodySchema,
   commonErrorResponses,
@@ -57,16 +57,16 @@ export const cmsArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
   app.post(
     '/preview',
     {
-      // Each call reads the database and stores a page in memory.
+      // Each call just reads the database to render the page - nothing is stored.
       config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
       schema: {
         tags: ['articles'],
-        summary: 'Preview a draft as the reader page',
+        summary: 'Build a draft as the reader page',
         description:
-          'Nothing is saved. Returns a short-lived token; the reader site shows the draft at `/preview/<token>`.',
+          'Nothing is saved or stored server-side. Returns the built page directly; the CMS hands it to the preview tab itself.',
         body: ArticlePreviewBodySchema,
         response: {
-          200: SuccessResponse(ArticlePreviewSchema),
+          200: SuccessResponse(PublicArticleSchema),
           ...commonErrorResponses,
         },
       },

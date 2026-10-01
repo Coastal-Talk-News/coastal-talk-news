@@ -31,8 +31,11 @@ declare module 'fastify' {
       request: FastifyRequest,
       reply: FastifyReply,
       userId: string,
-    ) => SessionRecord;
-    clearSession: (request: FastifyRequest, reply: FastifyReply) => void;
+    ) => Promise<SessionRecord>;
+    clearSession: (
+      request: FastifyRequest,
+      reply: FastifyReply,
+    ) => Promise<void>;
     challenges: ChallengeStore;
     secretBox: SecretBox;
     issueChallenge: (
@@ -63,7 +66,7 @@ async function authPlugin(
   const isProduction = env.NODE_ENV === 'production';
   const absoluteTtlMs = env.SESSION_TTL_HOURS * 60 * 60 * 1000;
 
-  const sessions = new SessionStore({
+  const sessions = new SessionStore(app.prisma, {
     absoluteTtlMs,
     idleTtlMs: env.SESSION_IDLE_MINUTES * 60 * 1000,
     maxPerUser: env.SESSION_MAX_PER_USER,
@@ -87,8 +90,8 @@ async function authPlugin(
 
   app.decorate(
     'issueSession',
-    (request: FastifyRequest, reply: FastifyReply, userId: string) => {
-      const { token, session } = sessions.create(userId, {
+    async (request: FastifyRequest, reply: FastifyReply, userId: string) => {
+      const { token, session } = await sessions.create(userId, {
         userAgent: request.headers['user-agent'] ?? null,
         ipAddress: request.ip,
       });
@@ -102,10 +105,10 @@ async function authPlugin(
 
   app.decorate(
     'clearSession',
-    (request: FastifyRequest, reply: FastifyReply) => {
+    async (request: FastifyRequest, reply: FastifyReply) => {
       const token = readToken(request, SESSION_COOKIE);
       if (token) {
-        sessions.revokeByToken(token);
+        await sessions.revokeByToken(token);
       }
       reply.clearCookie(SESSION_COOKIE, cookieOptions);
     },
@@ -166,7 +169,7 @@ async function authPlugin(
 
   app.decorate('requireAuth', async (request: FastifyRequest) => {
     const token = readToken(request, SESSION_COOKIE);
-    const session = token ? sessions.verify(token) : null;
+    const session = token ? await sessions.verify(token) : null;
 
     if (!session) {
       throw new UnauthorizedError();
@@ -175,7 +178,9 @@ async function authPlugin(
   });
 
   const sweeper = setInterval(() => {
-    sessions.sweep();
+    sessions
+      .sweep()
+      .catch((error: unknown) => app.log.error(error, 'Session sweep failed'));
     challenges.sweep();
   }, SWEEP_INTERVAL_MS);
   sweeper.unref();

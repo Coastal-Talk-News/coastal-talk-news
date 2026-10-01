@@ -104,7 +104,7 @@ export const authRoutes: FastifyPluginAsyncTypebox = async (app) => {
         tags: ['auth'],
         summary: 'List your active sessions',
         description:
-          'Sessions are held in the API process, so a restart or deploy ends all of them.',
+          'Sorted by most recently active. Each expires a week after sign-in, or sooner after a long idle stretch, whichever comes first.',
         response: {
           200: SuccessResponse(Type.Array(SessionSchema)),
           ...commonErrorResponses,

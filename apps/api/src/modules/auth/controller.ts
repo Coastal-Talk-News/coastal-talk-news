@@ -50,7 +50,7 @@ export async function login(
 }
 
 export async function logout(request: FastifyRequest, reply: FastifyReply) {
-  request.server.clearSession(request, reply);
+  await request.server.clearSession(request, reply);
   return reply.status(204).send(null);
 }
 
@@ -63,7 +63,9 @@ export async function me(request: FastifyRequest) {
 }
 
 export async function listSessions(request: FastifyRequest) {
-  const sessions = request.server.sessions.listForUser(request.session.userId);
+  const sessions = await request.server.sessions.listForUser(
+    request.session.userId,
+  );
   return dataEnvelope(
     sessions.map((session) => toSessionDto(session, request.session.id)),
   );
@@ -77,18 +79,18 @@ export async function revokeSession(
   const { id } = request.params;
 
   if (id === request.session.id) {
-    request.server.clearSession(request, reply);
+    await request.server.clearSession(request, reply);
     return reply.status(204).send(null);
   }
 
-  if (!sessions.revokeForUser(request.session.userId, id)) {
+  if (!(await sessions.revokeForUser(request.session.userId, id))) {
     throw new NotFoundError('Session');
   }
   return reply.status(204).send(null);
 }
 
 export async function revokeOtherSessions(request: FastifyRequest) {
-  const revoked = request.server.sessions.revokeOthers(
+  const revoked = await request.server.sessions.revokeOthers(
     request.session.userId,
     request.session.id,
   );
@@ -113,9 +115,9 @@ export async function changePassword(
   // Anyone holding a token from before the change loses it: every other device
   // signs in again, and this one is handed a fresh token so a copy of the old
   // one is worthless too.
-  const revokedSessions = sessions.revokeOthers(userId, sessionId);
-  sessions.revokeForUser(userId, sessionId);
-  request.server.issueSession(request, reply, userId);
+  const revokedSessions = await sessions.revokeOthers(userId, sessionId);
+  await sessions.revokeForUser(userId, sessionId);
+  await request.server.issueSession(request, reply, userId);
 
   return dataEnvelope({ revokedSessions });
 }

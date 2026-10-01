@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
+import type { Database } from '@coastal-talk-news/db';
 
 const TOKEN_BYTES = 32;
 
@@ -22,109 +23,142 @@ function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
 
+function hasLapsed(
+  session: SessionRecord,
+  now: Date,
+  idleTtlMs: number,
+): boolean {
+  return (
+    session.expiresAt.getTime() <= now.getTime() ||
+    now.getTime() - session.lastSeenAt.getTime() >= idleTtlMs
+  );
+}
+
+/**
+ * A signed-in device, backed by `cms_sessions`. Only the SHA-256 hash of the
+ * token is ever written to or read from the database - the plaintext token
+ * lives only in the cookie - so a copy of the table can't be replayed.
+ *
+ * A session past its absolute or idle deadline isn't just rejected: `verify`
+ * deletes it on the spot, and the periodic `sweep` catches whatever a reader
+ * never comes back to redeem. Either way it's really gone, not flagged.
+ */
 export class SessionStore {
-  private readonly sessions = new Map<string, SessionRecord>();
+  constructor(
+    private readonly db: Database,
+    private readonly options: SessionStoreOptions,
+  ) {}
 
-  constructor(private readonly options: SessionStoreOptions) {}
-
-  create(
+  async create(
     userId: string,
     meta: { userAgent: string | null; ipAddress: string | null },
     now = new Date(),
-  ): { token: string; session: SessionRecord } {
+  ): Promise<{ token: string; session: SessionRecord }> {
     const token = randomBytes(TOKEN_BYTES).toString('base64url');
-    const session: SessionRecord = {
-      id: hashToken(token),
-      userId,
-      createdAt: now,
-      lastSeenAt: now,
-      expiresAt: new Date(now.getTime() + this.options.absoluteTtlMs),
-      userAgent: meta.userAgent,
-      ipAddress: meta.ipAddress,
-    };
+    const expiresAt = new Date(now.getTime() + this.options.absoluteTtlMs);
 
-    this.sessions.set(session.id, session);
-    this.enforcePerUserLimit(userId);
-    return { token, session };
+    const row = await this.db.cmsSession.create({
+      data: {
+        id: hashToken(token),
+        userId,
+        createdAt: now,
+        lastSeenAt: now,
+        expiresAt,
+        userAgent: meta.userAgent,
+        ipAddress: meta.ipAddress,
+      },
+    });
+
+    await this.enforcePerUserLimit(userId);
+    return { token, session: row };
   }
 
-  verify(token: string, now = new Date()): SessionRecord | null {
-    const session = this.sessions.get(hashToken(token));
+  async verify(token: string, now = new Date()): Promise<SessionRecord | null> {
+    const session = await this.db.cmsSession.findUnique({
+      where: { id: hashToken(token) },
+    });
     if (!session) {
       return null;
     }
 
-    if (this.hasLapsed(session, now)) {
-      this.sessions.delete(session.id);
+    if (hasLapsed(session, now, this.options.idleTtlMs)) {
+      await this.db.cmsSession
+        .delete({ where: { id: session.id } })
+        // Already gone (e.g. a concurrent sweep) is the same outcome.
+        .catch(() => undefined);
       return null;
     }
 
-    session.lastSeenAt = now;
-    return session;
+    return this.db.cmsSession.update({
+      where: { id: session.id },
+      data: { lastSeenAt: now },
+    });
   }
 
-  revokeByToken(token: string): boolean {
-    return this.sessions.delete(hashToken(token));
+  async revokeByToken(token: string): Promise<boolean> {
+    return this.db.cmsSession
+      .delete({ where: { id: hashToken(token) } })
+      .then(() => true)
+      .catch(() => false);
   }
 
-  revokeForUser(userId: string, sessionId: string): boolean {
-    const session = this.sessions.get(sessionId);
-    if (!session || session.userId !== userId) {
-      return false;
+  async revokeForUser(userId: string, sessionId: string): Promise<boolean> {
+    const { count } = await this.db.cmsSession.deleteMany({
+      where: { id: sessionId, userId },
+    });
+    return count > 0;
+  }
+
+  async revokeOthers(userId: string, keepSessionId: string): Promise<number> {
+    const { count } = await this.db.cmsSession.deleteMany({
+      where: { userId, id: { not: keepSessionId } },
+    });
+    return count;
+  }
+
+  async listForUser(
+    userId: string,
+    now = new Date(),
+  ): Promise<SessionRecord[]> {
+    await this.sweep(now);
+    return this.db.cmsSession.findMany({
+      where: { userId },
+      orderBy: { lastSeenAt: 'desc' },
+    });
+  }
+
+  async sweep(now = new Date()): Promise<number> {
+    const { count } = await this.db.cmsSession.deleteMany({
+      where: {
+        OR: [
+          { expiresAt: { lte: now } },
+          {
+            lastSeenAt: {
+              lte: new Date(now.getTime() - this.options.idleTtlMs),
+            },
+          },
+        ],
+      },
+    });
+    return count;
+  }
+
+  async size(): Promise<number> {
+    return this.db.cmsSession.count();
+  }
+
+  private async enforcePerUserLimit(userId: string): Promise<void> {
+    const owned = await this.db.cmsSession.findMany({
+      where: { userId },
+      orderBy: { lastSeenAt: 'desc' },
+      skip: this.options.maxPerUser,
+      select: { id: true },
+    });
+    if (owned.length === 0) {
+      return;
     }
-    return this.sessions.delete(sessionId);
-  }
-
-  revokeOthers(userId: string, keepSessionId: string): number {
-    let revoked = 0;
-    for (const [id, session] of this.sessions) {
-      if (session.userId === userId && id !== keepSessionId) {
-        this.sessions.delete(id);
-        revoked += 1;
-      }
-    }
-    return revoked;
-  }
-
-  listForUser(userId: string, now = new Date()): SessionRecord[] {
-    this.sweep(now);
-    return [...this.sessions.values()]
-      .filter((session) => session.userId === userId)
-      .sort((a, b) => b.lastSeenAt.getTime() - a.lastSeenAt.getTime());
-  }
-
-  sweep(now = new Date()): number {
-    let removed = 0;
-    for (const [id, session] of this.sessions) {
-      if (this.hasLapsed(session, now)) {
-        this.sessions.delete(id);
-        removed += 1;
-      }
-    }
-    return removed;
-  }
-
-  get size(): number {
-    return this.sessions.size;
-  }
-
-  private hasLapsed(session: SessionRecord, now: Date): boolean {
-    return (
-      session.expiresAt.getTime() <= now.getTime() ||
-      now.getTime() - session.lastSeenAt.getTime() >= this.options.idleTtlMs
-    );
-  }
-
-  private enforcePerUserLimit(userId: string): void {
-    const owned = [...this.sessions.values()]
-      .filter((session) => session.userId === userId)
-      .sort((a, b) => a.lastSeenAt.getTime() - b.lastSeenAt.getTime());
-
-    for (const session of owned.slice(
-      0,
-      owned.length - this.options.maxPerUser,
-    )) {
-      this.sessions.delete(session.id);
-    }
+    await this.db.cmsSession.deleteMany({
+      where: { id: { in: owned.map((session) => session.id) } },
+    });
   }
 }

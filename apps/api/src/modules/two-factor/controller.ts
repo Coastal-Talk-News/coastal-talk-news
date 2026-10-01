@@ -55,7 +55,7 @@ async function completeSignIn(
   userId: string,
 ) {
   request.server.clearChallenge(request, reply);
-  request.server.issueSession(request, reply, userId);
+  await request.server.issueSession(request, reply, userId);
   return authService.getCurrentUser(request.server.prisma, userId);
 }
 
@@ -225,7 +225,7 @@ export async function confirmReset(
   challenges.discard(pending.key);
   // A new authenticator is a change of who can get in, so every other device
   // has to prove itself again; this one, which just did, stays.
-  const revokedSessions = sessions.revokeOthers(userId, sessionId);
+  const revokedSessions = await sessions.revokeOthers(userId, sessionId);
   request.log.info({ userId, revokedSessions }, 'Authenticator reset');
   return dataEnvelope({ recoveryCodes, revokedSessions });
 }

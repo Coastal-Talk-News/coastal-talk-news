@@ -1,10 +1,10 @@
 import type {
   ArticleDto,
-  ArticlePreviewDto,
   ArticlePreviewRequest,
   ArticleListParams,
   ArticleStatusCountsDto,
   CreateArticleRequest,
+  PublicArticleDto,
   UpdateArticleRequest,
 } from '@coastal-talk-news/types';
 import { api, buildQuery } from './client.js';
@@ -33,7 +33,7 @@ export const articlesApi = {
     api.patch<ArticleDto>(`${BASE}/${id}`, body),
 
   preview: (body: ArticlePreviewRequest) =>
-    api.post<ArticlePreviewDto>(`${BASE}/preview`, body),
+    api.post<PublicArticleDto>(`${BASE}/preview`, body),
 
   remove: (id: string) => api.send(`${BASE}/${id}`, 'DELETE'),
 };

@@ -5,7 +5,6 @@ import {
   PublicAdvertisementParamsSchema,
   PublicArticleCardSchema,
   PublicArticleParamsSchema,
-  PreviewTokenParamsSchema,
   PublicArticleSchema,
   PublicArticlesQuerySchema,
   PublicHomeQuerySchema,
@@ -131,26 +130,6 @@ export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
       config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
     },
     controller.recordArticleView,
-  );
-
-  app.get(
-    '/previews/:token',
-    {
-      // The token is the only credential, so guessing is throttled as well as impractical.
-      config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
-      schema: {
-        tags: ['public'],
-        summary: 'Get a draft preview by its token',
-        description:
-          'Only a page an editor asked to preview, and only until its token expires.',
-        params: PreviewTokenParamsSchema,
-        response: {
-          200: SuccessResponse(PublicArticleSchema),
-          ...commonErrorResponses,
-        },
-      },
-    },
-    controller.getArticlePreview,
   );
 
   app.get(

@@ -91,11 +91,14 @@ export async function remove(
   return reply.status(204).send(null);
 }
 
+/**
+ * Nothing is stored: the built page is handed straight back in the response,
+ * and the CMS relays it to the already-open preview tab itself.
+ */
 export async function preview(
   request: FastifyRequest<{ Body: ArticlePreviewInput }>,
 ) {
-  const { prisma, storage, previews } = request.server;
+  const { prisma, storage } = request.server;
   const page = await buildPreview({ db: prisma, storage }, request.body);
-  const { token, expiresAt } = previews.add(page);
-  return dataEnvelope({ token, expiresAt: expiresAt.toISOString() });
+  return dataEnvelope(page);
 }

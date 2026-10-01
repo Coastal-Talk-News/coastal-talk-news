@@ -88,9 +88,3 @@ export interface ArticlePreviewRequest {
   featuredImageId?: Id | null;
   featuredImageLayout?: ImageLayoutDto;
 }
-
-export interface ArticlePreviewDto {
-  /** Opens the preview on the reader site: `/preview/<token>`. */
-  token: string;
-  expiresAt: IsoDateTime;
-}
