@@ -70,6 +70,22 @@ model MediaAsset {
   @@map("media_assets")
 }
 
+/// One row per counted read (see `Article.viewCount`), kept only for its
+/// timestamp — the analytics page's Today/Week/Month/Year figures are a
+/// count of these rows in a date range. No reader information: this is the
+/// same anonymous event the running total already represents, just dated.
+model ArticleView {
+  id        String   @id @default(uuid(7))
+  articleId String   @map("article_id")
+  viewedAt  DateTime @default(now()) @map("viewed_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([viewedAt])
+  @@index([articleId])
+  @@map("article_views")
+}
+
 model Category {
   id           String   @id @default(uuid(7))
   name         String   @unique
@@ -130,8 +146,12 @@ model Article {
   metaDescription String? @map("meta_description")
 
   /// Reads counted by the public site: one per visit, once the reader has
-  /// stayed for half the article's estimated read time.
+  /// stayed for half the article's estimated read time. A running total;
+  /// `views` below is the same reads, timestamped, so they can be counted
+  /// by period (today, this week...) without re-scanning every article.
   viewCount Int @default(0) @map("view_count")
+
+  views ArticleView[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
