@@ -13,39 +13,31 @@ export interface AnalyticsStatsDto {
   activeAdvertisements: number;
   /** Reads counted since local midnight. */
   viewsToday: number;
-  /** Reads in the trailing 7/30/365 days — a rolling window, not the
-   * calendar week/month/year, so there's no reset at a boundary. */
-  viewsThisWeek: number;
-  viewsThisMonth: number;
-  viewsThisYear: number;
 }
 
-/** One day in the "This Week" detail table. */
+/** One day of a chosen calendar week or calendar month - which, and which
+ * one exactly, is set by the request that fetched it (`weeksAgo`, or
+ * `year`+`month`), not carried on the row itself. */
 export interface AnalyticsDailyViewsDto {
   date: IsoDateTime;
   views: number;
 }
 
-/** One rolling 7-day span in the "This Month" detail table, oldest span
- * shorter when 30 doesn't divide evenly by 7. */
-export interface AnalyticsWeeklyViewsDto {
-  from: IsoDateTime;
-  to: IsoDateTime;
-  views: number;
-}
-
-/** One calendar month of a chosen year, in the "This Year" detail table. */
+/** One calendar month of a chosen year, in the Year detail view. */
 export interface AnalyticsMonthlyViewsDto {
   /** 1 (January) through 12 (December). */
   month: number;
   views: number;
 }
 
-/** The years worth offering in the year picker: from the earliest recorded
- * read through the current year. Equal when there's no read yet. */
+/** The year range to offer navigating Year across, and the exact earliest
+ * recorded read, so Week/Month navigation knows where to stop going back.
+ * `minYear`/`maxYear` are equal and `earliestDate` is null when there's no
+ * read yet. */
 export interface AnalyticsYearRangeDto {
   minYear: number;
   maxYear: number;
+  earliestDate: IsoDateTime | null;
 }
 
 export interface AnalyticsArticleDto {

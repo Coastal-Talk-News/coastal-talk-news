@@ -1,4 +1,8 @@
-import type { CmsUserDto } from '@coastal-talk-news/types';
+import type {
+  CmsUserDto,
+  PublicSiteSettingsDto,
+} from '@coastal-talk-news/types';
+import { cn } from '@coastal-talk-news/ui/cn';
 import { Images, Newspaper, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -7,6 +11,57 @@ import { CredentialsForm } from '../features/auth/CredentialsForm.js';
 import { SignInSetup } from '../features/auth/SignInSetup.js';
 import { TwoFactorChallenge } from '../features/auth/TwoFactorChallenge.js';
 import { useAuth } from '../features/auth/useAuth.js';
+import { useSiteBrand } from '../features/branding/useSiteBrand.js';
+
+/**
+ * Logo and site name together, styled like the reader site's own masthead
+ * (uppercase serif, see Brand.tsx) rather than the CMS's plain UI font - so
+ * the login page reads as the same publication, not a generic admin tool.
+ */
+function BrandLockup({
+  settings,
+  size,
+}: {
+  settings: PublicSiteSettingsDto | undefined;
+  size: 'sm' | 'lg';
+}) {
+  const name = settings?.siteName ?? 'Coastal Talk News';
+
+  return (
+    <div className="flex items-center gap-3.5">
+      {settings?.logo && (
+        <img
+          src={settings.logo.url}
+          alt=""
+          className={cn(
+            'shrink-0 rounded-full object-cover',
+            size === 'lg' ? 'size-14' : 'size-12',
+          )}
+        />
+      )}
+      <div>
+        <p
+          className={cn(
+            'font-article text-ink font-bold tracking-tight uppercase',
+            size === 'lg' ? 'text-[42px]' : 'text-[28px]',
+          )}
+        >
+          {name}
+        </p>
+        {settings?.tagline && (
+          <p
+            className={cn(
+              'font-article text-ink-subtle',
+              size === 'lg' ? 'text-sm' : 'text-xs',
+            )}
+          >
+            {settings.tagline}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const HIGHLIGHTS = [
   {
@@ -33,6 +88,7 @@ export function LoginPage() {
   const { user, isLoading, setUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const settings = useSiteBrand();
 
   const [stage, setStage] = useState<Stage>('credentials');
   const [email, setEmail] = useState('');
@@ -58,10 +114,8 @@ export function LoginPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       <section className="hidden flex-col justify-between p-12 lg:flex">
         <div>
-          <p className="text-2xl font-bold tracking-tight text-ink">
-            Coastal Talk<span className="text-accent-text"> News</span>
-          </p>
-          <p className="mt-0.5 text-[11px] tracking-[0.2em] text-ink-subtle uppercase">
+          <BrandLockup settings={settings} size="lg" />
+          <p className="mt-2 text-[11px] tracking-[0.2em] text-ink-subtle uppercase">
             CMS
           </p>
         </div>
@@ -104,36 +158,46 @@ export function LoginPage() {
       </section>
 
       <section className="flex items-center justify-center p-6 lg:p-12">
-        <div className="w-full max-w-md border-hairline rounded-2xl border bg-surface p-8 shadow-sm lg:p-10">
-          {stage === 'credentials' && (
-            <CredentialsForm
-              notice={notice}
-              onContinue={(status, typedEmail) => {
-                setEmail(typedEmail);
-                setNotice(null);
-                setStage(status === 'two_factor_required' ? 'verify' : 'setup');
-              }}
-            />
-          )}
+        <div className="w-full max-w-md">
+          {/* The hero panel above carries branding from lg up; below that,
+              this is the only branding a visitor sees before signing in. */}
+          <div className="mb-6 flex justify-center lg:hidden">
+            <BrandLockup settings={settings} size="sm" />
+          </div>
 
-          {stage === 'verify' && (
-            <TwoFactorChallenge
-              onSignedIn={(result) => {
-                enter(result.user);
-                if (result.usedRecoveryCode) {
-                  toast.warning('You signed in with a recovery code', {
-                    description: `${result.recoveryCodesRemaining} left. You can create new ones in Settings, under Password & Security.`,
-                  });
-                }
-              }}
-              onRestart={restart}
-              onBack={() => setStage('credentials')}
-            />
-          )}
+          <div className="border-hairline rounded-2xl border bg-surface p-8 shadow-sm lg:p-10">
+            {stage === 'credentials' && (
+              <CredentialsForm
+                notice={notice}
+                onContinue={(status, typedEmail) => {
+                  setEmail(typedEmail);
+                  setNotice(null);
+                  setStage(
+                    status === 'two_factor_required' ? 'verify' : 'setup',
+                  );
+                }}
+              />
+            )}
 
-          {stage === 'setup' && (
-            <SignInSetup email={email} onDone={enter} onRestart={restart} />
-          )}
+            {stage === 'verify' && (
+              <TwoFactorChallenge
+                onSignedIn={(result) => {
+                  enter(result.user);
+                  if (result.usedRecoveryCode) {
+                    toast.warning('You signed in with a recovery code', {
+                      description: `${result.recoveryCodesRemaining} left. You can create new ones in Settings, under Password & Security.`,
+                    });
+                  }
+                }}
+                onRestart={restart}
+                onBack={() => setStage('credentials')}
+              />
+            )}
+
+            {stage === 'setup' && (
+              <SignInSetup email={email} onDone={enter} onRestart={restart} />
+            )}
+          </div>
         </div>
       </section>
     </div>

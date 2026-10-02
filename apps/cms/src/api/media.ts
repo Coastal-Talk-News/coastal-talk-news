@@ -1,11 +1,12 @@
 import type {
   MediaAssetDto,
-  MediaUploadSignatureDto,
+  MediaUploadTicketDto,
   RegisterMediaRequest,
 } from '@coastal-talk-news/types';
 import { compressImage } from '../lib/compressImage.js';
 import { api, ApiError, buildQuery } from './client.js';
 import { uploadToCloudinary } from './cloudinaryUpload.js';
+import { uploadToS3 } from './s3Upload.js';
 
 const BASE = '/api/v1/cms/media';
 
@@ -16,15 +17,20 @@ export interface MediaListParams {
 }
 
 /**
- * Compress → sign → upload straight to Cloudinary → register. The raw bytes
- * only ever travel from this browser to Cloudinary; our own server sees a
- * signature request and, afterwards, a small JSON confirmation - never the
- * image itself.
+ * Compress → sign → upload straight to storage → register. The raw bytes
+ * only ever travel from this browser to whichever backend `STORAGE_PROVIDER`
+ * selects on the server; our own API only ever sees a ticket request and,
+ * afterwards, a small JSON confirmation - never the image itself.
+ *
+ * Which storage backend is live is entirely the ticket's `provider` field -
+ * this function is the one place that branches on it; everything else
+ * (compression, progress reporting, the register call) is identical either
+ * way.
  *
  * Progress is weighted across the stages so the bar moves the whole time
  * rather than sitting at 0% through compression and then jumping to 100%:
- * compression and the signature request are quick and get a small slice
- * each, the Cloudinary upload (the real work) gets the rest.
+ * compression and the ticket request are quick and get a small slice each,
+ * the actual upload (the real work) gets the rest.
  */
 async function uploadOne(
   file: File,
@@ -35,18 +41,27 @@ async function uploadOne(
     const compressed = await compressImage(file);
 
     onProgress?.(5);
-    const signature = await api.post<MediaUploadSignatureDto>(
-      `${BASE}/signature`,
-    );
+    const ticket = await api.post<MediaUploadTicketDto>(`${BASE}/signature`, {
+      contentType: compressed.file.type,
+    });
 
     onProgress?.(10);
-    const { publicId } = await uploadToCloudinary(
-      compressed,
-      signature,
-      (percent) => onProgress?.(10 + Math.round(percent * 0.85)),
-    );
+    const onUploadProgress = (percent: number) =>
+      onProgress?.(10 + Math.round(percent * 0.85));
+    const storageKey =
+      ticket.provider === 'cloudinary'
+        ? (await uploadToCloudinary(compressed.file, ticket, onUploadProgress))
+            .publicId
+        : (await uploadToS3(compressed.file, ticket, onUploadProgress))
+            .storageKey;
 
-    const body: RegisterMediaRequest = { publicId, filename: file.name };
+    const body: RegisterMediaRequest = {
+      storageKey,
+      filename: file.name,
+      ...(compressed.width && compressed.height
+        ? { width: compressed.width, height: compressed.height }
+        : {}),
+    };
     const asset = await api.post<MediaAssetDto>(BASE, body);
     onProgress?.(100);
     return asset;

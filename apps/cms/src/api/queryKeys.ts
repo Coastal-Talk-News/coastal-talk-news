@@ -24,6 +24,9 @@ export const queryKeys = {
   advertisementList: (params: Record<string, unknown>) =>
     ['advertisements', params] as const,
   settings: ['settings'] as const,
+  // The public /site endpoint, not the authenticated settings one above -
+  // used for branding (logo, site name) on screens rendered before sign-in.
+  siteBrand: ['site-brand'] as const,
   analytics: ['analytics'] as const,
   seoHealth: ['seo-health'] as const,
   // Under seoHealth, so refreshing the checks refreshes this list too.
@@ -31,9 +34,10 @@ export const queryKeys = {
     ['seo-health', 'articles', params] as const,
   analyticsArticles: (params: Record<string, unknown>) =>
     ['analytics', 'articles', params] as const,
-  analyticsStorage: ['analytics', 'storage'] as const,
-  analyticsDailyViews: ['analytics', 'views', 'daily'] as const,
-  analyticsWeeklyViews: ['analytics', 'views', 'weekly'] as const,
+  analyticsWeekViews: (weeksAgo: number) =>
+    ['analytics', 'views', 'week', weeksAgo] as const,
+  analyticsMonthViews: (year: number, month: number) =>
+    ['analytics', 'views', 'month', year, month] as const,
   analyticsMonthlyViews: (year: number) =>
     ['analytics', 'views', 'monthly', year] as const,
   analyticsYearRange: ['analytics', 'views', 'years'] as const,

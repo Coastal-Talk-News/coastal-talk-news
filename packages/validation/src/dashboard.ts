@@ -51,6 +51,8 @@ export const UsageMeterSchema = Type.Object({
 export const DashboardUsageSchema = Type.Object({
   cloudinary: Type.Union([UsageMeterSchema, Type.Null()]),
   supabase: Type.Union([UsageMeterSchema, Type.Null()]),
+  mediaStorage: Type.Union([UsageMeterSchema, Type.Null()]),
+  storageProvider: Type.Union([Type.Literal('cloudinary'), Type.Literal('s3')]),
 });
 
 export const DashboardSchema = Type.Object({

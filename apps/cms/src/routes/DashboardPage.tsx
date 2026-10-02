@@ -8,13 +8,16 @@ import {
 } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import {
+  BarChart3,
   Bell,
   Cloud,
   Database,
   FileText,
   Image as ImageIcon,
+  LayoutGrid,
   Megaphone,
   Plus,
+  Settings as SettingsIcon,
   Zap,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -142,50 +145,83 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="border-accent-soft bg-accent-soft rounded-card border p-5">
+        <p className="mb-3 flex items-center gap-2 font-semibold text-ink">
+          <Zap className="text-accent-text size-4" aria-hidden />
+          Quick Actions
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <Link to="/articles/new">
+            <Button size="sm">
+              <Plus className="size-4" aria-hidden />
+              Create Article
+            </Button>
+          </Link>
+          <Link to="/latest-news">
+            <Button size="sm" variant="secondary">
+              <Bell className="size-4" aria-hidden />
+              Latest News
+            </Button>
+          </Link>
+          <Link to="/media">
+            <Button size="sm" variant="secondary">
+              <ImageIcon className="size-4" aria-hidden />
+              Upload Media
+            </Button>
+          </Link>
+          <Link to="/categories">
+            <Button size="sm" variant="secondary">
+              <LayoutGrid className="size-4" aria-hidden />
+              Categories
+            </Button>
+          </Link>
+          <Link to="/advertisements">
+            <Button size="sm" variant="secondary">
+              <Megaphone className="size-4" aria-hidden />
+              Advertisements
+            </Button>
+          </Link>
+          <Link to="/analytics">
+            <Button size="sm" variant="secondary">
+              <BarChart3 className="size-4" aria-hidden />
+              Analytics
+            </Button>
+          </Link>
+          <Link to="/settings">
+            <Button size="sm" variant="secondary">
+              <SettingsIcon className="size-4" aria-hidden />
+              Settings
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {/* Shown as unavailable rather than left out while loading or on
             failure: the dashboard is worth opening without them. */}
+        {(!usage || usage.storageProvider === 'cloudinary') && (
+          <UsageMeter
+            label="Cloudinary credits"
+            icon={Cloud}
+            usage={usage ? usage.cloudinary : null}
+            unit="credits"
+            pending={usageQuery.isPending}
+          />
+        )}
         <UsageMeter
-          label="Cloudinary credits"
-          icon={Cloud}
-          usage={usage ? usage.cloudinary : null}
-          unit="credits"
+          label="Image storage"
+          icon={ImageIcon}
+          usage={usage ? usage.mediaStorage : null}
+          unit="MB"
           pending={usageQuery.isPending}
         />
         <UsageMeter
-          label="Storage"
+          label="Database storage"
           icon={Database}
           usage={usage ? usage.supabase : null}
           unit="MB"
           pending={usageQuery.isPending}
         />
-
-        <div className="border-accent-soft bg-accent-soft rounded-card border p-5">
-          <p className="mb-3 flex items-center gap-2 font-semibold text-ink">
-            <Zap className="text-accent-text size-4" aria-hidden />
-            Quick Actions
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Link to="/articles/new">
-              <Button size="sm">
-                <Plus className="size-4" aria-hidden />
-                Create Article
-              </Button>
-            </Link>
-            <Link to="/latest-news">
-              <Button size="sm" variant="secondary">
-                <Bell className="size-4" aria-hidden />
-                Latest News
-              </Button>
-            </Link>
-            <Link to="/media">
-              <Button size="sm" variant="secondary">
-                <ImageIcon className="size-4" aria-hidden />
-                Upload Media
-              </Button>
-            </Link>
-          </div>
-        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

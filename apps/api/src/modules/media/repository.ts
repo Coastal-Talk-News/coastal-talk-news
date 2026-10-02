@@ -56,3 +56,12 @@ export function upsertByStorageKey(
 export function remove(db: TransactionClient, id: string) {
   return db.mediaAsset.deleteMany({ where: { id } });
 }
+
+/** Every stored image's size added together, for the storage cap meter and
+ *  its enforcement - regardless of which backend actually holds them. */
+export async function totalStorageBytes(
+  db: TransactionClient,
+): Promise<number> {
+  const result = await db.mediaAsset.aggregate({ _sum: { fileSize: true } });
+  return result._sum.fileSize ?? 0;
+}

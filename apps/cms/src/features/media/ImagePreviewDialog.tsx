@@ -13,13 +13,6 @@ interface ImagePreviewDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * A closer look than a grid thumbnail allows — but still the thumbnail file,
- * not the original: a second Cloudinary-transformed size would cost more
- * transformation credits for a dialog that never needs full resolution, and
- * reusing the exact URL the grid already loaded usually means the browser
- * serves this from its own cache rather than fetching anything at all.
- */
 export function ImagePreviewDialog({
   asset,
   onOpenChange,
@@ -38,7 +31,7 @@ export function ImagePreviewDialog({
 
               <div className="bg-surface-sunken flex max-h-[65vh] items-center justify-center overflow-hidden">
                 <img
-                  src={asset.thumbnailUrl}
+                  src={asset.url}
                   alt=""
                   className="max-h-[65vh] max-w-full object-contain"
                 />

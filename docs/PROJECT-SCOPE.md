@@ -97,7 +97,11 @@ Pictures are framed by the editor, not left to the file's own size: the featured
 section of the article form) and every image in the body have a width (any percentage of the
 column, by dragging the edge or typing it), a placement (left, centre, right, or left/right with
 the text wrapping around it) and an optional non-destructive crop, plus a caption in the body.
-The reader site draws them exactly as set.
+The reader site draws width and placement exactly as set (plain CSS on the delivered image, same
+either way). **Crop is currently dormant**: it's still chosen and saved as editorial metadata, but
+neither storage backend applies a delivery-time crop any more (see "Media flow" in
+`docs/DATA-MODEL.md`) - the image is drawn uncropped, at its originally-uploaded framing, until
+cropping is reinstated some other way.
 
 **Preview.** The Publish card has a Preview article button that opens the whole article page (site
 header, ads, footer and all) in a new tab, built from the form as it stands, so unsaved edits and

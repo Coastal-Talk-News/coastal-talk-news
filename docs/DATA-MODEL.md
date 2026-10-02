@@ -343,31 +343,54 @@ rule.
 
 ## Media flow
 
-The file itself never passes through the API - only a signature request and, afterwards, a small
-JSON confirmation do:
+The file itself never passes through the API - only a ticket request and, afterwards, a small
+JSON confirmation do. Which backend actually stores it is a single setting, `STORAGE_PROVIDER`
+(`cloudinary` or `s3`) - the API's `ObjectStorage` interface
+(`apps/api/src/modules/media/storage-types.ts`) is implemented once per backend
+(`cloudinary-storage.ts`, `s3-storage.ts`), and nothing outside those two files knows which one is
+live:
 
 ```text
 Browser: compress/resize to WebP (skipped for GIF, to keep any animation)
-API:     POST /cms/media/signature → a signed, single-use, time-boxed upload ticket
-             (public_id minted server-side, under this server's own Cloudinary folder;
-             allowed_formats is part of what's signed, so it can't be widened client-side)
-Browser: uploads the file straight to Cloudinary with that ticket
-API:     POST /cms/media { publicId, filename } → reads the asset back from Cloudinary's
-             own Admin API (format, width, height, bytes - never trusted from the request)
+API:     POST /cms/media/signature { contentType } → a signed, single-use, time-boxed upload
+             ticket (storage key minted server-side, under this server's own folder) - shaped
+             differently per backend (Cloudinary's signature params vs. an S3 presigned POST
+             policy), tagged with `provider` so the browser knows which upload protocol to speak
+Browser: uploads the file straight to storage with that ticket
+API:     POST /cms/media { storageKey, filename, width?, height? } → reads the asset back from
+             the storage backend's own records (Cloudinary's Admin API; an S3 HeadObject) -
+             format and byte size are never trusted from the request. Cloudinary also reports
+             real dimensions; S3-compatible storage can't without downloading and decoding the
+             file itself, so there `width`/`height` fall back to what the browser already
+             measured while compressing it
              → upserts { filename, storage_key, mime_type, file_size, width, height } as a
                Media Asset row, keyed by storage_key so a retried register call is a no-op
 ```
 
-Reads work the same as before: the public site and CMS both resolve a Media Asset to a Cloudinary
-delivery URL (`storage_key` is the Cloudinary `public_id`) via `ObjectStorage.publicUrl()`, with
-`f_auto,q_auto` and an optional width transform applied on delivery, not on upload.
+**Neither backend applies an on-the-fly image transform on delivery.** `ObjectStorage.publicUrl()`
+always returns the original upload exactly as stored - no width limit, no crop, no format/quality
+adjustment - and `width`/`region` on `TransformOptions` are accepted for interface compatibility
+but have no effect, on either backend. For Cloudinary this is deliberate: a transformed delivery
+URL makes Cloudinary generate and keep a derived copy the first time it's requested, spending
+storage and transformation credits on a variant of a file that was already resized and compressed
+in the browser before upload - redundant work this app chooses not to pay for. For S3-compatible
+storage it's inherent: plain object storage has no image processing capability at all. Either way,
+a featured image's crop can still be set and saved (it's just editorial metadata in the database),
+but it has nothing to act on for delivery - this is a dormant feature right now, not a removed one.
 
-A browser that abandons the flow between a successful Cloudinary upload and the register call
-leaves an untracked object in Cloudinary: no Media Asset row exists for it, so the "clean up
-unused" sweep never sees it (that sweep only ever looks at rows that exist), and a retry uploads
-again under a fresh signature rather than resuming the old one. This is a deliberate, accepted
-trade-off for keeping uploads off the API entirely, on the expectation that it is rare - a dropped
-connection in the brief window between an upload finishing and the register call going out.
+**`MEDIA_STORAGE_CAP_MB`** (decimal MB, default 5000) is a hard ceiling on total stored image size,
+enforced regardless of provider: checked once at signature time (so an upload that was always
+going to be refused never spends bandwidth) and authoritatively at register time (so a race
+between two uploads, or the cap being lowered in between, still can't exceed it) - see
+`registerUpload()`/`createUploadSignature()` in `apps/api/src/modules/media/service.ts`. Over the
+cap, uploads are refused with a 413 until something is deleted or the cap is raised.
+
+A browser that abandons the flow between a successful upload and the register call leaves an
+untracked object in storage: no Media Asset row exists for it, so the "clean up unused" sweep
+never sees it (that sweep only ever looks at rows that exist), and a retry uploads again under a
+fresh ticket rather than resuming the old one. This is a deliberate, accepted trade-off for
+keeping uploads off the API entirely, on the expectation that it is rare - a dropped connection in
+the brief window between an upload finishing and the register call going out.
 
 ## API ↔ database access pattern
 

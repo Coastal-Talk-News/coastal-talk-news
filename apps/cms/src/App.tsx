@@ -4,6 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/layout/AppLayout.js';
 import { AuthProvider } from './features/auth/AuthProvider.js';
 import { RequireAuth } from './features/auth/RequireAuth.js';
+import { FaviconSync } from './features/branding/FaviconSync.js';
 import { ThemeProvider } from './features/theme/ThemeProvider.js';
 import { ThemedToaster } from './features/theme/ThemedToaster.js';
 import { LoginPage } from './routes/LoginPage.js';
@@ -74,6 +75,7 @@ export default function App() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
+        <FaviconSync />
         <BrowserRouter>
           <AuthProvider>
             <Routes>
