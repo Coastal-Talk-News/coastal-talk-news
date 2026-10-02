@@ -19,7 +19,7 @@ export function containsActive(
 interface CategoryFlyoutListProps {
   categories: PublicNavCategoryDto[];
   activeCategoryId: string | undefined;
-  categoryHref: (id: string) => string;
+  categoryHref: (category: PublicNavCategoryDto) => string;
   locale: Locale;
 }
 
@@ -50,7 +50,7 @@ export function CategoryFlyoutList({
           return (
             <li key={category.id}>
               <Link
-                href={categoryHref(category.id)}
+                href={categoryHref(category)}
                 aria-current={active ? 'page' : undefined}
                 className={`hover:bg-paper-sunken block px-4 py-2 text-sm font-semibold transition-colors ${
                   highlighted ? 'bg-brand-soft text-brand' : 'hover:text-brand'

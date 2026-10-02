@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import type { MediaSummaryDto } from '@coastal-talk-news/types';
+import { MastheadName } from './MastheadName';
 
 interface BrandProps {
   siteName: string;
@@ -9,6 +10,8 @@ interface BrandProps {
   tone?: 'default' | 'inverse';
   priority?: boolean;
   size?: 'md' | 'lg';
+  /** The header's lockup: its name is the homepage's h1. */
+  masthead?: boolean;
 }
 
 /** Sized to share a phone row with the menu button without wrapping. */
@@ -66,11 +69,16 @@ export function Brand({
   tone = 'default',
   priority = false,
   size = 'md',
+  masthead = false,
 }: BrandProps) {
   const nameColor = tone === 'inverse' ? 'text-white' : 'text-ink';
   const taglineColor =
     tone === 'inverse' ? 'text-night-muted' : 'text-ink-subtle';
   const ringColor = tone === 'inverse' ? 'ring-white/15' : 'ring-rule';
+  const name = {
+    className: `${nameColor} -ml-[0.04em] block font-serif leading-tight font-bold whitespace-nowrap uppercase`,
+    style: { fontSize: NAME_SIZE[size] },
+  };
 
   return (
     <Link href="/" className={`flex min-w-0 items-center ${GAP[size]}`}>
@@ -88,16 +96,15 @@ export function Brand({
       {/* flex-1, not content-sized: the name is sized from this box, so the
           box must be measured from the row's spare space rather than from the
           name inside it. */}
-      <span className="@container min-w-0 flex-1 leading-none">
+      <div className="@container min-w-0 flex-1 leading-none">
         {/* One line at every width: a masthead that wraps or is cut off
             mid-word reads as broken. The pull to the left cancels the large
             capital's side gap, so the name starts level with the tagline. */}
-        <span
-          className={`${nameColor} -ml-[0.04em] block font-serif leading-tight font-bold whitespace-nowrap uppercase`}
-          style={{ fontSize: NAME_SIZE[size] }}
-        >
-          {siteName}
-        </span>
+        {masthead ? (
+          <MastheadName {...name}>{siteName}</MastheadName>
+        ) : (
+          <span {...name}>{siteName}</span>
+        )}
         {tagline && (
           // Two lines on a phone rather than moving out of the lockup.
           <span
@@ -106,7 +113,7 @@ export function Brand({
             {tagline}
           </span>
         )}
-      </span>
+      </div>
     </Link>
   );
 }

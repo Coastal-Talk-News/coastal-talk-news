@@ -2,9 +2,20 @@ import { Type } from '@sinclair/typebox';
 import { LanguageSchema } from './article.js';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { MediaSummarySchema } from './media.js';
-import { CATEGORY_NAME_MAX, CATEGORY_DESCRIPTION_MAX } from './limits.js';
+import {
+  CATEGORY_NAME_MAX,
+  CATEGORY_DESCRIPTION_MAX,
+  CATEGORY_SEO_TITLE_MAX,
+  CATEGORY_META_DESCRIPTION_MAX,
+} from './limits.js';
+import { SLUG_MAX } from './slug.js';
 
-export { CATEGORY_NAME_MAX, CATEGORY_DESCRIPTION_MAX };
+export {
+  CATEGORY_NAME_MAX,
+  CATEGORY_DESCRIPTION_MAX,
+  CATEGORY_SEO_TITLE_MAX,
+  CATEGORY_META_DESCRIPTION_MAX,
+};
 
 const categoryFields = {
   id: Type.String(),
@@ -15,6 +26,9 @@ const categoryFields = {
   displayOrder: Type.Integer(),
   parentId: Type.Union([Type.String(), Type.Null()]),
   coverImage: Type.Union([MediaSummarySchema, Type.Null()]),
+  slug: Type.Union([Type.String(), Type.Null()]),
+  seoTitle: Type.Union([Type.String(), Type.Null()]),
+  metaDescription: Type.Union([Type.String(), Type.Null()]),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
 };
@@ -42,6 +56,19 @@ export const CreateCategoryBodySchema = Type.Object(
     displayOrder: Type.Optional(Type.Integer({ minimum: 0 })),
     parentId: Type.Optional(NullableId),
     coverImageId: Type.Optional(NullableId),
+    slug: Type.Optional(Type.String({ minLength: 1, maxLength: SLUG_MAX })),
+    seoTitle: Type.Optional(
+      Type.Union([
+        Type.String({ maxLength: CATEGORY_SEO_TITLE_MAX }),
+        Type.Null(),
+      ]),
+    ),
+    metaDescription: Type.Optional(
+      Type.Union([
+        Type.String({ maxLength: CATEGORY_META_DESCRIPTION_MAX }),
+        Type.Null(),
+      ]),
+    ),
   },
   { additionalProperties: false },
 );

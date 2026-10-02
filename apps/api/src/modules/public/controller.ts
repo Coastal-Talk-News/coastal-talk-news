@@ -41,11 +41,15 @@ export async function getHome(
 }
 
 export async function getArticle(
-  request: FastifyRequest<{ Params: { id: string } }>,
+  request: FastifyRequest<{ Params: { key: string } }>,
 ) {
   return dataEnvelope(
-    await service.getArticle(deps(request), request.params.id),
+    await service.getArticle(deps(request), request.params.key),
   );
+}
+
+export async function getSitemap(request: FastifyRequest) {
+  return dataEnvelope(await service.getSitemap(deps(request)));
 }
 
 export async function recordArticleView(

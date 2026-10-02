@@ -1,3 +1,4 @@
+import { liveArticleWhere } from '../../lib/article-visibility.js';
 import type { Language, TransactionClient } from '@coastal-talk-news/db';
 import { cardSelect } from '../public/repository.js';
 
@@ -23,6 +24,13 @@ export interface ListFilters {
 export function findById(db: TransactionClient, id: string) {
   return db.category.findUnique({
     where: { id },
+    include: withMedia,
+  });
+}
+
+export function findBySlug(db: TransactionClient, slug: string) {
+  return db.category.findUnique({
+    where: { slug },
     include: withMedia,
   });
 }
@@ -65,6 +73,9 @@ export function create(
     displayOrder: number;
     parentId: string | null;
     mediaId: string | null;
+    slug: string;
+    seoTitle: string | null;
+    metaDescription: string | null;
   },
 ) {
   return db.category.create({ data, include: { ...withMedia, ...withCounts } });
@@ -81,6 +92,9 @@ export function update(
     displayOrder?: number;
     parentId?: string | null;
     mediaId?: string | null;
+    slug?: string;
+    seoTitle?: string | null;
+    metaDescription?: string | null;
   },
 ) {
   return db.category.update({
@@ -198,7 +212,7 @@ export function findPublishedArticles(
   page: { skip: number; take: number },
 ) {
   return db.article.findMany({
-    where: { categoryId, status: 'PUBLISHED', ...(language && { language }) },
+    where: { categoryId, ...liveArticleWhere(), ...(language && { language }) },
     orderBy: [{ publicationDate: 'desc' }, { createdAt: 'desc' }],
     select: cardSelect,
     ...page,
@@ -211,6 +225,6 @@ export function countPublishedArticles(
   { language }: { language?: Language } = {},
 ) {
   return db.article.count({
-    where: { categoryId, status: 'PUBLISHED', ...(language && { language }) },
+    where: { categoryId, ...liveArticleWhere(), ...(language && { language }) },
   });
 }

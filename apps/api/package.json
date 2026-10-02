@@ -10,6 +10,7 @@
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "db:backfill-article-views": "tsx --env-file-if-exists=.env src/scripts/backfill-article-views.ts",
+    "db:backfill-slugs": "tsx --env-file-if-exists=.env src/scripts/backfill-slugs.ts"
     "media:migrate-cloudinary-to-s3": "tsx --env-file-if-exists=.env src/scripts/migrate-cloudinary-to-s3.ts"
   },
   "keywords": [],

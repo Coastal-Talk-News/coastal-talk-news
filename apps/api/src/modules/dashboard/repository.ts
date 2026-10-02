@@ -40,9 +40,14 @@ export function countActiveAdvertisements(db: TransactionClient, now: Date) {
   });
 }
 
+/**
+ * Newest first, by when the article was written. Not by last update: an old
+ * article that is being read (older API versions stamped updated_at on every
+ * read) or lightly edited would push today's stories off a five-item list.
+ */
 export function findRecentArticles(db: TransactionClient, take: number) {
   return db.article.findMany({
-    orderBy: { updatedAt: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take,
     select: {
       id: true,
