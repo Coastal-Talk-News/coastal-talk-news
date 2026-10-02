@@ -24,6 +24,9 @@ export const queryKeys = {
   advertisementList: (params: Record<string, unknown>) =>
     ['advertisements', params] as const,
   settings: ['settings'] as const,
+  // The public /site endpoint, not the authenticated settings one above -
+  // used for branding (logo, site name) on screens rendered before sign-in.
+  siteBrand: ['site-brand'] as const,
   analytics: ['analytics'] as const,
   analyticsArticles: (params: Record<string, unknown>) =>
     ['analytics', 'articles', params] as const,
