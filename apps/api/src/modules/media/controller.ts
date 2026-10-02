@@ -9,6 +9,7 @@ function deps(request: FastifyRequest): service.MediaServiceDeps {
     db: request.server.prisma,
     storage: request.server.storage,
     logger: request.log,
+    maxTotalBytes: request.server.mediaStorageCapBytes,
   };
 }
 
@@ -47,8 +48,14 @@ export async function getById(
   return dataEnvelope(toMediaAssetDto(asset, publicUrl(request), usage));
 }
 
-export async function getUploadSignature(request: FastifyRequest) {
-  return dataEnvelope(service.createUploadSignature(deps(request)));
+export async function getUploadSignature(
+  request: FastifyRequest<{ Body: { contentType: string } }>,
+) {
+  const ticket = await service.createUploadSignature(
+    deps(request),
+    request.body,
+  );
+  return dataEnvelope(ticket);
 }
 
 export async function registerUpload(

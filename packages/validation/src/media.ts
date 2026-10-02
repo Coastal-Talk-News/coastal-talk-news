@@ -24,7 +24,6 @@ export const MediaUsageSchema = Type.Object({
 export const MediaAssetSchema = Type.Object({
   id: Type.String(),
   url: Type.String(),
-  thumbnailUrl: Type.String(),
   filename: Type.String(),
   mimeType: Type.String(),
   fileSize: Type.Integer(),
@@ -34,7 +33,15 @@ export const MediaAssetSchema = Type.Object({
   usage: MediaUsageSchema,
 });
 
-export const MediaUploadSignatureSchema = Type.Object({
+export const UploadSignatureBodySchema = Type.Object(
+  {
+    contentType: Type.String({ minLength: 1, maxLength: 100 }),
+  },
+  { additionalProperties: false },
+);
+
+const CloudinaryUploadTicketSchema = Type.Object({
+  provider: Type.Literal('cloudinary'),
   cloudName: Type.String(),
   apiKey: Type.String(),
   timestamp: Type.Integer(),
@@ -43,10 +50,26 @@ export const MediaUploadSignatureSchema = Type.Object({
   allowedFormats: Type.String(),
 });
 
+const S3UploadTicketSchema = Type.Object({
+  provider: Type.Literal('s3'),
+  uploadUrl: Type.String(),
+  storageKey: Type.String(),
+  fields: Type.Record(Type.String(), Type.String()),
+});
+
+export const MediaUploadTicketSchema = Type.Union([
+  CloudinaryUploadTicketSchema,
+  S3UploadTicketSchema,
+]);
+
 export const RegisterMediaBodySchema = Type.Object(
   {
-    publicId: Type.String({ minLength: 1, maxLength: 300 }),
+    storageKey: Type.String({ minLength: 1, maxLength: 300 }),
     filename: Type.String({ minLength: 1, maxLength: 255 }),
+    // Fallback dimensions for a backend that can't report them itself
+    // (S3-compatible storage). Cloudinary ignores these.
+    width: Type.Optional(Type.Integer({ minimum: 1 })),
+    height: Type.Optional(Type.Integer({ minimum: 1 })),
   },
   { additionalProperties: false },
 );

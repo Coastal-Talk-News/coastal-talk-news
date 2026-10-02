@@ -27,9 +27,10 @@ export const queryKeys = {
   analytics: ['analytics'] as const,
   analyticsArticles: (params: Record<string, unknown>) =>
     ['analytics', 'articles', params] as const,
-  analyticsStorage: ['analytics', 'storage'] as const,
-  analyticsDailyViews: ['analytics', 'views', 'daily'] as const,
-  analyticsWeeklyViews: ['analytics', 'views', 'weekly'] as const,
+  analyticsWeekViews: (weeksAgo: number) =>
+    ['analytics', 'views', 'week', weeksAgo] as const,
+  analyticsMonthViews: (year: number, month: number) =>
+    ['analytics', 'views', 'month', year, month] as const,
   analyticsMonthlyViews: (year: number) =>
     ['analytics', 'views', 'monthly', year] as const,
   analyticsYearRange: ['analytics', 'views', 'years'] as const,

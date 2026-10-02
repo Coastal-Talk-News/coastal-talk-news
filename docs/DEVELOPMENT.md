@@ -133,13 +133,19 @@ now" action triggered by the admin — don't build a background sweep unless ask
 - Authentication and authorization enforced on every protected route, server-side, every
   time.
 - Passwords: bcrypt, never plaintext, never in logs or responses.
-- File uploads: images upload directly from the browser to Cloudinary (see §8), so the API never
-  receives the bytes to inspect. The equivalent control is Cloudinary itself: `allowed_formats`
-  is part of what the upload signature signs, so it can't be widened client-side, and Cloudinary
-  determines format from the file's actual content rather than the extension or declared MIME
-  type. After the upload, the API independently re-reads the asset's format/dimensions/size from
-  Cloudinary's own Admin API before ever writing a Media Asset row - never trusted from the
-  client's register request.
+- File uploads: images upload directly from the browser to object storage - Cloudinary or an
+  S3-compatible backend, picked by `STORAGE_PROVIDER` (see §8) - so the API never receives the
+  bytes to inspect. After the upload, the API independently re-reads the asset's format and byte
+  size from the storage backend's own records before ever writing a Media Asset row - never
+  trusted from the client's register request. The strength of that check differs by backend:
+  Cloudinary determines format from the file's actual content (and `allowed_formats` is part of
+  what the upload signature signs, so it can't be widened client-side); an S3-compatible backend
+  has no content inspection at all, so its reported format is only ever what the browser's upload
+  request declared as `Content-Type` - weaker, and an accepted trade-off of using plain object
+  storage. Either way, every upload surface only renders images via `<img>`, which doesn't execute
+  a script embedded in an SVG even if one slipped through - direct navigation to a raw asset URL
+  would, so don't start linking to raw storage URLs anywhere that isn't an `<img>` without
+  re-examining this.
 - Rich content (Tiptap output) rendered on the public site: treat as untrusted, sanitize or
   render through a method that can't execute injected markup (XSS).
 - Never expose passwords, password hashes, secrets, internal stack traces, or raw env vars
@@ -191,10 +197,11 @@ now" action triggered by the admin — don't build a background sweep unless ask
   Advertisement visibility in V1. Do not build scheduled infrastructure around it unless
   another concrete V1 requirement needs it. If it's already installed in the repo, don't
   remove it reflexively — confirm during the repo audit whether anything actually uses it.
-- Image pipeline: compress/resize in the browser → signed direct upload to Cloudinary → API
-  reads the result back from Cloudinary and writes the Media Asset row. The API never receives
-  the file itself; see "Media flow" in `docs/DATA-MODEL.md` for the full sequence. Don't create
-  redundant copies unless there's a real requirement.
+- Image pipeline: compress/resize in the browser → signed direct upload to object storage → API
+  reads the result back from storage and writes the Media Asset row. The API never receives the
+  file itself; see "Media flow" in `docs/DATA-MODEL.md` for the full sequence, including the
+  `STORAGE_PROVIDER` toggle between Cloudinary and S3-compatible storage (AWS S3, Cloudflare R2)
+  and what differs between them. Don't create redundant copies unless there's a real requirement.
 
 ## 9. Performance
 

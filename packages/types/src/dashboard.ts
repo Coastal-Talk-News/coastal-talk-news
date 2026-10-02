@@ -46,10 +46,18 @@ export interface UsageMeterDto {
 }
 
 export interface DashboardUsageDto {
-  /** Credits this billing period; null when Cloudinary could not be reached. */
+  /** Credits this billing period; null when Cloudinary could not be reached,
+   *  or when a different storage provider is active - Cloudinary credits
+   *  aren't a meaningful figure then. Check `storageProvider` before
+   *  rendering this, rather than just treating null as "unavailable". */
   cloudinary: UsageMeterDto | null;
   /** Size of the Supabase database in MB; null when it could not be read. */
   supabase: UsageMeterDto | null;
+  /** Total size of every stored image in MB, against MEDIA_STORAGE_CAP_MB.
+   *  Present regardless of which storage provider is active. */
+  mediaStorage: UsageMeterDto | null;
+  /** Which backend is currently storing images. */
+  storageProvider: 'cloudinary' | 's3';
 }
 
 export interface DashboardDto {

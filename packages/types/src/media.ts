@@ -15,8 +15,11 @@ export interface MediaUsageDto {
   total: number;
 }
 
-/** A time-boxed ticket for uploading one image straight to Cloudinary. */
-export interface MediaUploadSignatureDto {
+/** A time-boxed ticket for uploading one image straight to storage - shaped
+ *  differently per backend, since Cloudinary and S3-compatible storage have
+ *  entirely different direct-upload protocols. `provider` says which. */
+export interface CloudinaryUploadTicketDto {
+  provider: 'cloudinary';
   cloudName: string;
   apiKey: string;
   timestamp: number;
@@ -25,15 +28,30 @@ export interface MediaUploadSignatureDto {
   allowedFormats: string;
 }
 
+export interface S3UploadTicketDto {
+  provider: 's3';
+  uploadUrl: string;
+  storageKey: string;
+  /** Every field the browser's multipart POST must send alongside the
+   *  file, in the order a presigned POST policy expects them. */
+  fields: Record<string, string>;
+}
+
+export type MediaUploadTicketDto =
+  CloudinaryUploadTicketDto | S3UploadTicketDto;
+
 export interface RegisterMediaRequest {
-  publicId: string;
+  storageKey: string;
   filename: string;
+  /** Only used as a fallback when the active storage backend can't report
+   *  dimensions itself (S3-compatible). Ignored by Cloudinary. */
+  width?: number;
+  height?: number;
 }
 
 export interface MediaAssetDto {
   id: Id;
   url: string;
-  thumbnailUrl: string;
   filename: string;
   mimeType: string;
   fileSize: number;

@@ -20,30 +20,18 @@ function startOfToday(now: Date): Date {
   return start;
 }
 
-function daysAgo(now: Date, days: number): Date {
-  return new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-}
-
 function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
-// Today is the calendar day so far; the rest are rolling windows (the
-// trailing 7, 30 and 365 days) rather than calendar week/month/year, so
-// there's no Monday- or 1st-of-the-month cliff where a count resets to zero.
-async function getViewPeriods(db: Database, now: Date) {
-  const [today, week, month, year] = await Promise.all([
-    repository.countViewsSince(db, startOfToday(now)),
-    repository.countViewsSince(db, daysAgo(now, 7)),
-    repository.countViewsSince(db, daysAgo(now, 30)),
-    repository.countViewsSince(db, daysAgo(now, 365)),
-  ]);
-  return {
-    viewsToday: today,
-    viewsThisWeek: week,
-    viewsThisMonth: month,
-    viewsThisYear: year,
-  };
+/** The Monday on or before this date. ISO weeks (Monday first), to match
+ * the calendar-aligned "Month" and "Year" breakdowns rather than a rolling
+ * trailing-7-days window with no fixed start. */
+function startOfWeek(date: Date): Date {
+  const start = startOfToday(date);
+  const dayOfWeek = start.getDay(); // 0 (Sun) .. 6 (Sat)
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  return addDays(start, -daysSinceMonday);
 }
 
 export async function getStats(db: Database, now = new Date()) {
@@ -52,13 +40,13 @@ export async function getStats(db: Database, now = new Date()) {
     publishedToday,
     activeBreakingNews,
     activeAdvertisements,
-    viewPeriods,
+    viewsToday,
   ] = await Promise.all([
     dashboardRepository.countArticlesByStatus(db),
     dashboardRepository.countPublishedSince(db, startOfToday(now)),
     dashboardRepository.countActiveBreakingNews(db, now),
     dashboardRepository.countActiveAdvertisements(db, now),
-    getViewPeriods(db, now),
+    repository.countViewsSince(db, startOfToday(now)),
   ]);
 
   const countFor = (status: string) =>
@@ -71,21 +59,32 @@ export async function getStats(db: Database, now = new Date()) {
     archived: countFor('ARCHIVED'),
     activeBreakingNews,
     activeAdvertisements,
-    ...viewPeriods,
+    viewsToday,
   };
 }
 
-const DAYS_IN_WEEK_DETAIL = 7;
-const DAYS_IN_MONTH_DETAIL = 30;
-const DAYS_PER_WEEKLY_BUCKET = 7;
-
-/** One row per day of the trailing week, oldest first — the "This Week"
- * card's detail. */
-export async function getDailyViews(db: Database, now = new Date()) {
-  const todayStart = startOfToday(now);
-  const days = Array.from({ length: DAYS_IN_WEEK_DETAIL }, (_, i) =>
-    addDays(todayStart, -(DAYS_IN_WEEK_DETAIL - 1 - i)),
+/**
+ * One row per day of a calendar week (Monday through Sunday), oldest first -
+ * the "Week" card's detail. `weeksAgo` counts whole weeks back from the one
+ * containing today (0 = this week, 1 = last week, and so on). The current
+ * week stops at today rather than running into days that haven't happened;
+ * every earlier week returns the full seven days.
+ */
+export async function getWeekViews(
+  db: Database,
+  weeksAgo: number,
+  now = new Date(),
+) {
+  const weekStart = addDays(startOfWeek(now), -7 * weeksAgo);
+  const lastDay = weeksAgo === 0 ? startOfToday(now) : addDays(weekStart, 6);
+  const dayCount =
+    Math.round(
+      (lastDay.getTime() - weekStart.getTime()) / (24 * 60 * 60 * 1000),
+    ) + 1;
+  const days = Array.from({ length: dayCount }, (_, i) =>
+    addDays(weekStart, i),
   );
+
   const counts = await Promise.all(
     days.map((day) => repository.countViewsBetween(db, day, addDays(day, 1))),
   );
@@ -96,38 +95,50 @@ export async function getDailyViews(db: Database, now = new Date()) {
 }
 
 /**
- * The trailing 30 days split into 7-day spans, most recent first — the "This
- * Month" card's detail. 30 doesn't divide evenly by 7, so the oldest span is
- * shorter (2 days) rather than reaching past the 30-day window.
+ * One row per day of the given calendar month, oldest first - the "Month"
+ * card's detail. For the current month this stops at today; a past month
+ * returns every day it actually had.
  */
-export async function getWeeklyViews(db: Database, now = new Date()) {
-  const windowEnd = addDays(startOfToday(now), 1);
-  const spans: Array<{ from: Date; to: Date }> = [];
-  let cursor = windowEnd;
-  let remaining = DAYS_IN_MONTH_DETAIL;
-  while (remaining > 0) {
-    const size = Math.min(DAYS_PER_WEEKLY_BUCKET, remaining);
-    const from = addDays(cursor, -size);
-    spans.push({ from, to: cursor });
-    cursor = from;
-    remaining -= size;
-  }
+export async function getMonthViews(
+  db: Database,
+  year: number,
+  month: number,
+  now = new Date(),
+) {
+  const monthStart = new Date(year, month - 1, 1);
+  const isCurrentMonth =
+    year === now.getFullYear() && month === now.getMonth() + 1;
+  const lastDay = isCurrentMonth ? startOfToday(now) : new Date(year, month, 0); // day 0 of next month = last day of this one
+  const dayCount =
+    Math.round(
+      (lastDay.getTime() - monthStart.getTime()) / (24 * 60 * 60 * 1000),
+    ) + 1;
+  const days = Array.from({ length: Math.max(0, dayCount) }, (_, i) =>
+    addDays(monthStart, i),
+  );
 
   const counts = await Promise.all(
-    spans.map((span) => repository.countViewsBetween(db, span.from, span.to)),
+    days.map((day) => repository.countViewsBetween(db, day, addDays(day, 1))),
   );
-  return spans.map((span, i) => ({
-    from: span.from.toISOString(),
-    // The span's upper bound is exclusive (midnight), so its last real day
-    // is the one before it.
-    to: addDays(span.to, -1).toISOString(),
+  return days.map((day, i) => ({
+    date: day.toISOString(),
     views: counts[i] ?? 0,
   }));
 }
 
-/** Every calendar month of the given year — the "This Year" card's detail. */
-export async function getMonthlyViews(db: Database, year: number) {
-  const months = Array.from({ length: 12 }, (_, i) => i);
+/**
+ * Every calendar month of the given year, oldest first — the "Year" card's
+ * detail. For the current year this stops at the current month; months
+ * later in the year haven't happened yet, so there is nothing to report for
+ * them. A past year still returns all twelve.
+ */
+export async function getMonthlyViews(
+  db: Database,
+  year: number,
+  now = new Date(),
+) {
+  const lastMonth = year === now.getFullYear() ? now.getMonth() : 11;
+  const months = Array.from({ length: lastMonth + 1 }, (_, i) => i);
   const counts = await Promise.all(
     months.map((month) =>
       repository.countViewsBetween(
@@ -143,10 +154,19 @@ export async function getMonthlyViews(db: Database, year: number) {
   }));
 }
 
+/**
+ * The year range and exact earliest moment with any recorded read, so the
+ * CMS can grey out "previous" once Week/Month/Year navigation would go
+ * further back than there is any real data to show.
+ */
 export async function getYearRange(db: Database, now = new Date()) {
   const earliest = await repository.earliestViewDate(db);
   const maxYear = now.getFullYear();
-  return { minYear: earliest ? earliest.getFullYear() : maxYear, maxYear };
+  return {
+    minYear: earliest ? earliest.getFullYear() : maxYear,
+    maxYear,
+    earliestDate: earliest ? earliest.toISOString() : null,
+  };
 }
 
 export async function listArticles(

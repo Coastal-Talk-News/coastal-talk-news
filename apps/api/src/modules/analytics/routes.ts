@@ -5,8 +5,9 @@ import {
   AnalyticsDailyViewsSchema,
   AnalyticsMonthlyViewsQuerySchema,
   AnalyticsMonthlyViewsSchema,
+  AnalyticsMonthViewsQuerySchema,
   AnalyticsStatsSchema,
-  AnalyticsWeeklyViewsSchema,
+  AnalyticsWeekViewsQuerySchema,
   AnalyticsYearRangeSchema,
   DatabaseStorageSchema,
   ListResponse,
@@ -50,36 +51,39 @@ export const analyticsRoutes: FastifyPluginAsyncTypebox = async (app) => {
   );
 
   app.get(
-    '/views/daily',
+    '/views/week',
     {
       schema: {
         tags: ['analytics'],
-        summary: 'Reads per day for the trailing 7 days',
-        description: 'Backs the detail view behind the "Views This Week" card.',
+        summary: 'Reads per day of a calendar week (Monday to Sunday)',
+        description:
+          'Backs the detail view behind the "Week" card. weeksAgo=0 is the week containing today (stopping at today); 1 is the week before that, and so on.',
+        querystring: AnalyticsWeekViewsQuerySchema,
         response: {
           200: SuccessResponse(Type.Array(AnalyticsDailyViewsSchema)),
           ...commonErrorResponses,
         },
       },
     },
-    controller.getDailyViews,
+    controller.getWeekViews,
   );
 
   app.get(
-    '/views/weekly',
+    '/views/month',
     {
       schema: {
         tags: ['analytics'],
-        summary: 'Reads per 7-day span for the trailing 30 days',
+        summary: 'Reads per day of the given calendar month',
         description:
-          'Backs the detail view behind the "Views This Month" card. The oldest span is shorter than 7 days, since 30 does not divide evenly by 7.',
+          'Backs the detail view behind the "Month" card. For the current month this stops at today; a past month returns every day it had.',
+        querystring: AnalyticsMonthViewsQuerySchema,
         response: {
-          200: SuccessResponse(Type.Array(AnalyticsWeeklyViewsSchema)),
+          200: SuccessResponse(Type.Array(AnalyticsDailyViewsSchema)),
           ...commonErrorResponses,
         },
       },
     },
-    controller.getWeeklyViews,
+    controller.getMonthViews,
   );
 
   app.get(
@@ -88,7 +92,8 @@ export const analyticsRoutes: FastifyPluginAsyncTypebox = async (app) => {
       schema: {
         tags: ['analytics'],
         summary: 'Reads per calendar month of the given year',
-        description: 'Backs the detail view behind the "Views This Year" card.',
+        description:
+          'Backs the detail view behind the "Year" card. For the current year this stops at the current month, for the same reason.',
         querystring: AnalyticsMonthlyViewsQuerySchema,
         response: {
           200: SuccessResponse(Type.Array(AnalyticsMonthlyViewsSchema)),
@@ -104,9 +109,10 @@ export const analyticsRoutes: FastifyPluginAsyncTypebox = async (app) => {
     {
       schema: {
         tags: ['analytics'],
-        summary: 'The year range with any recorded reads',
+        summary:
+          'The year range, and the earliest moment, with any recorded reads',
         description:
-          'The earliest year with a read through the current year, for the year picker next to the monthly detail view.',
+          'The earliest year with a read through the current year, plus the exact earliest timestamp, so Week/Month/Year navigation knows where to stop going further back.',
         response: {
           200: SuccessResponse(AnalyticsYearRangeSchema),
           ...commonErrorResponses,
