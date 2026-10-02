@@ -17,7 +17,7 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 import { adsForZone } from '../lib/ads';
 import { getSite } from '../lib/api';
 import { getLocale } from '../lib/i18n/server';
-import { buildMetadata } from '../lib/seo';
+import { buildSiteMetadata } from '../lib/seo';
 import { getOrigin } from '../lib/site-url';
 import './globals.css';
 
@@ -74,7 +74,7 @@ export async function generateMetadata(): Promise<Metadata> {
       getLocale(),
       getOrigin(),
     ]);
-    return buildMetadata({ settings, locale, origin });
+    return buildSiteMetadata({ settings, locale, origin });
   } catch {
     // Metadata must never be the reason a page fails to render.
     return { title: 'News' };

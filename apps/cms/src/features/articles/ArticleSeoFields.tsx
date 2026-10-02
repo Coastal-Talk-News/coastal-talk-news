@@ -6,23 +6,55 @@ import {
   ARTICLE_META_DESCRIPTION_MAX,
   ARTICLE_SEO_TITLE_MAX,
 } from '@coastal-talk-news/validation/limits';
+import { ARTICLE_SLUG_MAX } from '@coastal-talk-news/validation/slug';
 import { ImagePlus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { WEB_URL } from '../../config.js';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
+import { SearchPreview, lengthHint } from '../seo/SearchPreview.js';
+import { useSiteName } from '../seo/useSiteName.js';
 import type { FormValues, UpdateValues } from './formValues.js';
 
 interface ArticleSeoFieldsProps {
   values: FormValues;
   onChange: UpdateValues;
+  /** The address the article will have: typed, saved, or made from an
+   * headline in its own language. Empty only for a headline with no words. */
+  effectiveSlug: string;
+  slugError?: string;
+  /** A live article's old address keeps redirecting if the slug changes. */
+  published: boolean;
 }
 
-export function ArticleSeoFields({ values, onChange }: ArticleSeoFieldsProps) {
+export function ArticleSeoFields({
+  values,
+  onChange,
+  effectiveSlug,
+  slugError,
+  published,
+}: ArticleSeoFieldsProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const siteName = useSiteName();
+  const detailsRef = useRef<HTMLDetailsElement>(null);
+
+  // The section starts collapsed; a slug problem must not hide inside it.
+  useEffect(() => {
+    if (slugError && detailsRef.current) detailsRef.current.open = true;
+  }, [slugError]);
+
+  const canonicalUrl = effectiveSlug
+    ? `${WEB_URL ?? ''}/article/${effectiveSlug}`
+    : null;
+  const previewTitle =
+    values.seoTitle.trim() ||
+    (values.headline.trim()
+      ? `${values.headline.trim()}${siteName ? ` | ${siteName}` : ''}`
+      : '');
 
   return (
     <section className="border-hairline rounded-card space-y-3 border bg-surface p-5 shadow-sm">
       <h2 className="text-ink text-sm font-semibold">Additional Settings</h2>
-      <details>
+      <details ref={detailsRef}>
         <summary className="text-ink-muted cursor-pointer text-sm font-medium">
           SEO Settings{' '}
           <span className="text-ink-subtle text-xs font-normal">
@@ -30,12 +62,12 @@ export function ArticleSeoFields({ values, onChange }: ArticleSeoFieldsProps) {
           </span>
         </summary>
 
-        <div className="mt-3 space-y-3">
+        <div className="mt-3 space-y-4">
           <Field
             label="SEO Title"
             htmlFor="article-seo-title"
             optional
-            hint="Defaults to the headline."
+            hint={`Defaults to the headline followed by the site name. ${lengthHint(values.seoTitle.trim().length, 50, 60)}.`}
           >
             <Input
               id="article-seo-title"
@@ -49,18 +81,55 @@ export function ArticleSeoFields({ values, onChange }: ArticleSeoFieldsProps) {
             label="Meta Description"
             htmlFor="article-meta-description"
             optional
+            hint={`Defaults to the summary. ${lengthHint(values.metaDescription.trim().length, 150, 160)}.`}
           >
             <Textarea
               id="article-meta-description"
               rows={3}
               maxLength={ARTICLE_META_DESCRIPTION_MAX}
-              showCount
               value={values.metaDescription}
               onChange={(event) =>
                 onChange({ metaDescription: event.target.value })
               }
             />
           </Field>
+
+          <Field
+            label="URL Slug"
+            htmlFor="article-slug"
+            optional
+            error={slugError}
+            hint={
+              published
+                ? 'Lowercase words joined by hyphens, in English or Kannada. If you change it, the old address keeps redirecting here.'
+                : 'Lowercase words joined by hyphens, in English or Kannada. Left empty, it is made from the headline when you save — a Kannada headline gives a Kannada address.'
+            }
+          >
+            <Input
+              id="article-slug"
+              value={values.slug}
+              maxLength={ARTICLE_SLUG_MAX}
+              placeholder={effectiveSlug || 'english-words-for-this-story'}
+              invalid={Boolean(slugError)}
+              onChange={(event) => onChange({ slug: event.target.value })}
+            />
+          </Field>
+
+          <div className="space-y-1.5">
+            <span className="text-ink-muted block text-sm font-medium">
+              Canonical URL
+            </span>
+            <p className="text-ink-muted rounded-lg bg-surface-sunken px-3 py-2 text-xs break-all">
+              {canonicalUrl ?? 'Made from the headline when you save.'}
+            </p>
+          </div>
+
+          <SearchPreview
+            siteName={siteName}
+            title={previewTitle}
+            url={canonicalUrl}
+            description={values.metaDescription.trim() || values.summary.trim()}
+          />
 
           <div className="space-y-1.5">
             <span className="text-ink-muted block text-sm font-medium">
@@ -98,6 +167,25 @@ export function ArticleSeoFields({ values, onChange }: ArticleSeoFieldsProps) {
                   <X className="size-4" aria-hidden />
                 </Button>
               </div>
+            ) : values.featuredImage ? (
+              <div className="border-hairline flex items-center gap-3 rounded-lg border p-3">
+                <img
+                  src={values.featuredImage.url}
+                  alt=""
+                  className="h-12 w-16 shrink-0 rounded-md object-cover"
+                />
+                <p className="text-ink-muted min-w-0 flex-1 text-sm">
+                  Using the featured image from the Media Library.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setPickerOpen(true)}
+                >
+                  Use another
+                </Button>
+              </div>
             ) : (
               <button
                 type="button"
@@ -112,7 +200,7 @@ export function ArticleSeoFields({ values, onChange }: ArticleSeoFieldsProps) {
                     Choose an image
                   </span>
                   <span className="text-ink-subtle block text-xs">
-                    Falls back to the featured image when not set.
+                    Uses the featured image once one is chosen.
                   </span>
                 </span>
               </button>

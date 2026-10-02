@@ -190,10 +190,12 @@ export interface ArticleWriteData {
   priority: ArticlePriority;
   status: ArticleStatus;
   publicationDate: Date | null;
+  endAt: Date | null;
   mediaId: string | null;
   ogImageId: string | null;
   seoTitle: string | null;
   metaDescription: string | null;
+  slug: string | null;
 }
 
 export function create(
@@ -217,6 +219,18 @@ export function update(
   return db.article.update({ where: { id }, data, include: withRelations });
 }
 
+/** Keeps a published article's previous slug pointing at it, and drops the
+ * new one from its own history if the editor is taking an old slug back. */
+export async function recordSlugChange(
+  db: TransactionClient,
+  articleId: string,
+  previous: string,
+  next: string,
+) {
+  await db.articleSlugRedirect.deleteMany({ where: { slug: next, articleId } });
+  await db.articleSlugRedirect.create({ data: { slug: previous, articleId } });
+}
+
 export function remove(db: TransactionClient, id: string) {
   return db.article.delete({ where: { id }, select: { id: true } });
 }
@@ -232,6 +246,7 @@ function publicSearchWhere(
 ): Prisma.Sql {
   const conditions: Prisma.Sql[] = [
     Prisma.sql`status = 'PUBLISHED'::"ArticleStatus"`,
+    Prisma.sql`(end_at IS NULL OR end_at > now())`,
   ];
   if (filters.language) {
     conditions.push(Prisma.sql`language = ${filters.language}::"Language"`);

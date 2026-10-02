@@ -203,6 +203,32 @@ now" action triggered by the admin — don't build a background sweep unless ask
   `STORAGE_PROVIDER` toggle between Cloudinary and S3-compatible storage (AWS S3, Cloudflare R2)
   and what differs between them. Don't create redundant copies unless there's a real requirement.
 
+### 8.1 SEO rules for the reader site
+
+- **Links:** build every article and section link with `articlePath()` / `categoryPath()`
+  (`apps/web/lib/routes.ts`). Articles are `/article/<slug>` (headline's language; rules and the generator in
+  `@coastal-talk-news/validation/slug`), sections `/category/<slug>`. Never link to an article by
+  id: that address only exists to redirect old links.
+- **No extra requests for SEO:** metadata, JSON-LD and breadcrumbs are built on the server from
+  data the page already loads. `generateMetadata` and the page call the same `lib/api.ts`
+  function, which Next memoises and caches — never add an endpoint or a client fetch for SEO.
+- **Absolute URLs:** take the origin from `getOrigin()` (`apps/web/lib/site-url.ts`). It returns
+  `PUBLIC_SITE_URL` when set, so canonical tags never depend on the host a request came in on.
+- **Metadata:** one helper, `apps/web/lib/seo.ts`. The root layout uses `buildSiteMetadata`
+  (no canonical, so nothing leaks into not-found or previews); each page uses `buildMetadata`
+  with its own canonical `path`, never including a query string.
+- **Structured data:** build it with `apps/web/lib/structured-data.tsx` and render one `<JsonLd>`
+  per page. It drops unknown values, accepts only http(s) URLs and escapes `<`.
+- **Response schemas:** a field added to a public DTO must also be added to its TypeBox schema in
+  `packages/validation` — Fastify silently strips any field the response schema doesn't list,
+  and TypeScript cannot catch the mismatch.
+- **`updated_at`:** it is the article's `dateModified`. Writes that aren't edits (read counts,
+  backfills) use raw SQL so Prisma's `@updatedAt` doesn't bump it.
+- **Slugs:** the shared rules live in `@coastal-talk-news/validation/slug`. After deploying a
+  change that creates articles or categories through an older API, run `pnpm db:backfill-slugs`
+  in `apps/api` (safe to repeat; never touches an existing slug). It lists any article it can't
+  name (a headline with no words at all) for an editor to give a slug in the CMS.
+
 ## 9. Performance
 
 Prioritize efficient Prisma queries and appropriate indexes, optimized images, and avoiding

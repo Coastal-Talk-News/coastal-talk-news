@@ -13,6 +13,18 @@ import { CategoryTag } from './CategoryTag';
 import { ShareLinks } from './ShareLinks';
 import { YoutubeEmbed } from './YoutubeEmbed';
 
+/** Saving within the hour of publishing is finishing the story, not
+ * updating it, so only a later edit is called out to the reader. */
+const UPDATE_GRACE_MS = 60 * 60 * 1000;
+
+function wasUpdated(article: PublicArticleDto): boolean {
+  return (
+    new Date(article.updatedAt).getTime() -
+      new Date(article.publicationDate).getTime() >
+    UPDATE_GRACE_MS
+  );
+}
+
 interface ArticleViewProps {
   article: PublicArticleDto;
   settings: PublicSiteSettingsDto;
@@ -57,12 +69,20 @@ export function ArticleView({
         </p>
 
         <div className="border-rule mt-5 flex flex-wrap items-center justify-between gap-4 border-y py-3">
-          <time
-            dateTime={article.publicationDate}
-            className="text-ink-subtle text-sm"
-          >
-            {formatDateTime(article.publicationDate)}
-          </time>
+          <p className="text-ink-subtle text-sm">
+            <time dateTime={article.publicationDate}>
+              {formatDateTime(article.publicationDate)}
+            </time>
+            {wasUpdated(article) && (
+              <>
+                {' · '}
+                {dictionary.article.updated}{' '}
+                <time dateTime={article.updatedAt}>
+                  {formatDateTime(article.updatedAt)}
+                </time>
+              </>
+            )}
+          </p>
           <ShareLinks
             url={shareUrl}
             headline={article.headline}
@@ -80,7 +100,9 @@ export function ArticleView({
         >
           <Image
             src={article.coverImage.url}
-            alt=""
+            // The story's own picture, not decoration: described by the
+            // headline, since pictures carry no caption of their own.
+            alt={article.headline}
             width={article.coverImage.width}
             height={article.coverImage.height}
             priority
