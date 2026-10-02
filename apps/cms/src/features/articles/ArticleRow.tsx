@@ -81,7 +81,7 @@ export function ArticleRow({
 }: ArticleRowProps) {
   const readMinutes = estimateReadMinutes(article.content);
   const { status } = article;
-  const liveUrl = status === 'PUBLISHED' ? publicArticleUrl(article) : null;
+  const liveUrl = status === 'PUBLISHED' ? publicArticleUrl(article.id) : null;
 
   return (
     <tr className="group hover:bg-surface-sunken align-middle transition-colors">

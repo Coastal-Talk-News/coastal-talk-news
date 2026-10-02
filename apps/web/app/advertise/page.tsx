@@ -18,7 +18,6 @@ export async function generateMetadata(): Promise<Metadata> {
     locale,
     origin,
     title: getDictionary(locale).advertise.title,
-    description: getDictionary(locale).advertise.intro,
     path: '/advertise',
   });
 }

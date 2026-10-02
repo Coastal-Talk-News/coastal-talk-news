@@ -72,9 +72,6 @@ export function DashboardPage() {
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: queryKeys.dashboard,
     queryFn: ({ signal }) => dashboardApi.get(signal),
-    // Other admins publish too: coming back to the tab shows their articles
-    // (still at most once per staleTime, set app-wide).
-    refetchOnWindowFocus: true,
   });
 
   const usageQuery = useQuery({
@@ -263,12 +260,9 @@ export function DashboardPage() {
                       </span>
                     )}
                     <div className="min-w-0 flex-1">
-                      <Link
-                        to={`/articles/${article.id}/edit`}
-                        className="block truncate text-sm font-medium text-ink hover:underline"
-                      >
+                      <p className="truncate text-sm font-medium text-ink">
                         {article.headline}
-                      </Link>
+                      </p>
                       <p className="mt-0.5 truncate text-xs text-ink-muted">
                         {article.categoryName ?? 'No category'} &middot;{' '}
                         {formatRelative(

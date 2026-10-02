@@ -7,6 +7,7 @@ import {
   KeyRound,
   Mail,
   Megaphone,
+  Search,
   ShieldCheck,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -20,6 +21,7 @@ import { SettingsPrivacyForm } from '../features/settings/SettingsPrivacyForm.js
 import { SettingsTermsForm } from '../features/settings/SettingsTermsForm.js';
 import { SettingsSecurityForm } from '../features/settings/SettingsSecurityForm.js';
 import { SettingsTwoFactor } from '../features/settings/SettingsTwoFactor.js';
+import { SettingsSeoForm } from '../features/settings/SettingsSeoForm.js';
 
 type Tab =
   | 'general'
@@ -28,6 +30,7 @@ type Tab =
   | 'advertise'
   | 'privacy'
   | 'terms'
+  | 'seo'
   | 'security';
 
 // Each standalone page on the website gets its own tab, so an admin looking
@@ -40,6 +43,7 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'advertise', label: 'Advertise', icon: Megaphone },
   { value: 'privacy', label: 'Privacy Policy', icon: ShieldCheck },
   { value: 'terms', label: 'Terms and Conditions', icon: FileCheck },
+  { value: 'seo', label: 'SEO', icon: Search },
   { value: 'security', label: 'Password & Security', icon: KeyRound },
 ];
 
@@ -117,6 +121,9 @@ export function SettingsPage() {
           </div>
           <div hidden={tab !== 'terms'}>
             <SettingsTermsForm settings={data} />
+          </div>
+          <div hidden={tab !== 'seo'}>
+            <SettingsSeoForm settings={data} />
           </div>
           {/* Mounted only while open, so half-typed passwords are discarded the
               moment the admin leaves the tab rather than lingering in a form

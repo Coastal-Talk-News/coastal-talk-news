@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
 import { categoryName } from '../../lib/category-name';
-import { categoryPath, decodeParam } from '../../lib/routes';
 import type { Locale } from '../../lib/i18n/types';
 import { CategoryFlyoutList, containsActive } from './CategoryFlyoutMenu';
 
@@ -165,11 +164,10 @@ export function CategoryNav({
   const visible = topLevel.slice(0, visibleCount);
   const overflow = topLevel.slice(visibleCount);
 
-  const categoryHref = (category: PublicNavCategoryDto) =>
-    categoryPath(category);
+  const categoryHref = (id: string) => `/category/${id}`;
   const isHome = pathname === '/';
   const activeCategoryId = categories.find(
-    (category) => decodeParam(pathname) === decodeParam(categoryHref(category)),
+    (category) => pathname === categoryHref(category.id),
   )?.id;
   const isActiveGroup = (category: PublicNavCategoryDto) =>
     containsActive(category, activeCategoryId);
@@ -196,7 +194,7 @@ export function CategoryNav({
           </span>
         ) : (
           <Link
-            href={categoryHref(category)}
+            href={categoryHref(category.id)}
             aria-current={active ? 'page' : undefined}
             style={padding}
             className={`hover:bg-paper-sunken block py-1.5 pr-4 text-sm font-medium transition-colors ${
@@ -235,7 +233,7 @@ export function CategoryNav({
             return (
               <Link
                 key={category.id}
-                href={categoryHref(category)}
+                href={categoryHref(category.id)}
                 aria-current={active ? 'page' : undefined}
                 className={`${ITEM_CLASS} ${active ? ACTIVE : IDLE}`}
               >

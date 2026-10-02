@@ -48,17 +48,10 @@ export function toArticleCard(
 ): PublicArticleCardDto {
   return {
     id: article.id,
-    // An article without a slug yet is still reachable by its id.
-    slug: article.slug ?? article.id,
     headline: article.headline,
     summary: article.summary,
     language: article.language,
-    category: article.category
-      ? {
-          ...article.category,
-          slug: article.category.slug ?? article.category.id,
-        }
-      : null,
+    category: article.category,
     image: toMedia(article.media, toPublicUrl),
     // Only published articles reach here, so the date is always set.
     publicationDate: (article.publicationDate ?? new Date()).toISOString(),
@@ -85,7 +78,6 @@ export function toArticleDetail(
     seoTitle: article.seoTitle,
     metaDescription: article.metaDescription,
     ogImage: toMedia(article.ogImage, toPublicUrl),
-    updatedAt: article.updatedAt.toISOString(),
   };
 }
 
@@ -95,8 +87,6 @@ export function toNavCategory(
 ): PublicNavCategoryDto {
   return {
     id: category.id,
-    // A category saved before slugs existed is still reachable by its id.
-    slug: category.slug ?? category.id,
     name: category.name,
     nameKannada: category.nameKannada,
     description: category.description,
@@ -108,28 +98,6 @@ export function toNavCategory(
     // siblings here.
     children: [],
   };
-}
-
-/**
- * Drops every category with nothing to read: no published article of its own
- * and no subcategory (at any depth) that has one. A section with an empty
- * page would only lead a reader nowhere. Run on the flat list, before it is
- * nested, so a hidden parent takes only empty children with it.
- */
-export function withoutEmptyCategories(
-  categories: PublicNavCategoryDto[],
-): PublicNavCategoryDto[] {
-  const byParent = new Map<string, PublicNavCategoryDto[]>();
-  for (const category of categories) {
-    if (!category.parentId) continue;
-    const siblings = byParent.get(category.parentId) ?? [];
-    siblings.push(category);
-    byParent.set(category.parentId, siblings);
-  }
-  const hasContent = (category: PublicNavCategoryDto): boolean =>
-    category.articleCount > 0 ||
-    (byParent.get(category.id) ?? []).some(hasContent);
-  return categories.filter(hasContent);
 }
 
 /**
@@ -229,39 +197,20 @@ interface SettingsRow {
   defaultUiLanguage: Language;
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;
-  googleSiteVerification: string | null;
   logo: MediaRow | null;
   favicon: MediaRow | null;
   defaultOgImage: MediaRow | null;
 }
 
-/**
- * Browsers draw a favicon at 16–48px and iOS saves a 180px home-screen icon;
- * every page links it, so it is delivered at this width rather than as the
- * full upload (a 1254px, 320 KB original at the time of writing).
- */
-const FAVICON_WIDTH = 192;
-
 export function toSettings(
   settings: SettingsRow,
   toPublicUrl: ToPublicUrl,
-  toSizedUrl: (storageKey: string, width: number) => string,
 ): PublicSiteSettingsDto {
   const { logo, favicon, defaultOgImage, ...rest } = settings;
-  // Delivery never enlarges, so the reported size shrinks only when the
-  // original is wider than the limit.
-  const scale = favicon ? Math.min(1, FAVICON_WIDTH / favicon.width) : 1;
   return {
     ...rest,
     logo: toMedia(logo, toPublicUrl),
-    favicon: favicon
-      ? {
-          id: favicon.id,
-          url: toSizedUrl(favicon.storageKey, FAVICON_WIDTH),
-          width: Math.round(favicon.width * scale),
-          height: Math.round(favicon.height * scale),
-        }
-      : null,
+    favicon: toMedia(favicon, toPublicUrl),
     defaultOgImage: toMedia(defaultOgImage, toPublicUrl),
   };
 }

@@ -9,5 +9,4 @@ export * from './dashboard.js';
 export * from './media.js';
 export * from './public.js';
 export * from './read-time.js';
-export * from './seo.js';
 export * from './settings.js';

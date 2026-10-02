@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  SearchCheck,
   Bell,
   Image,
   LayoutDashboard,
@@ -60,7 +59,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/sessions', label: 'Sessions', icon: ShieldCheck },
       { to: '/settings', label: 'Settings', icon: Settings },
       { to: '/analytics', label: 'Analytics', icon: BarChart3 },
-      { to: '/seo', label: 'SEO', icon: SearchCheck },
     ],
   },
 ];

@@ -9,9 +9,7 @@ import type {
   PublicHomeDto,
   PublicPageDto,
   PublicSiteDto,
-  PublicSitemapDto,
 } from '@coastal-talk-news/types';
-import { isUuid } from '@coastal-talk-news/validation/slug';
 import type { Locale } from './i18n/types';
 
 /** Maps the UI-language toggle to the article-content language it now filters to. */
@@ -55,14 +53,10 @@ export class ApiClientError extends Error {
  */
 const RETRY_DELAYS_MS = [2_000, 6_000, 12_000];
 
-async function fetchPublicJson<T>(
-  path: string,
-  revalidate = REVALIDATE_SECONDS,
-  attempt = 0,
-): Promise<T> {
+async function fetchPublicJson<T>(path: string, attempt = 0): Promise<T> {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/public${path}`, {
-      next: { revalidate },
+      next: { revalidate: REVALIDATE_SECONDS },
     });
     // A 4xx is a real answer (missing/deactivated resource, bad input) —
     // retrying it on a backoff would just delay a page that should resolve
@@ -85,12 +79,12 @@ async function fetchPublicJson<T>(
         : new ApiUnavailableError(path, error);
     }
     await new Promise((resolve) => setTimeout(resolve, delay));
-    return fetchPublicJson<T>(path, revalidate, attempt + 1);
+    return fetchPublicJson<T>(path, attempt + 1);
   }
 }
 
-async function fetchPublic<T>(path: string, revalidate?: number): Promise<T> {
-  const payload = await fetchPublicJson<ApiSuccess<T>>(path, revalidate);
+async function fetchPublic<T>(path: string): Promise<T> {
+  const payload = await fetchPublicJson<ApiSuccess<T>>(path);
   return payload.data;
 }
 
@@ -162,10 +156,14 @@ export async function recordArticleView(
   }
 }
 
-/** 404 and 400 both mean "no such page" to a reader following a link. */
-async function orNull<T>(load: Promise<T>): Promise<T | null> {
+/**
+ * Null when there is no such published article — either the id doesn't
+ * resolve (404) or it isn't a well-formed id at all (400, from the route's
+ * uuid check). Both mean the same thing to a reader following a stale link.
+ */
+export async function getArticle(id: string): Promise<PublicArticleDto | null> {
   try {
-    return await load;
+    return await fetchPublic<PublicArticleDto>(`/articles/${id}`);
   } catch (error) {
     if (
       error instanceof ApiClientError &&
@@ -175,43 +173,6 @@ async function orNull<T>(load: Promise<T>): Promise<T | null> {
     }
     throw error;
   }
-}
-
-/**
- * A published article by slug (current or former) or by id — one request
- * either way; the result carries the current slug. Null for a draft, an
- * archived or deleted article, or a key that matches nothing. Called by both
- * generateMetadata and the page: the identical fetch is made once per render
- * and then served from the data cache, so the article is never requested
- * twice.
- */
-export function getArticle(key: string): Promise<PublicArticleDto | null> {
-  return orNull(
-    fetchPublic<PublicArticleDto>(`/articles/${encodeURIComponent(key)}`),
-  );
-}
-
-/** An active category by slug, or by the id that old links still carry. */
-export function findCategory(key: string): Promise<CategoryDto | null> {
-  return orNull(
-    fetchPublic<CategoryDto>(
-      isUuid(key)
-        ? `/categories/${key}`
-        : `/categories/by-slug/${encodeURIComponent(key)}`,
-    ),
-  );
-}
-
-/** `revalidate` matches sitemap.ts's own: a shorter fetch window would
- * shorten the route's, rebuilding the sitemap every minute. */
-export async function getSitemap(
-  revalidate: number,
-): Promise<PublicSitemapDto> {
-  const sitemap = await fetchPublic<PublicSitemapDto>('/sitemap', revalidate);
-  return {
-    articles: list(sitemap.articles),
-    categories: list(sitemap.categories),
-  };
 }
 
 /**
@@ -235,6 +196,11 @@ export async function getAdvertisement(
     }
     throw error;
   }
+}
+
+/** Throws ApiClientError (404) for an unknown or deactivated category id. */
+export async function getCategory(id: string): Promise<CategoryDto> {
+  return fetchPublic<CategoryDto>(`/categories/${id}`);
 }
 
 export interface CategoryArticlesPage {

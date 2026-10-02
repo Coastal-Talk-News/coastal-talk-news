@@ -7,7 +7,6 @@ import type {
   Language,
   MediaSummaryDto,
 } from '@coastal-talk-news/types';
-import { splitIso } from '../../lib/dateTime.js';
 import { DEFAULT_LAYOUT } from '../media/imageFrame.js';
 
 export interface FormValues {
@@ -23,13 +22,7 @@ export interface FormValues {
   tags: string[];
   seoTitle: string;
   metaDescription: string;
-  /** Empty on a new article: the API makes one from the headline. */
-  slug: string;
   ogImage: MediaSummaryDto | null;
-  /** The optional scheduled end, as the date-time field edits it; both
-   * empty means no end. */
-  endDate: string;
-  endTime: string;
 }
 
 export type UpdateValues = (patch: Partial<FormValues>) => void;
@@ -49,10 +42,7 @@ export function toValues(article: ArticleDto | null): FormValues {
       tags: [],
       seoTitle: '',
       metaDescription: '',
-      slug: '',
       ogImage: null,
-      endDate: '',
-      endTime: '',
     };
   }
   return {
@@ -68,10 +58,7 @@ export function toValues(article: ArticleDto | null): FormValues {
     tags: article.tags,
     seoTitle: article.seoTitle ?? '',
     metaDescription: article.metaDescription ?? '',
-    slug: article.slug ?? '',
     ogImage: article.ogImage,
-    endDate: article.endAt ? splitIso(article.endAt).date : '',
-    endTime: article.endAt ? splitIso(article.endAt).time : '',
   };
 }
 

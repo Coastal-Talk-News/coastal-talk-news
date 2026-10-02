@@ -22,9 +22,7 @@ export async function generateMetadata(): Promise<Metadata> {
     locale,
     origin,
     title: page.title ?? getDictionary(locale).about.title,
-    description:
-      page.intro ??
-      getDictionary(locale).about.seoDescription(settings.siteName),
+    description: page.intro,
     path: '/about',
   });
 }

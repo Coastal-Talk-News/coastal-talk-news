@@ -18,7 +18,6 @@ export async function generateMetadata(): Promise<Metadata> {
     locale,
     origin,
     title: getDictionary(locale).common.termsAndConditions,
-    description: getDictionary(locale).terms.seoDescription(settings.siteName),
     path: '/terms-and-conditions',
   });
 }
