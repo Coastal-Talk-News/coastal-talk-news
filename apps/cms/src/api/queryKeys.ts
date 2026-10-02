@@ -25,6 +25,10 @@ export const queryKeys = {
     ['advertisements', params] as const,
   settings: ['settings'] as const,
   analytics: ['analytics'] as const,
+  seoHealth: ['seo-health'] as const,
+  // Under seoHealth, so refreshing the checks refreshes this list too.
+  seoArticles: (params: Record<string, unknown>) =>
+    ['seo-health', 'articles', params] as const,
   analyticsArticles: (params: Record<string, unknown>) =>
     ['analytics', 'articles', params] as const,
   analyticsStorage: ['analytics', 'storage'] as const,

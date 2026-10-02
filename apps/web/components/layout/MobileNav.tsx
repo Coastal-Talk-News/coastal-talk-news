@@ -9,6 +9,7 @@ import type {
   PublicSiteSettingsDto,
 } from '@coastal-talk-news/types';
 import { categoryName } from '../../lib/category-name';
+import { categoryPath, decodeParam } from '../../lib/routes';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { LanguageToggle } from './LanguageToggle';
@@ -44,7 +45,8 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
     if (!open) return;
     const byId = new Map(categories.map((category) => [category.id, category]));
     const current = categories.find(
-      (category) => pathname === `/category/${category.id}`,
+      (category) =>
+        decodeParam(pathname) === decodeParam(categoryPath(category)),
     );
     const ancestors = new Set<string>();
     let parentId = current?.parentId ?? null;
@@ -59,7 +61,8 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
 
   function renderCategory(category: PublicNavCategoryDto, depth: number) {
     const hasChildren = category.children.length > 0;
-    const active = pathname === `/category/${category.id}`;
+    const active =
+      decodeParam(pathname) === decodeParam(categoryPath(category));
     const isExpanded = expanded.has(category.id);
 
     // One rule per level above this row, so an expanded group reads as a
@@ -105,7 +108,7 @@ export function MobileNav({ categories, settings, locale }: MobileNavProps) {
             </button>
           ) : (
             <Link
-              href={`/category/${category.id}`}
+              href={categoryPath(category)}
               aria-current={active ? 'page' : undefined}
               className={`group flex flex-1 items-center justify-between gap-3 rounded-sm px-2 py-2.5 transition-colors ${
                 active ? 'bg-brand-soft' : 'hover:bg-paper-sunken'

@@ -4,6 +4,7 @@ import {
   PublicAdvertisementDetailSchema,
   PublicAdvertisementParamsSchema,
   PublicArticleCardSchema,
+  PublicArticleKeyParamsSchema,
   PublicArticleParamsSchema,
   PublicArticleSchema,
   PublicArticlesQuerySchema,
@@ -14,6 +15,7 @@ import {
   PublicPageSchema,
   PublicSearchQuerySchema,
   PublicSiteSchema,
+  PublicSitemapSchema,
   SuccessResponse,
   commonErrorResponses,
 } from '@coastal-talk-news/validation';
@@ -35,6 +37,23 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.getSite,
+  );
+
+  app.get(
+    '/sitemap',
+    {
+      schema: {
+        tags: ['public'],
+        summary: 'Every published article and active category, for sitemap.xml',
+        description:
+          'Article ids, category slugs and last-edit times only. Drafts, archived articles and hidden categories are never listed.',
+        response: {
+          200: SuccessResponse(PublicSitemapSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.getSitemap,
   );
 
   app.get(
@@ -133,14 +152,14 @@ export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
   );
 
   app.get(
-    '/:id',
+    '/:key',
     {
       schema: {
         tags: ['public'],
-        summary: 'Get a published article, body included',
+        summary: 'Get a published article, body included, by slug or id',
         description:
-          'Draft and archived articles 404 rather than 403, so a stale shared link lands on the reader-site not-found page.',
-        params: PublicArticleParamsSchema,
+          'A slug (also one the article had before an editor changed it) or the id old links carry; the response always holds the current slug. Draft and archived articles 404 rather than 403, so a stale shared link lands on the reader-site not-found page.',
+        params: PublicArticleKeyParamsSchema,
         response: {
           200: SuccessResponse(PublicArticleSchema),
           ...commonErrorResponses,

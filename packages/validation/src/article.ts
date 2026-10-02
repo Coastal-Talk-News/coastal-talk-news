@@ -1,6 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import { IsoDateTime, paginationQueryFields } from './envelope.js';
 import { ImageLayoutSchema, MediaSummarySchema } from './media.js';
+import { ARTICLE_SLUG_MAX } from './slug.js';
 import {
   ARTICLE_HEADLINE_MAX,
   ARTICLE_SUMMARY_MAX,
@@ -69,8 +70,10 @@ const articleFields = {
   priority: ArticlePrioritySchema,
   status: ArticleStatusSchema,
   publicationDate: Type.Union([IsoDateTime, Type.Null()]),
+  endAt: Type.Union([IsoDateTime, Type.Null()]),
   seoTitle: Type.Union([Type.String(), Type.Null()]),
   metaDescription: Type.Union([Type.String(), Type.Null()]),
+  slug: Type.Union([Type.String(), Type.Null()]),
   featuredImage: Type.Union([MediaSummarySchema, Type.Null()]),
   featuredImageLayout: ImageLayoutSchema,
   ogImage: Type.Union([MediaSummarySchema, Type.Null()]),
@@ -100,6 +103,10 @@ const writableArticleFields = {
     Type.String({ maxLength: ARTICLE_META_DESCRIPTION_MAX }),
     Type.Null(),
   ]),
+  // Its shape is checked by the service, which tidies what was typed first
+  // and can say what's wrong in plain words.
+  slug: Type.String({ minLength: 1, maxLength: ARTICLE_SLUG_MAX }),
+  endAt: Type.Union([IsoDateTime, Type.Null()]),
 };
 
 export const CreateArticleBodySchema = Type.Object(
@@ -120,6 +127,8 @@ export const CreateArticleBodySchema = Type.Object(
     ogImageId: Type.Optional(writableArticleFields.ogImageId),
     seoTitle: Type.Optional(writableArticleFields.seoTitle),
     metaDescription: Type.Optional(writableArticleFields.metaDescription),
+    slug: Type.Optional(writableArticleFields.slug),
+    endAt: Type.Optional(writableArticleFields.endAt),
   },
   { additionalProperties: false },
 );
