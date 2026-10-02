@@ -14,6 +14,16 @@ const ACCEPTED_TYPES = new Set([
   'image/gif',
 ]);
 
+export interface CompressedImage {
+  file: File;
+  /** Null only when the browser couldn't decode the file at all - the
+   *  upload still proceeds with the original bytes, just without a
+   *  dimension fallback to offer a storage backend that can't measure the
+   *  image itself (S3-compatible). Cloudinary never needs this. */
+  width: number | null;
+  height: number | null;
+}
+
 function fitWithin(
   width: number,
   height: number,
@@ -37,10 +47,12 @@ function fitWithin(
  *
  * GIFs pass through untouched - canvas re-encoding only ever keeps one
  * frame, which would silently destroy an animation. Anything that fails to
- * decode, or that came out larger than it went in, falls back to the
- * original file rather than blocking the upload.
+ * re-encode, or that came out larger than it went in, falls back to the
+ * original file rather than blocking the upload; the real dimensions are
+ * still reported in that case, since they don't depend on which bytes end
+ * up being uploaded.
  */
-export async function compressImage(file: File): Promise<File> {
+export async function compressImage(file: File): Promise<CompressedImage> {
   if (!ACCEPTED_TYPES.has(file.type)) {
     throw new Error(`"${file.name}" is not a supported image format.`);
   }
@@ -49,41 +61,48 @@ export async function compressImage(file: File): Promise<File> {
       `"${file.name}" exceeds the ${Math.floor(MAX_INPUT_BYTES / 1024 / 1024)}MB limit.`,
     );
   }
-  if (file.type === 'image/gif') {
-    return file;
-  }
 
   let bitmap: ImageBitmap;
   try {
     bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   } catch {
-    // Not decodable here (an unusual encoder, a browser gap) - let the
-    // upload proceed with the original and leave the verdict to Cloudinary.
-    return file;
+    // Not decodable here at all (an unusual encoder, a browser gap) - let
+    // the upload proceed with the original and leave the verdict to
+    // storage; there is nothing to measure it with either.
+    return { file, width: null, height: null };
   }
 
   try {
+    if (file.type === 'image/gif') {
+      return { file, width: bitmap.width, height: bitmap.height };
+    }
+
     const { width, height } = fitWithin(bitmap.width, bitmap.height, MAX_EDGE);
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) return file;
+    if (!ctx) return { file, width: bitmap.width, height: bitmap.height };
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(bitmap, 0, 0, width, height);
 
     const blob = await new Promise<Blob | null>((resolve) =>
       canvas.toBlob(resolve, 'image/webp', QUALITY),
     );
     if (!blob || blob.size >= file.size) {
-      return file;
+      return { file, width: bitmap.width, height: bitmap.height };
     }
 
     const newName = `${file.name.replace(/\.[^./]+$/, '')}.webp`;
-    return new File([blob], newName, {
-      type: 'image/webp',
-      lastModified: file.lastModified,
-    });
+    return {
+      file: new File([blob], newName, {
+        type: 'image/webp',
+        lastModified: file.lastModified,
+      }),
+      width,
+      height,
+    };
   } finally {
     bitmap.close();
   }

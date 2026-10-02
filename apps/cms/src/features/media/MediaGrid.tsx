@@ -164,7 +164,7 @@ export function MediaGrid({
                   className="bg-surface-sunken block aspect-4/3 w-full cursor-pointer"
                 >
                   <img
-                    src={asset.thumbnailUrl}
+                    src={asset.url}
                     alt={asset.filename}
                     loading="lazy"
                     width={asset.width}

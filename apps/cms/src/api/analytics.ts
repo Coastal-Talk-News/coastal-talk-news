@@ -4,9 +4,7 @@ import type {
   AnalyticsMonthlyViewsDto,
   AnalyticsSort,
   AnalyticsStatsDto,
-  AnalyticsWeeklyViewsDto,
   AnalyticsYearRangeDto,
-  DatabaseStorageDto,
   SortOrder,
 } from '@coastal-talk-news/types';
 import { api, buildQuery } from './client.js';
@@ -14,8 +12,6 @@ import { api, buildQuery } from './client.js';
 export const analyticsApi = {
   stats: (signal?: AbortSignal) =>
     api.get<AnalyticsStatsDto>('/api/v1/cms/analytics', signal),
-  storage: (signal?: AbortSignal) =>
-    api.get<DatabaseStorageDto>('/api/v1/cms/analytics/storage', signal),
   articles: (
     params: {
       page: number;
@@ -29,14 +25,14 @@ export const analyticsApi = {
       `/api/v1/cms/analytics/articles${buildQuery(params)}`,
       signal,
     ),
-  dailyViews: (signal?: AbortSignal) =>
+  weekViews: (weeksAgo: number, signal?: AbortSignal) =>
     api.get<AnalyticsDailyViewsDto[]>(
-      '/api/v1/cms/analytics/views/daily',
+      `/api/v1/cms/analytics/views/week${buildQuery({ weeksAgo })}`,
       signal,
     ),
-  weeklyViews: (signal?: AbortSignal) =>
-    api.get<AnalyticsWeeklyViewsDto[]>(
-      '/api/v1/cms/analytics/views/weekly',
+  monthViews: (year: number, month: number, signal?: AbortSignal) =>
+    api.get<AnalyticsDailyViewsDto[]>(
+      `/api/v1/cms/analytics/views/month${buildQuery({ year, month })}`,
       signal,
     ),
   monthlyViews: (year: number, signal?: AbortSignal) =>

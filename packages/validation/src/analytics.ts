@@ -10,9 +10,6 @@ export const AnalyticsStatsSchema = Type.Object({
   activeBreakingNews: Type.Integer(),
   activeAdvertisements: Type.Integer(),
   viewsToday: Type.Integer(),
-  viewsThisWeek: Type.Integer(),
-  viewsThisMonth: Type.Integer(),
-  viewsThisYear: Type.Integer(),
 });
 
 export const AnalyticsDailyViewsSchema = Type.Object({
@@ -20,10 +17,15 @@ export const AnalyticsDailyViewsSchema = Type.Object({
   views: Type.Integer(),
 });
 
-export const AnalyticsWeeklyViewsSchema = Type.Object({
-  from: IsoDateTime,
-  to: IsoDateTime,
-  views: Type.Integer(),
+export const AnalyticsWeekViewsQuerySchema = Type.Object({
+  // How many whole weeks back from the one containing today - 0 is this
+  // week, 1 is last week, and so on. Never negative: there's no "future week".
+  weeksAgo: Type.Integer({ minimum: 0, default: 0 }),
+});
+
+export const AnalyticsMonthViewsQuerySchema = Type.Object({
+  year: Type.Integer({ minimum: 2000, maximum: 2100 }),
+  month: Type.Integer({ minimum: 1, maximum: 12 }),
 });
 
 export const AnalyticsMonthlyViewsSchema = Type.Object({
@@ -38,6 +40,7 @@ export const AnalyticsMonthlyViewsQuerySchema = Type.Object({
 export const AnalyticsYearRangeSchema = Type.Object({
   minYear: Type.Integer(),
   maxYear: Type.Integer(),
+  earliestDate: Type.Union([IsoDateTime, Type.Null()]),
 });
 
 export const AnalyticsArticleSchema = Type.Object({

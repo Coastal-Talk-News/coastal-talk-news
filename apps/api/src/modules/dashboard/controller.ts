@@ -7,6 +7,7 @@ export async function getUsage(request: FastifyRequest) {
     await service.getUsage({
       db: request.server.prisma,
       storage: request.server.storage,
+      mediaStorageCapBytes: request.server.mediaStorageCapBytes,
     }),
   );
 }
@@ -15,6 +16,7 @@ export async function getDashboard(request: FastifyRequest) {
   const data = await service.getDashboard({
     db: request.server.prisma,
     storage: request.server.storage,
+    mediaStorageCapBytes: request.server.mediaStorageCapBytes,
   });
   return dataEnvelope(data);
 }

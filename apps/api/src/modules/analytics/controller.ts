@@ -11,12 +11,24 @@ export async function getStorage(request: FastifyRequest) {
   return dataEnvelope(await service.getStorage(request.server.prisma));
 }
 
-export async function getDailyViews(request: FastifyRequest) {
-  return dataEnvelope(await service.getDailyViews(request.server.prisma));
+export async function getWeekViews(
+  request: FastifyRequest<{ Querystring: { weeksAgo: number } }>,
+) {
+  return dataEnvelope(
+    await service.getWeekViews(request.server.prisma, request.query.weeksAgo),
+  );
 }
 
-export async function getWeeklyViews(request: FastifyRequest) {
-  return dataEnvelope(await service.getWeeklyViews(request.server.prisma));
+export async function getMonthViews(
+  request: FastifyRequest<{ Querystring: { year: number; month: number } }>,
+) {
+  return dataEnvelope(
+    await service.getMonthViews(
+      request.server.prisma,
+      request.query.year,
+      request.query.month,
+    ),
+  );
 }
 
 export async function getMonthlyViews(

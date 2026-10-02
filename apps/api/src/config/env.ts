@@ -30,13 +30,46 @@ const EnvSchema = Type.Object({
 
   CORS_ORIGINS: Type.String({ minLength: 1 }),
 
-  CLOUDINARY_CLOUD_NAME: Type.String({ minLength: 1 }),
-  CLOUDINARY_API_KEY: Type.String({ minLength: 1 }),
-  CLOUDINARY_API_SECRET: Type.String({ minLength: 1 }),
+  // Which object storage backend handles image uploads. Only the selected
+  // one's variables below are required - see the per-provider check in
+  // loadEnv(). Switching is a config change only: nothing in the code
+  // branches on which provider is active beyond this one setting.
+  STORAGE_PROVIDER: Type.Union(
+    [Type.Literal('cloudinary'), Type.Literal('s3')],
+    { default: 'cloudinary' },
+  ),
+
+  CLOUDINARY_CLOUD_NAME: Type.Optional(Type.String({ minLength: 1 })),
+  CLOUDINARY_API_KEY: Type.Optional(Type.String({ minLength: 1 })),
+  CLOUDINARY_API_SECRET: Type.Optional(Type.String({ minLength: 1 })),
   CLOUDINARY_FOLDER: Type.String({
     minLength: 1,
     default: 'coastal-talk-news',
   }),
+
+  // S3-compatible: real AWS S3, Cloudflare R2, or anything else that speaks
+  // the S3 API. Leave S3_ENDPOINT unset for AWS S3 itself; set it to the
+  // provider's endpoint (e.g. R2's account endpoint) for anything else.
+  S3_BUCKET: Type.Optional(Type.String({ minLength: 1 })),
+  S3_REGION: Type.Optional(Type.String({ minLength: 1 })),
+  S3_ACCESS_KEY_ID: Type.Optional(Type.String({ minLength: 1 })),
+  S3_SECRET_ACCESS_KEY: Type.Optional(Type.String({ minLength: 1 })),
+  S3_ENDPOINT: Type.Optional(Type.String({ minLength: 1 })),
+  // Base URL objects are served from - a CloudFront domain, R2's public
+  // bucket URL, or a custom domain in front of either. Required because
+  // plain bucket endpoints aren't public read by default.
+  S3_PUBLIC_URL: Type.Optional(Type.String({ minLength: 1 })),
+  // Some S3-compatible services need path-style addressing
+  // (https://host/bucket/key) instead of the virtual-hosted style AWS
+  // defaults to (https://bucket.host/key).
+  S3_FORCE_PATH_STYLE: Type.Boolean({ default: false }),
+  S3_FOLDER: Type.String({ minLength: 1, default: 'coastal-talk-news' }),
+
+  // A hard ceiling on total stored image size, regardless of provider -
+  // decimal MB, matching how every other storage figure in this app is
+  // reported. Once reached, new uploads are refused until something is
+  // deleted or this is raised.
+  MEDIA_STORAGE_CAP_MB: Type.Integer({ default: 5000, minimum: 1 }),
 });
 
 export type Env = Static<typeof EnvSchema> & {
@@ -73,5 +106,40 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
     );
   }
 
+  requireStorageProviderConfig(parsed);
+
   return { ...parsed, corsOrigins, totpKey };
+}
+
+/**
+ * Only the active provider's variables are required - TypeBox can't express
+ * "required if STORAGE_PROVIDER is X" declaratively, so this is a plain
+ * follow-up check, the same way CORS_ORIGINS and TOTP_ENCRYPTION_KEY are
+ * validated above.
+ */
+function requireStorageProviderConfig(env: Static<typeof EnvSchema>): void {
+  function require(keys: (keyof Static<typeof EnvSchema>)[]) {
+    const missing = keys.filter((key) => !env[key]);
+    if (missing.length > 0) {
+      throw new Error(
+        `STORAGE_PROVIDER=${env.STORAGE_PROVIDER} requires: ${missing.join(', ')}`,
+      );
+    }
+  }
+
+  if (env.STORAGE_PROVIDER === 'cloudinary') {
+    require([
+      'CLOUDINARY_CLOUD_NAME',
+      'CLOUDINARY_API_KEY',
+      'CLOUDINARY_API_SECRET',
+    ]);
+  } else {
+    require([
+      'S3_BUCKET',
+      'S3_REGION',
+      'S3_ACCESS_KEY_ID',
+      'S3_SECRET_ACCESS_KEY',
+      'S3_PUBLIC_URL',
+    ]);
+  }
 }

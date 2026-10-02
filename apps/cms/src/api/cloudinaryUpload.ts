@@ -1,4 +1,4 @@
-import type { MediaUploadSignatureDto } from '@coastal-talk-news/types';
+import type { CloudinaryUploadTicketDto } from '@coastal-talk-news/types';
 
 export interface CloudinaryUploadResult {
   publicId: string;
@@ -20,7 +20,7 @@ interface CloudinaryErrorPayload {
  */
 export function uploadToCloudinary(
   file: File,
-  signature: MediaUploadSignatureDto,
+  signature: CloudinaryUploadTicketDto,
   onProgress?: (percent: number) => void,
 ): Promise<CloudinaryUploadResult> {
   return new Promise((resolve, reject) => {

@@ -21,7 +21,7 @@ const NO_USAGE: MediaUsage = {
 };
 
 export interface UrlBuilder {
-  (storageKey: string, options?: { width?: number }): string;
+  (storageKey: string): string;
 }
 
 export function toMediaAssetDto(
@@ -32,7 +32,6 @@ export function toMediaAssetDto(
   return {
     id: asset.id,
     url: toPublicUrl(asset.storageKey),
-    thumbnailUrl: toPublicUrl(asset.storageKey, { width: 600 }),
     filename: asset.filename,
     mimeType: asset.mimeType,
     fileSize: asset.fileSize,

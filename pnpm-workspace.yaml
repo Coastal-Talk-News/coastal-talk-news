@@ -19,3 +19,7 @@ allowBuilds:
   # correctness, so leave their install scripts off.
   msgpackr-extract: false
   workerd: false
+
+minimumReleaseAgeExclude:
+  - '@aws-sdk/client-s3@3.1145.0'
+  - '@aws-sdk/s3-presigned-post@3.1145.0'

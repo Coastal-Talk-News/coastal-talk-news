@@ -1,5 +1,6 @@
 import type { Database } from '@coastal-talk-news/db';
 import { isActiveAt, isActiveAtOpenEnded } from '../../lib/schedule.js';
+import * as mediaRepository from '../media/repository.js';
 import type { ObjectStorage } from '../media/storage.js';
 import * as repository from './repository.js';
 
@@ -8,6 +9,8 @@ const PREVIEW_LIMIT = 5;
 export interface DashboardDeps {
   db: Database;
   storage: ObjectStorage;
+  /** MEDIA_STORAGE_CAP_MB, in bytes. Only getUsage() needs this. */
+  mediaStorageCapBytes: number;
 }
 
 function startOfToday(now: Date): Date {
@@ -69,15 +72,40 @@ async function readSupabase(db: Database) {
   }
 }
 
+async function readMediaStorage(db: Database, capBytes: number) {
+  try {
+    const used = await mediaRepository.totalStorageBytes(db);
+    const limit = bytesToMB(capBytes);
+    return {
+      used: bytesToMB(used),
+      limit,
+      warnAt: Math.round(limit * 0.9),
+    };
+  } catch {
+    // A usage meter is never worth failing the dashboard for.
+    return null;
+  }
+}
+
 export async function getUsage(
-  { db, storage }: DashboardDeps,
+  { db, storage, mediaStorageCapBytes }: DashboardDeps,
   now = new Date(),
 ) {
-  const [cloudinary, supabase] = await Promise.all([
-    readCloudinary(storage, now),
+  const [cloudinary, supabase, mediaStorage] = await Promise.all([
+    // Cloudinary's own credit figure isn't a meaningful thing to show when
+    // a different backend is actually storing the images.
+    storage.provider === 'cloudinary'
+      ? readCloudinary(storage, now)
+      : Promise.resolve(null),
     readSupabase(db),
+    readMediaStorage(db, mediaStorageCapBytes),
   ]);
-  return { cloudinary, supabase };
+  return {
+    cloudinary,
+    supabase,
+    mediaStorage,
+    storageProvider: storage.provider,
+  };
 }
 
 export async function getDashboard(

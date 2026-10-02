@@ -5,9 +5,10 @@ import {
   MediaAssetSchema,
   MediaListQuerySchema,
   MediaParamsSchema,
-  MediaUploadSignatureSchema,
+  MediaUploadTicketSchema,
   RegisterMediaBodySchema,
   SuccessResponse,
+  UploadSignatureBodySchema,
   commonErrorResponses,
 } from '@coastal-talk-news/validation';
 import { Type } from '@sinclair/typebox';
@@ -36,17 +37,17 @@ export const mediaRoutes: FastifyPluginAsyncTypebox = async (app) => {
   app.post(
     '/signature',
     {
-      // Minting a signature is cheap, but each one doubles as an invite to
-      // spend an upload against this Cloudinary account.
+      // Minting a ticket is cheap, but each one doubles as an invite to
+      // spend an upload against this storage account.
       config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
       schema: {
         tags: ['media'],
-        summary:
-          'Get a signed ticket to upload one image straight to Cloudinary',
+        summary: 'Get a signed ticket to upload one image straight to storage',
         description:
-          'Nothing is stored yet. The browser uploads directly to Cloudinary with this, then calls POST / with the result to register it.',
+          'Nothing is stored yet. The browser uploads directly to whichever backend STORAGE_PROVIDER selects with this, then calls POST / with the result to register it.',
+        body: UploadSignatureBodySchema,
         response: {
-          200: SuccessResponse(MediaUploadSignatureSchema),
+          200: SuccessResponse(MediaUploadTicketSchema),
           ...commonErrorResponses,
         },
       },
@@ -60,9 +61,9 @@ export const mediaRoutes: FastifyPluginAsyncTypebox = async (app) => {
       config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
       schema: {
         tags: ['media'],
-        summary: 'Register an image already uploaded to Cloudinary',
+        summary: 'Register an image already uploaded to storage',
         description:
-          'The upload itself happens directly between the browser and Cloudinary. This confirms it actually happened by reading the asset back from Cloudinary - format, dimensions, byte size - rather than trusting the request, then records it.',
+          'The upload itself happens directly between the browser and storage. This confirms it actually happened by reading the asset back from the storage backend - format and byte size always, dimensions where the backend can report them - rather than trusting the request, then records it.',
         body: RegisterMediaBodySchema,
         response: {
           201: SuccessResponse(MediaAssetSchema),
