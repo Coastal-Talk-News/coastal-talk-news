@@ -21,7 +21,6 @@
     "@coastal-talk-news/validation": "workspace:*",
     "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
-    "@fastify/multipart": "^10.1.1",
     "@fastify/rate-limit": "^11.2.0",
     "@fastify/swagger": "^9.8.1",
     "@fastify/swagger-ui": "^6.1.1",
@@ -31,9 +30,7 @@
     "cloudinary": "^2.11.0",
     "fastify": "^5.12.3",
     "fastify-plugin": "^6.0.0",
-    "file-type": "^22.0.2",
-    "pino": "^10.3.1",
-    "sharp": "^0.35.4"
+    "pino": "^10.3.1"
   },
   "devDependencies": {
     "@coastal-talk-news/eslint-config": "workspace:*",

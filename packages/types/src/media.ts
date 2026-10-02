@@ -15,6 +15,21 @@ export interface MediaUsageDto {
   total: number;
 }
 
+/** A time-boxed ticket for uploading one image straight to Cloudinary. */
+export interface MediaUploadSignatureDto {
+  cloudName: string;
+  apiKey: string;
+  timestamp: number;
+  signature: string;
+  publicId: string;
+  allowedFormats: string;
+}
+
+export interface RegisterMediaRequest {
+  publicId: string;
+  filename: string;
+}
+
 export interface MediaAssetDto {
   id: Id;
   url: string;

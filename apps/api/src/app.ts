@@ -1,6 +1,5 @@
 import { API_BASE_PATH } from '@coastal-talk-news/types';
 import cors from '@fastify/cors';
-import multipart from '@fastify/multipart';
 import swagger from '@fastify/swagger';
 import swaggerUi from '@fastify/swagger-ui';
 import type { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
@@ -11,7 +10,6 @@ import { cmsArticleRoutes } from './modules/articles/routes.js';
 import { analyticsRoutes } from './modules/analytics/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { twoFactorRoutes } from './modules/two-factor/routes.js';
-import { MAX_UPLOAD_BYTES } from './modules/media/image.js';
 import { cmsBreakingNewsRoutes } from './modules/breaking-news/routes.js';
 import {
   cmsCategoryRoutes,
@@ -95,10 +93,6 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
     },
   });
   await app.register(swaggerUi, { routePrefix: '/docs' });
-
-  await app.register(multipart, {
-    limits: { fileSize: MAX_UPLOAD_BYTES, files: 10 },
-  });
 
   await app.register(prismaPlugin, { env });
   await app.register(storagePlugin, { env });

@@ -30,7 +30,12 @@ export function findById(db: TransactionClient, id: string) {
   return db.mediaAsset.findUnique({ where: { id } });
 }
 
-export function create(
+/**
+ * Keyed by `storageKey` rather than a plain insert: a retried register call
+ * for the same Cloudinary upload (a dropped response, a double click) must
+ * land on the same row, not a duplicate.
+ */
+export function upsertByStorageKey(
   db: TransactionClient,
   data: {
     filename: string;
@@ -41,7 +46,11 @@ export function create(
     height: number;
   },
 ) {
-  return db.mediaAsset.create({ data });
+  return db.mediaAsset.upsert({
+    where: { storageKey: data.storageKey },
+    create: data,
+    update: {},
+  });
 }
 
 export function remove(db: TransactionClient, id: string) {
