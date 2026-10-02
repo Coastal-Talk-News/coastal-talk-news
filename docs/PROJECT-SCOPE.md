@@ -324,7 +324,8 @@ expired advertisements and permanently delete unwanted ones later.
 
 Up to two images per ad - the banner shown in its zone, and an optional larger detail
 image for the ad's own page - each any resolution, rendered responsively with aspect
-ratio preserved. No separate desktop/tablet/mobile variants in V1. Optimized server-side on upload (Sharp).
+ratio preserved. No separate desktop/tablet/mobile variants in V1. Compressed in the browser before
+upload (see Media flow in `docs/DATA-MODEL.md`) - nothing server-side.
 
 ### Media Library
 

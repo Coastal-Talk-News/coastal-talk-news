@@ -133,8 +133,13 @@ now" action triggered by the admin — don't build a background sweep unless ask
 - Authentication and authorization enforced on every protected route, server-side, every
   time.
 - Passwords: bcrypt, never plaintext, never in logs or responses.
-- File uploads: validate actual file content, not just the client-supplied filename or MIME
-  type; enforce size/type limits server-side.
+- File uploads: images upload directly from the browser to Cloudinary (see §8), so the API never
+  receives the bytes to inspect. The equivalent control is Cloudinary itself: `allowed_formats`
+  is part of what the upload signature signs, so it can't be widened client-side, and Cloudinary
+  determines format from the file's actual content rather than the extension or declared MIME
+  type. After the upload, the API independently re-reads the asset's format/dimensions/size from
+  Cloudinary's own Admin API before ever writing a Media Asset row - never trusted from the
+  client's register request.
 - Rich content (Tiptap output) rendered on the public site: treat as untrusted, sanitize or
   render through a method that can't execute injected markup (XSS).
 - Never expose passwords, password hashes, secrets, internal stack traces, or raw env vars
@@ -186,8 +191,10 @@ now" action triggered by the admin — don't build a background sweep unless ask
   Advertisement visibility in V1. Do not build scheduled infrastructure around it unless
   another concrete V1 requirement needs it. If it's already installed in the repo, don't
   remove it reflexively — confirm during the repo audit whether anything actually uses it.
-- Image pipeline: validate → Sharp processing/optimization → Cloudinary → Media Asset row. Don't
-  create redundant copies unless there's a real requirement.
+- Image pipeline: compress/resize in the browser → signed direct upload to Cloudinary → API
+  reads the result back from Cloudinary and writes the Media Asset row. The API never receives
+  the file itself; see "Media flow" in `docs/DATA-MODEL.md` for the full sequence. Don't create
+  redundant copies unless there's a real requirement.
 
 ## 9. Performance
 

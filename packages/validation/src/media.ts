@@ -34,6 +34,23 @@ export const MediaAssetSchema = Type.Object({
   usage: MediaUsageSchema,
 });
 
+export const MediaUploadSignatureSchema = Type.Object({
+  cloudName: Type.String(),
+  apiKey: Type.String(),
+  timestamp: Type.Integer(),
+  signature: Type.String(),
+  publicId: Type.String(),
+  allowedFormats: Type.String(),
+});
+
+export const RegisterMediaBodySchema = Type.Object(
+  {
+    publicId: Type.String({ minLength: 1, maxLength: 300 }),
+    filename: Type.String({ minLength: 1, maxLength: 255 }),
+  },
+  { additionalProperties: false },
+);
+
 export const MediaListQuerySchema = Type.Object({
   ...paginationQueryFields,
   search: Type.Optional(Type.String({ maxLength: 120 })),

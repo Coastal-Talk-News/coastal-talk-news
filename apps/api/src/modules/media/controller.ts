@@ -1,7 +1,6 @@
+import type { RegisterMediaRequest } from '@coastal-talk-news/types';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { BadRequestError } from '../../lib/errors.js';
 import { dataEnvelope, listEnvelope } from '../../lib/pagination.js';
-import { MAX_UPLOAD_BYTES } from './image.js';
 import { toMediaAssetDto } from './mapper.js';
 import * as service from './service.js';
 
@@ -48,32 +47,18 @@ export async function getById(
   return dataEnvelope(toMediaAssetDto(asset, publicUrl(request), usage));
 }
 
-export async function upload(request: FastifyRequest, reply: FastifyReply) {
-  const files = request.files();
-  const created = [];
+export async function getUploadSignature(request: FastifyRequest) {
+  return dataEnvelope(service.createUploadSignature(deps(request)));
+}
 
-  for await (const part of files) {
-    const buffer = await part.toBuffer();
-    // Fastify truncates at the configured limit rather than throwing, so an
-    // oversized file would otherwise be stored silently corrupted.
-    if (part.file.truncated) {
-      throw new BadRequestError(
-        `"${part.filename}" exceeds the ${Math.floor(MAX_UPLOAD_BYTES / 1024 / 1024)}MB limit.`,
-      );
-    }
-    created.push(
-      await service.upload(deps(request), { filename: part.filename, buffer }),
-    );
-  }
-
-  if (created.length === 0) {
-    throw new BadRequestError('No file was uploaded.');
-  }
-
-  const toUrl = publicUrl(request);
+export async function registerUpload(
+  request: FastifyRequest<{ Body: RegisterMediaRequest }>,
+  reply: FastifyReply,
+) {
+  const asset = await service.registerUpload(deps(request), request.body);
   return reply
     .status(201)
-    .send(dataEnvelope(created.map((asset) => toMediaAssetDto(asset, toUrl))));
+    .send(dataEnvelope(toMediaAssetDto(asset, publicUrl(request))));
 }
 
 export async function remove(

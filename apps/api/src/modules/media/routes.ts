@@ -5,6 +5,8 @@ import {
   MediaAssetSchema,
   MediaListQuerySchema,
   MediaParamsSchema,
+  MediaUploadSignatureSchema,
+  RegisterMediaBodySchema,
   SuccessResponse,
   commonErrorResponses,
 } from '@coastal-talk-news/validation';
@@ -12,6 +14,7 @@ import { Type } from '@sinclair/typebox';
 import * as controller from './controller.js';
 
 export const mediaRoutes: FastifyPluginAsyncTypebox = async (app) => {
+  await app.register(import('@fastify/rate-limit'), { global: false });
   app.addHook('preHandler', app.requireAuth);
 
   app.get(
@@ -31,19 +34,43 @@ export const mediaRoutes: FastifyPluginAsyncTypebox = async (app) => {
   );
 
   app.post(
-    '',
+    '/signature',
     {
+      // Minting a signature is cheap, but each one doubles as an invite to
+      // spend an upload against this Cloudinary account.
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
       schema: {
         tags: ['media'],
-        summary: 'Upload one or more images',
-        consumes: ['multipart/form-data'],
+        summary:
+          'Get a signed ticket to upload one image straight to Cloudinary',
+        description:
+          'Nothing is stored yet. The browser uploads directly to Cloudinary with this, then calls POST / with the result to register it.',
         response: {
-          201: SuccessResponse(Type.Array(MediaAssetSchema)),
+          200: SuccessResponse(MediaUploadSignatureSchema),
           ...commonErrorResponses,
         },
       },
     },
-    controller.upload,
+    controller.getUploadSignature,
+  );
+
+  app.post(
+    '',
+    {
+      config: { rateLimit: { max: 30, timeWindow: '1 minute' } },
+      schema: {
+        tags: ['media'],
+        summary: 'Register an image already uploaded to Cloudinary',
+        description:
+          'The upload itself happens directly between the browser and Cloudinary. This confirms it actually happened by reading the asset back from Cloudinary - format, dimensions, byte size - rather than trusting the request, then records it.',
+        body: RegisterMediaBodySchema,
+        response: {
+          201: SuccessResponse(MediaAssetSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.registerUpload,
   );
 
   // Declared before /:id so "cleanup" is not captured as an id.

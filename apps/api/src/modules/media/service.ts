@@ -1,16 +1,21 @@
 import type { Database } from '@coastal-talk-news/db';
 import type { FastifyBaseLogger } from 'fastify';
-import { ConflictError, NotFoundError } from '../../lib/errors.js';
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+  PayloadTooLargeError,
+  UnsupportedMediaTypeError,
+} from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
-import { processUpload } from './image.js';
 import {
   countUsage,
   findUnreferencedMedia,
   type MediaUsage,
 } from './reference.js';
 import * as repository from './repository.js';
-import type { ObjectStorage } from './storage.js';
+import type { ObjectStorage, UploadSignature } from './storage.js';
 
 export interface MediaServiceDeps {
   db: Database;
@@ -62,27 +67,82 @@ export async function getById({ db }: MediaServiceDeps, id: string) {
   return { asset, usage: usage.get(asset.id) };
 }
 
-export interface UploadInput {
-  filename: string;
-  buffer: Buffer;
+/**
+ * There is no signed "max bytes" upload parameter - Cloudinary only lets
+ * that be capped account-wide, in its dashboard. This is the backstop for
+ * someone who skips the browser's own compression and uploads something
+ * huge directly: it is still rejected, just one request later than ideal,
+ * and the object is removed from Cloudinary rather than left billing
+ * storage with nothing in our own database pointing at it.
+ */
+const MAX_ASSET_BYTES = 10 * 1024 * 1024;
+
+/** Cloudinary's own `format`, which it derives from the file's actual
+ *  content - never what the client's register call might claim. */
+const MIME_BY_FORMAT: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  gif: 'image/gif',
+};
+
+export function createUploadSignature({
+  storage,
+}: MediaServiceDeps): UploadSignature {
+  return storage.createUploadSignature();
 }
 
-export async function upload(
+export interface RegisterUploadInput {
+  publicId: string;
+  filename: string;
+}
+
+/**
+ * The second half of a direct-to-Cloudinary upload: the browser already put
+ * the file there itself, so this only has a public id to go on. Everything
+ * that ends up in the database - format, dimensions, byte size - is read
+ * back from Cloudinary directly rather than trusted from the request, so a
+ * client can't register an asset that was never actually uploaded, or lie
+ * about what it is.
+ */
+export async function registerUpload(
   { db, storage }: MediaServiceDeps,
-  input: UploadInput,
+  input: RegisterUploadInput,
 ) {
-  const processed = await processUpload(input.buffer);
-  const storageKey = storage.buildStorageKey();
+  const { publicId, filename } = input;
 
-  await storage.put(storageKey, processed.buffer);
+  if (!storage.isManagedKey(publicId)) {
+    throw new BadRequestError('Not a recognised upload.');
+  }
 
-  return repository.create(db, {
-    filename: input.filename,
-    storageKey,
-    mimeType: processed.mimeType,
-    fileSize: processed.fileSize,
-    width: processed.width,
-    height: processed.height,
+  const resource = await storage.getUploadedAsset(publicId).catch(() => {
+    throw new NotFoundError('Uploaded image');
+  });
+
+  if (resource.bytes > MAX_ASSET_BYTES) {
+    await storage.delete(publicId);
+    throw new PayloadTooLargeError(
+      `Image exceeds the ${Math.floor(MAX_ASSET_BYTES / 1024 / 1024)}MB limit.`,
+    );
+  }
+
+  const mimeType = MIME_BY_FORMAT[resource.format.toLowerCase()];
+  if (!mimeType) {
+    await storage.delete(publicId);
+    throw new UnsupportedMediaTypeError(
+      `Unsupported image format: ${resource.format}.`,
+    );
+  }
+
+  return repository.upsertByStorageKey(db, {
+    filename: filename.trim() || 'Untitled image',
+    storageKey: publicId,
+    mimeType,
+    fileSize: resource.bytes,
+    width: resource.width,
+    height: resource.height,
   });
 }
 

@@ -309,17 +309,31 @@ rule.
 
 ## Media flow
 
+The file itself never passes through the API - only a signature request and, afterwards, a small
+JSON confirmation do:
+
 ```text
-Upload → validate (real file content, not just client-supplied MIME/extension)
-       → process/optimize with Sharp
-       → store object in Cloudinary
-       → save { filename, storage_key, mime_type, file_size } as a Media Asset row
+Browser: compress/resize to WebP (skipped for GIF, to keep any animation)
+API:     POST /cms/media/signature → a signed, single-use, time-boxed upload ticket
+             (public_id minted server-side, under this server's own Cloudinary folder;
+             allowed_formats is part of what's signed, so it can't be widened client-side)
+Browser: uploads the file straight to Cloudinary with that ticket
+API:     POST /cms/media { publicId, filename } → reads the asset back from Cloudinary's
+             own Admin API (format, width, height, bytes - never trusted from the request)
+             → upserts { filename, storage_key, mime_type, file_size, width, height } as a
+               Media Asset row, keyed by storage_key so a retried register call is a no-op
 ```
 
-The architecture diagram shows the client talking to Cloudinary directly on two paths, in addition
-to the API↔Cloudinary path — this suggests either a presigned-upload flow, direct public reads of
-stored images, or both. Confirm the actual implementation in `apps/api`/`apps/cms` and
-update this section once you have.
+Reads work the same as before: the public site and CMS both resolve a Media Asset to a Cloudinary
+delivery URL (`storage_key` is the Cloudinary `public_id`) via `ObjectStorage.publicUrl()`, with
+`f_auto,q_auto` and an optional width transform applied on delivery, not on upload.
+
+A browser that abandons the flow between a successful Cloudinary upload and the register call
+leaves an untracked object in Cloudinary: no Media Asset row exists for it, so the "clean up
+unused" sweep never sees it (that sweep only ever looks at rows that exist), and a retry uploads
+again under a fresh signature rather than resuming the old one. This is a deliberate, accepted
+trade-off for keeping uploads off the API entirely, on the expectation that it is rare - a dropped
+connection in the brief window between an upload finishing and the register call going out.
 
 ## API ↔ database access pattern
 
