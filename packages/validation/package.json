@@ -16,6 +16,10 @@
     "./password-policy": {
       "types": "./dist/password-policy.d.ts",
       "default": "./dist/password-policy.js"
+    },
+    "./slug": {
+      "types": "./dist/slug.d.ts",
+      "default": "./dist/slug.js"
     }
   },
   "scripts": {

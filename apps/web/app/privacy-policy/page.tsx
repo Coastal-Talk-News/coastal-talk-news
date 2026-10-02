@@ -18,6 +18,9 @@ export async function generateMetadata(): Promise<Metadata> {
     locale,
     origin,
     title: getDictionary(locale).common.privacyPolicy,
+    description: getDictionary(locale).privacy.seoDescription(
+      settings.siteName,
+    ),
     path: '/privacy-policy',
   });
 }

@@ -11,8 +11,17 @@ them in Prisma before building the feature that depends on them.
 
 `id`, `category_id` (FK → Category), `media_id` (FK → Media Asset, featured image),
 `language`, `headline`, `summary`, `content`, `youtube_url`, `tags`, `priority`,
-`status` (→ `ArticleStatus`), `publication_date`, `created_at`, `updated_at`, `seo_title`,
-`meta_description`, `og_image_id` (FK → Media Asset), `view_count`, `featured_image_layout`
+`status` (→ `ArticleStatus`), `publication_date`, `end_at`, `created_at`, `updated_at`, `seo_title`,
+`meta_description`, `og_image_id` (FK → Media Asset), `view_count`, `featured_image_layout`,
+`slug` (unique)
+
+`end_at` is an optional scheduled end: from that moment the article is off the public site
+(pages, lists, search, sitemap, section counts) though it stays Published in the CMS. Like
+breaking news it is derived from the time at query time — no stored flag, no cron. Setting it
+requires a future moment; clearing it (null) brings the article back.
+
+`updated_at` is the article's `dateModified` for search engines, so only an edit moves it:
+counting a read updates `view_count` with raw SQL that leaves it alone.
 
 `view_count` is a running total of reads, incremented by the public site once a visitor has
 stayed past half the article's read time. Anonymous: no per-reader record exists.
@@ -46,8 +55,23 @@ V1; if that's needed later, revisit whether a real entity is warranted then.
 `tags` is shown on the public article page as plain labels, not links — there is no tag
 page to link to. Not returned on article cards/listings, only on the full article.
 
-No `slug` field exists. Public article URLs are not yet scoped — this is a known gap, not
-an oversight; revisit before the public article page is built.
+`slug` is the article's public address, `/article/<slug>`; `id` stays the primary key and the
+target of every relation. In the headline's own language: lowercase words of letters (any
+script, vowel signs included) and digits joined by single hyphens, at most 80 characters — an
+English headline gives `udupi-heavy-rain-alert`, a Kannada one `ಉಡುಪಿಯಲ್ಲಿ-ಭಾರಿ-ಮಳೆ` (links
+carry it percent-encoded). When the editor leaves it empty the API makes one from the headline
+(about 60 characters at most, cut at a word), adding `-2`, `-3`… on a clash. A headline edit never
+changes it; a slug the editor types does, and one in use (now or formerly) is refused with a 409.
+Null only on rows written by an older API, until `pnpm db:backfill-slugs` fills them.
+
+### Article Slug Redirect
+
+`slug` (PK), `article_id` (FK → Article, cascade), `created_at`
+
+A slug a published article used to have before the editor changed it. The old address
+redirects permanently to the current one; rows always point at the article, never at another
+old slug, so there are no chains. Deleted with the article, whose links then 404. An article may
+take one of its own old slugs back (the row is removed).
 
 `category_id` is nullable at the database level — a change applied directly to the shared
 dev database (alongside the Media Library work) rather than through this doc's process.
@@ -79,8 +103,17 @@ up UI or filters.
 ### Category
 
 `id`, `media_id` (FK → Media Asset), `name`, `name_kannada`, `description`, `is_active`,
-`display_order`, `parent_id` (FK → Category, nullable, self-relation), `created_at`,
-`updated_at`
+`display_order`, `parent_id` (FK → Category, nullable, self-relation), `slug` (unique),
+`seo_title`, `meta_description`, `created_at`, `updated_at`
+
+`slug` is the section's address, `/category/<slug>`: made from the English name when the
+category is created (`-2`, `-3`… on a clash), never changed by a rename — only a slug the editor
+types changes it, and one already in use is refused with a 409. Nullable only so rows written by
+an older API stay valid (`pnpm db:backfill-slugs` in apps/api fills them); the old
+`/category/<id>` address redirects permanently to `/category/<slug>`. `seo_title` (used exactly as
+written) and `meta_description` are the section page's search-result title and description;
+when empty the reader site uses "<name> News | <site name>" and "Latest <name> news, updates
+and stories from <site name>."
 
 `name` is the English name and stays unique. `name_kannada` is required by the API and the
 CMS on every save, but the column stays nullable so categories that predate it keep working.
@@ -214,7 +247,8 @@ No role/permission field — single-tier admin access, confirmed for V1.
 `facebook_url`,
 `instagram_url`,
 `youtube_url`, `x_url`, `whatsapp_english_url`, `whatsapp_kannada_url`, `default_ui_language`,
-`default_seo_title`, `default_meta_description`, `default_og_image_id` (FK), `created_at`,
+`default_seo_title`, `default_meta_description`, `default_og_image_id` (FK),
+`google_site_verification`, `created_at`,
 `updated_at`
 
 The `about_*`, `contact_*` and `advertise_*` columns are the copy for the three standalone

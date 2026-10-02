@@ -19,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
     locale,
     origin,
     title: getDictionary(locale).contact.title,
+    description: getDictionary(locale).contact.intro,
     path: '/contact',
   });
 }

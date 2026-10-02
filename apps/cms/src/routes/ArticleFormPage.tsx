@@ -44,6 +44,8 @@ import {
 } from '../features/articles/formValues.js';
 import { hasText } from '../features/articles/readTime.js';
 import { TagsInput } from '../features/articles/TagsInput.js';
+import { ArticleScheduleFields } from '../features/articles/ArticleScheduleFields.js';
+import { combineToIso } from '../lib/dateTime.js';
 import { TiptapEditor } from '../components/TiptapEditor.js';
 import { STATUS_LABELS, STATUS_TONES } from '../features/articles/status.js';
 import { useArticleMutations } from '../features/articles/useArticleMutations.js';
@@ -52,6 +54,11 @@ import { DEFAULT_LAYOUT } from '../features/media/imageFrame.js';
 import { MediaPickerDialog } from '../features/media/MediaPickerDialog.js';
 import { CopyButton } from '../components/CopyButton.js';
 import { publicArticleUrl } from '../config.js';
+import {
+  isValidArticleSlug,
+  normalizeSlugInput,
+  suggestArticleSlug,
+} from '@coastal-talk-news/validation/slug';
 import { formatDate, formatTime } from '../lib/format.js';
 
 type PublishChoice = 'PUBLISHED' | 'DRAFT';
@@ -76,7 +83,7 @@ export function ArticleFormPage() {
   const mutations = useArticleMutations();
   const preview = useArticlePreview();
   const article = articleQuery.data ?? null;
-  const liveUrl = article ? publicArticleUrl(article.id) : null;
+  const liveUrl = article ? publicArticleUrl(article) : null;
 
   const [values, setValues] = useState<FormValues>(() => toValues(null));
   const [touched, setTouched] = useState(false);
@@ -148,12 +155,50 @@ export function ArticleFormPage() {
   const contentError =
     touched && !contentFilled ? 'Write some content before saving.' : undefined;
 
+  // Checked as it's typed, without asking the server: availability is
+  // checked once, on save.
+  const typedSlug = normalizeSlugInput(values.slug);
+  const slugFormatError =
+    typedSlug && !isValidArticleSlug(typedSlug)
+      ? 'Use lowercase letters (English or Kannada), numbers and single hyphens only — no spaces or symbols.'
+      : undefined;
+  // What the address will be: the typed slug, the one already saved, or one
+  // made from the headline in its own language (Kannada stays Kannada).
+  // Only a headline with no words at all gives none.
+  const effectiveSlug =
+    typedSlug ||
+    article?.slug ||
+    suggestArticleSlug({
+      headline: trimmedHeadline,
+      seoTitle: values.seoTitle,
+    });
+  const [publishAttempted, setPublishAttempted] = useState(false);
+  const slugError =
+    slugFormatError ??
+    (publishAttempted && !effectiveSlug
+      ? 'Add a URL slug to publish — this headline has no words to make one from.'
+      : undefined);
+
+  // The end is optional, but half of one is not: both parts or neither. A
+  // moment already past is refused only if it is a change — an article whose
+  // end has since come and gone can still be edited.
+  const endAt = combineToIso(values.endDate, values.endTime);
+  const endChanged = endAt !== (article?.endAt ?? null);
+  const endError =
+    Boolean(values.endDate) !== Boolean(values.endTime)
+      ? 'Choose both a date and a time, or remove the end date.'
+      : endAt && endChanged && new Date(endAt).getTime() <= Date.now()
+        ? 'The end date and time must be in the future.'
+        : undefined;
+
   const canSubmit =
+    !endError &&
     Boolean(trimmedHeadline) &&
     Boolean(trimmedSummary) &&
     Boolean(values.categoryId) &&
     Boolean(values.language) &&
-    contentFilled;
+    contentFilled &&
+    !slugFormatError;
 
   function buildPayload(
     language: Language,
@@ -178,6 +223,11 @@ export function ArticleFormPage() {
       status,
       seoTitle: values.seoTitle.trim() || null,
       metaDescription: values.metaDescription.trim() || null,
+      // null clears an end; the API reads an omitted field as "unchanged".
+      endAt,
+      // Left out when empty: a new article then gets one made from its
+      // headline, and an existing one keeps its own.
+      ...(typedSlug ? { slug: typedSlug } : {}),
     };
   }
 
@@ -185,6 +235,10 @@ export function ArticleFormPage() {
     setTouched(true);
     const { language, content } = values;
     if (!canSubmit || !language || !content) return;
+    if (nextStatus === 'PUBLISHED' && !effectiveSlug) {
+      setPublishAttempted(true);
+      return;
+    }
 
     setPending(action);
     const payload = buildPayload(language, content, nextStatus);
@@ -358,6 +412,12 @@ export function ArticleFormPage() {
               }
             />
           </section>
+
+          <ArticleScheduleFields
+            values={values}
+            onChange={update}
+            error={endError}
+          />
         </div>
 
         <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
@@ -486,6 +546,12 @@ export function ArticleFormPage() {
               <p className="text-ink-subtle text-xs">No changes to save.</p>
             ) : null}
 
+            {publishAttempted && !effectiveSlug && (
+              <p role="alert" className="text-danger-text text-xs">
+                Add a URL slug under SEO Settings to publish.
+              </p>
+            )}
+
             {saveError && (
               <p
                 role="alert"
@@ -498,7 +564,13 @@ export function ArticleFormPage() {
             )}
           </section>
 
-          <ArticleSeoFields values={values} onChange={update} />
+          <ArticleSeoFields
+            values={values}
+            onChange={update}
+            effectiveSlug={effectiveSlug}
+            slugError={slugError}
+            published={status === 'PUBLISHED'}
+          />
 
           {editing && (
             <section className="border-hairline rounded-card space-y-3 border bg-surface p-5 shadow-sm">

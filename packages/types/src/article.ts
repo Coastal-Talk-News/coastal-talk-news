@@ -21,8 +21,14 @@ export interface ArticleDto {
   status: ArticleStatus;
   /** Null until first published. */
   publicationDate: IsoDateTime | null;
+  /** When set, the article leaves the public site at this time. */
+  endAt: IsoDateTime | null;
   seoTitle: string | null;
   metaDescription: string | null;
+  /** The public address is /article/<slug>, in the headline's language
+   * (Kannada headlines give Kannada slugs). Null only on rows from before
+   * slugs, until backfilled. */
+  slug: string | null;
   featuredImage: MediaSummaryDto | null;
   featuredImageLayout: ImageLayoutDto;
   ogImage: MediaSummaryDto | null;
@@ -50,6 +56,11 @@ export interface CreateArticleRequest {
   ogImageId?: Id | null;
   seoTitle?: string | null;
   metaDescription?: string | null;
+  /** Optional scheduled end; null (or omitted) means no end. */
+  endAt?: IsoDateTime | null;
+  /** Omitted: made from the headline (or SEO title). Never regenerated
+   * by a later headline edit; only a slug sent here changes it. */
+  slug?: string;
 }
 
 export type UpdateArticleRequest = Partial<

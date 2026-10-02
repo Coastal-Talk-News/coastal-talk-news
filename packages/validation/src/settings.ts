@@ -14,6 +14,7 @@ import {
   SETTINGS_HOURS_MAX,
   SETTINGS_SEO_TITLE_MAX,
   SETTINGS_META_DESCRIPTION_MAX,
+  SETTINGS_SITE_VERIFICATION_MAX,
 } from './limits.js';
 
 export {
@@ -28,6 +29,7 @@ export {
   SETTINGS_HOURS_MAX,
   SETTINGS_SEO_TITLE_MAX,
   SETTINGS_META_DESCRIPTION_MAX,
+  SETTINGS_SITE_VERIFICATION_MAX,
 };
 
 const NullableId = Type.Union([Type.String({ format: 'uuid' }), Type.Null()]);
@@ -71,6 +73,7 @@ export const SiteSettingsSchema = Type.Object({
   defaultSeoTitle: Type.Union([Type.String(), Type.Null()]),
   defaultMetaDescription: Type.Union([Type.String(), Type.Null()]),
   defaultOgImage: NullableMedia,
+  googleSiteVerification: Type.Union([Type.String(), Type.Null()]),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
 });
@@ -129,6 +132,9 @@ export const UpdateSiteSettingsBodySchema = Type.Object(
       nullableString(SETTINGS_META_DESCRIPTION_MAX),
     ),
     defaultOgImageId: Type.Optional(NullableId),
+    googleSiteVerification: Type.Optional(
+      nullableString(SETTINGS_SITE_VERIFICATION_MAX),
+    ),
   },
   {
     minProperties: 1,

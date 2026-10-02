@@ -1,5 +1,6 @@
 import type { PublicCategorySectionDto } from '@coastal-talk-news/types';
 import { categoryName } from '../../lib/category-name';
+import { categoryPath } from '../../lib/routes';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { gridColumnsFor } from '../../lib/layout';
@@ -29,7 +30,7 @@ export function CategoryPreviewRow({
   const heading = (
     <SectionHeading
       title={name}
-      href={hasMore ? `/category/${category.id}` : undefined}
+      href={hasMore ? categoryPath(category) : undefined}
       linkLabel={dictionary.home.viewAllIn(name)}
     />
   );

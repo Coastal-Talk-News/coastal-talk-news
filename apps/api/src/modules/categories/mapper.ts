@@ -15,6 +15,9 @@ export interface CategoryEntity {
   isActive: boolean;
   displayOrder: number;
   parentId: string | null;
+  slug: string | null;
+  seoTitle: string | null;
+  metaDescription: string | null;
   media: MediaRow | null;
   createdAt: Date;
   updatedAt: Date;
@@ -42,6 +45,9 @@ export function toCategoryDto(
           height: category.media.height,
         }
       : null,
+    slug: category.slug,
+    seoTitle: category.seoTitle,
+    metaDescription: category.metaDescription,
     createdAt: category.createdAt.toISOString(),
     updatedAt: category.updatedAt.toISOString(),
   };

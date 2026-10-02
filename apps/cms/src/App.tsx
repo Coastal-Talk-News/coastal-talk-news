@@ -47,6 +47,9 @@ const AdvertisementsPage = lazy(() =>
 const SessionsPage = lazy(() =>
   import('./routes/SessionsPage.js').then((m) => ({ default: m.SessionsPage })),
 );
+const SeoPage = lazy(() =>
+  import('./routes/SeoPage.js').then((m) => ({ default: m.SeoPage })),
+);
 const AnalyticsPage = lazy(() =>
   import('./routes/AnalyticsPage.js').then((m) => ({
     default: m.AnalyticsPage,
@@ -96,6 +99,7 @@ export default function App() {
                   <Route path="sessions" element={<SessionsPage />} />
                   <Route path="settings" element={<SettingsPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
+                  <Route path="seo" element={<SeoPage />} />
                   <Route path="*" element={<NotFoundPage />} />
                 </Route>
               </Route>
