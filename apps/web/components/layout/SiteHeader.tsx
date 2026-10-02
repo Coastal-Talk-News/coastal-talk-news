@@ -68,7 +68,6 @@ export function SiteHeader({
             logo={settings.logo}
             priority
             size="lg"
-            masthead
           />
         </div>
 

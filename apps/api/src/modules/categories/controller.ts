@@ -113,16 +113,6 @@ export async function getPublic(request: FastifyRequest<{ Params: IdParams }>) {
   return dataEnvelope(toCategoryDto(category, publicUrl(request)));
 }
 
-export async function getPublicBySlug(
-  request: FastifyRequest<{ Params: { slug: string } }>,
-) {
-  const category = await service.getPublicBySlug(
-    deps(request),
-    request.params.slug,
-  );
-  return dataEnvelope(toCategoryDto(category, publicUrl(request)));
-}
-
 export async function listPublicArticles(
   request: FastifyRequest<{
     Params: IdParams;

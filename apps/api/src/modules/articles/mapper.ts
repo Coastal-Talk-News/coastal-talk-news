@@ -26,10 +26,8 @@ export interface ArticleEntity {
   priority: ArticlePriority;
   status: ArticleStatus;
   publicationDate: Date | null;
-  endAt: Date | null;
   seoTitle: string | null;
   metaDescription: string | null;
-  slug: string | null;
   createdAt: Date;
   updatedAt: Date;
   category: { id: string; name: string } | null;
@@ -67,10 +65,8 @@ export function toArticleDto(
     priority: article.priority,
     status: article.status,
     publicationDate: article.publicationDate?.toISOString() ?? null,
-    endAt: article.endAt?.toISOString() ?? null,
     seoTitle: article.seoTitle,
     metaDescription: article.metaDescription,
-    slug: article.slug,
     featuredImage: toMediaSummary(article.media, toPublicUrl),
     featuredImageLayout: toLayout(article.featuredImageLayout),
     ogImage: toMediaSummary(article.ogImage, toPublicUrl),

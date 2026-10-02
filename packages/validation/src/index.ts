@@ -8,5 +8,4 @@ export * from './analytics.js';
 export * from './dashboard.js';
 export * from './media.js';
 export * from './public.js';
-export * from './seo.js';
 export * from './settings.js';

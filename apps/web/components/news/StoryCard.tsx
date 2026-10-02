@@ -2,7 +2,6 @@ import Link from 'next/link';
 import type { PublicArticleCardDto } from '@coastal-talk-news/types';
 import { highlightMatches } from '../../lib/highlight';
 import type { Locale } from '../../lib/i18n/types';
-import { articlePath } from '../../lib/routes';
 import { CategoryTag } from './CategoryTag';
 import { StoryImage } from './StoryImage';
 import { StoryMeta } from './StoryMeta';
@@ -35,7 +34,7 @@ export function StoryCard({
   locale = 'en',
   highlightQuery,
 }: StoryCardProps) {
-  const href = articlePath(article);
+  const href = `/article/${article.id}`;
   const headline = highlightQuery
     ? highlightMatches(article.headline, highlightQuery)
     : article.headline;

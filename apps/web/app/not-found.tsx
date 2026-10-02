@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { getSite } from '../lib/api';
 import { categoryName } from '../lib/category-name';
-import { categoryPath } from '../lib/routes';
 import { getDictionary } from '../lib/i18n/dictionaries';
 import { getLocale } from '../lib/i18n/server';
 
@@ -13,7 +12,6 @@ export default async function NotFound() {
 
   let categories: Array<{
     id: string;
-    slug: string;
     name: string;
     nameKannada: string | null;
   }> = [];
@@ -51,7 +49,7 @@ export default async function NotFound() {
             {categories.slice(0, 6).map((category) => (
               <Link
                 key={category.id}
-                href={categoryPath(category)}
+                href={`/category/${category.id}`}
                 className="border-rule hover:border-brand hover:text-brand rounded-sm border px-4 py-2 text-sm font-medium transition-colors"
               >
                 {categoryName(category, locale)}

@@ -28,10 +28,6 @@ export const queryKeys = {
   // used for branding (logo, site name) on screens rendered before sign-in.
   siteBrand: ['site-brand'] as const,
   analytics: ['analytics'] as const,
-  seoHealth: ['seo-health'] as const,
-  // Under seoHealth, so refreshing the checks refreshes this list too.
-  seoArticles: (params: Record<string, unknown>) =>
-    ['seo-health', 'articles', params] as const,
   analyticsArticles: (params: Record<string, unknown>) =>
     ['analytics', 'articles', params] as const,
   analyticsWeekViews: (weeksAgo: number) =>

@@ -13,7 +13,6 @@
   "dependencies": {
     "@coastal-talk-news/types": "workspace:*",
     "@coastal-talk-news/ui": "workspace:*",
-    "@coastal-talk-news/validation": "workspace:*",
     "@tailwindcss/postcss": "^4.3.3",
     "next": "16.3.4",
     "postcss": "^8.5.28",

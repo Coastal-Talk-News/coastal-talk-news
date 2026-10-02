@@ -8,7 +8,6 @@ import type { Env } from './config/env.js';
 import { cmsAdvertisementRoutes } from './modules/advertisements/routes.js';
 import { cmsArticleRoutes } from './modules/articles/routes.js';
 import { analyticsRoutes } from './modules/analytics/routes.js';
-import { seoRoutes } from './modules/seo/routes.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { twoFactorRoutes } from './modules/two-factor/routes.js';
 import { cmsBreakingNewsRoutes } from './modules/breaking-news/routes.js';
@@ -48,16 +47,9 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
     },
     // Render terminates TLS upstream; without this, Secure cookies break.
     trustProxy: true,
-    routerOptions: {
-      // Without this a trailing slash falls through to the /:id route and
-      // fails uuid validation instead of listing the collection.
-      ignoreTrailingSlash: true,
-      // The router's default of 100 characters answers 414 for a long
-      // category slug, and an editor-typed Kannada slug arrives
-      // percent-encoded at up to nine characters per letter. The slug
-      // schema still caps the length.
-      maxParamLength: 1200,
-    },
+    // Without this a trailing slash falls through to the /:id route and fails
+    // uuid validation instead of listing the collection.
+    ignoreTrailingSlash: true,
   }).withTypeProvider<TypeBoxTypeProvider>();
 
   await app.register(errorHandler);
@@ -130,9 +122,6 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   });
   await app.register(analyticsRoutes, {
     prefix: `${API_BASE_PATH}/cms/analytics`,
-  });
-  await app.register(seoRoutes, {
-    prefix: `${API_BASE_PATH}/cms/seo`,
   });
   await app.register(mediaRoutes, {
     prefix: `${API_BASE_PATH}/cms/media`,

@@ -43,27 +43,6 @@ export interface UpdateSiteSettingsInput {
   defaultSeoTitle?: string | null;
   defaultMetaDescription?: string | null;
   defaultOgImageId?: string | null;
-  googleSiteVerification?: string | null;
-}
-
-/** Search Console's tokens are letters, digits, '-' and '_'. */
-const VERIFICATION_TOKEN = /^[A-Za-z0-9_-]{10,100}$/;
-
-/**
- * Accepts the bare token or the whole tag Search Console shows
- * (`<meta name="google-site-verification" content="…" />`) and keeps only
- * the token, so whatever is stored can only ever be a plain attribute value.
- */
-function toVerificationToken(value: string | null): string | null {
-  const trimmed = value?.trim();
-  if (!trimmed) return null;
-  const token = /content\s*=\s*["']([^"']*)["']/i.exec(trimmed)?.[1] ?? trimmed;
-  if (!VERIFICATION_TOKEN.test(token)) {
-    throw new BadRequestError(
-      'That does not look like a Google Search Console verification code. Paste the code, or the whole meta tag Search Console gives you.',
-    );
-  }
-  return token;
 }
 
 async function assertMediaExists(
@@ -188,10 +167,6 @@ export async function update(
     throw new NotFoundError('Site settings');
   }
   const { patch, mediaByPage } = await preparePages(db, existing, input);
-  const googleSiteVerification =
-    input.googleSiteVerification !== undefined
-      ? toVerificationToken(input.googleSiteVerification)
-      : undefined;
 
   if (input.logoMediaId) {
     await assertMediaExists(db, input.logoMediaId, 'logoMediaId');
@@ -287,9 +262,6 @@ export async function update(
         : {}),
       ...(input.defaultOgImageId !== undefined
         ? { defaultOgImageId: input.defaultOgImageId }
-        : {}),
-      ...(googleSiteVerification !== undefined
-        ? { googleSiteVerification }
         : {}),
     });
 

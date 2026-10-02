@@ -12,22 +12,11 @@ import { Textarea } from '@coastal-talk-news/ui/textarea';
 import { Toggle } from '@coastal-talk-news/ui/toggle';
 import {
   CATEGORY_DESCRIPTION_MAX,
-  CATEGORY_META_DESCRIPTION_MAX,
   CATEGORY_NAME_MAX,
-  CATEGORY_SEO_TITLE_MAX,
 } from '@coastal-talk-news/validation/limits';
-import {
-  SLUG_MAX,
-  isValidSlug,
-  normalizeSlugInput,
-  slugify,
-} from '@coastal-talk-news/validation/slug';
 import { ImagePlus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { WEB_URL } from '../../config.js';
 import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
-import { SearchPreview, lengthHint } from '../seo/SearchPreview.js';
-import { useSiteName } from '../seo/useSiteName.js';
 import { categoryPathLabel, descendantIds } from './tree.js';
 
 interface FormValues {
@@ -37,10 +26,6 @@ interface FormValues {
   isActive: boolean;
   parentId: string | null;
   coverImage: MediaSummaryDto | null;
-  /** Empty on a new category: the API makes one from the name. */
-  slug: string;
-  seoTitle: string;
-  metaDescription: string;
 }
 
 function toValues(category: CmsCategoryDto | null): FormValues {
@@ -51,9 +36,6 @@ function toValues(category: CmsCategoryDto | null): FormValues {
     isActive: category?.isActive ?? true,
     parentId: category?.parentId ?? null,
     coverImage: category?.coverImage ?? null,
-    slug: category?.slug ?? '',
-    seoTitle: category?.seoTitle ?? '',
-    metaDescription: category?.metaDescription ?? '',
   };
 }
 
@@ -83,7 +65,6 @@ export function CategorySheet({
   const [touched, setTouched] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
   const nameRef = useRef<HTMLInputElement>(null);
-  const siteName = useSiteName();
   const initial = useRef<FormValues>(toValues(editing));
 
   // Choosing this category as a parent would make it its own descendant, so
@@ -126,10 +107,7 @@ export function CategorySheet({
     values.isActive !== initial.current.isActive ||
     values.parentId !== initial.current.parentId ||
     (values.coverImage?.id ?? null) !==
-      (initial.current.coverImage?.id ?? null) ||
-    values.slug.trim() !== initial.current.slug.trim() ||
-    values.seoTitle.trim() !== initial.current.seoTitle.trim() ||
-    values.metaDescription.trim() !== initial.current.metaDescription.trim();
+      (initial.current.coverImage?.id ?? null);
 
   const duplicate =
     trimmedName.length > 0 &&
@@ -152,30 +130,10 @@ export function CategorySheet({
       ? 'Kannada category name is required.'
       : undefined;
 
-  const slugError =
-    values.slug.trim() && !isValidSlug(normalizeSlugInput(values.slug))
-      ? 'Use lowercase letters, numbers and single hyphens only — no spaces or other symbols.'
-      : undefined;
-
-  // What the section's address will be: the slug as typed, or — while it's
-  // empty on a new category — the one the API will make from the name.
-  const effectiveSlug = normalizeSlugInput(values.slug) || slugify(trimmedName);
-  const sectionUrl =
-    WEB_URL && effectiveSlug && isValidSlug(effectiveSlug)
-      ? `${WEB_URL}/category/${effectiveSlug}`
-      : null;
-  const defaultSeoTitle = trimmedName
-    ? `${trimmedName} News${siteName ? ` | ${siteName}` : ''}`
-    : '';
-  const defaultDescription = trimmedName
-    ? `Latest ${trimmedName} news, updates and stories from ${siteName || 'the site'}.`
-    : '';
-
   const canSubmit =
     Boolean(trimmedName) &&
     Boolean(trimmedNameKannada) &&
     !duplicate &&
-    !slugError &&
     (isDirty || !editing);
 
   function handleSubmit(event: FormEvent) {
@@ -189,11 +147,6 @@ export function CategorySheet({
       isActive: values.isActive,
       parentId: values.parentId,
       coverImageId: values.coverImage?.id ?? null,
-      seoTitle: values.seoTitle.trim() || null,
-      metaDescription: values.metaDescription.trim() || null,
-      // Left out when empty, so a new category gets one made from its name;
-      // the API keeps an existing one unless a new slug is sent.
-      ...(values.slug.trim() ? { slug: values.slug.trim() } : {}),
     });
   }
 
@@ -448,92 +401,6 @@ export function CategorySheet({
               aria-label="Visible on the website"
             />
           </div>
-        </div>
-
-        <div className="border-hairline space-y-4 border-t pt-5">
-          <div>
-            <h3 className="text-ink text-sm font-semibold">Search engines</h3>
-            <p className="text-ink-subtle mt-0.5 text-xs">
-              How this section&rsquo;s page appears in search results.
-              Everything here is optional.
-            </p>
-          </div>
-
-          <Field
-            label="URL Slug"
-            htmlFor="category-slug"
-            optional
-            error={slugError}
-            hint={
-              editing
-                ? 'Lowercase words separated by hyphens. Changing it moves the section to a new address — links already shared stop working.'
-                : 'Lowercase words separated by hyphens. Left empty, it is made from the English name.'
-            }
-          >
-            <Input
-              id="category-slug"
-              value={values.slug}
-              maxLength={SLUG_MAX}
-              placeholder={slugify(trimmedName) || 'made-from-the-name'}
-              invalid={Boolean(slugError)}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  slug: event.target.value,
-                }))
-              }
-            />
-          </Field>
-
-          <Field
-            label="SEO Title"
-            htmlFor="category-seo-title"
-            optional
-            hint={`Used exactly as written.${defaultSeoTitle ? ` Defaults to “${defaultSeoTitle}”.` : ''} ${lengthHint(values.seoTitle.trim().length, 50, 60)}.`}
-          >
-            <Input
-              id="category-seo-title"
-              value={values.seoTitle}
-              maxLength={CATEGORY_SEO_TITLE_MAX}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  seoTitle: event.target.value,
-                }))
-              }
-            />
-          </Field>
-
-          <Field
-            label="Meta Description"
-            htmlFor="category-meta-description"
-            optional
-            hint={`Defaults to the description above. ${lengthHint(values.metaDescription.trim().length, 150, 160)}.`}
-          >
-            <Textarea
-              id="category-meta-description"
-              rows={3}
-              maxLength={CATEGORY_META_DESCRIPTION_MAX}
-              value={values.metaDescription}
-              onChange={(event) =>
-                setValues((current) => ({
-                  ...current,
-                  metaDescription: event.target.value,
-                }))
-              }
-            />
-          </Field>
-
-          <SearchPreview
-            siteName={siteName}
-            title={values.seoTitle.trim() || defaultSeoTitle}
-            url={sectionUrl}
-            description={
-              values.metaDescription.trim() ||
-              values.description.trim() ||
-              defaultDescription
-            }
-          />
         </div>
 
         {serverError && (

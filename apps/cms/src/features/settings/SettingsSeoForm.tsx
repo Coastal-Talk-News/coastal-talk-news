@@ -1,7 +1,6 @@
-import {
-  defaultSiteDescription,
-  type SiteSettingsDto,
-  type UpdateSiteSettingsRequest,
+import type {
+  SiteSettingsDto,
+  UpdateSiteSettingsRequest,
 } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
 import { Field } from '@coastal-talk-news/ui/field';
@@ -10,7 +9,6 @@ import { Textarea } from '@coastal-talk-news/ui/textarea';
 import {
   SETTINGS_META_DESCRIPTION_MAX,
   SETTINGS_SEO_TITLE_MAX,
-  SETTINGS_SITE_VERIFICATION_MAX,
 } from '@coastal-talk-news/validation/limits';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
@@ -22,7 +20,6 @@ interface SeoValues {
   defaultSeoTitle: string;
   defaultMetaDescription: string;
   defaultOgImage: SiteSettingsDto['defaultOgImage'];
-  googleSiteVerification: string;
 }
 
 function toValues(settings: SiteSettingsDto): SeoValues {
@@ -30,7 +27,6 @@ function toValues(settings: SiteSettingsDto): SeoValues {
     defaultSeoTitle: settings.defaultSeoTitle ?? '',
     defaultMetaDescription: settings.defaultMetaDescription ?? '',
     defaultOgImage: settings.defaultOgImage,
-    googleSiteVerification: settings.googleSiteVerification ?? '',
   };
 }
 
@@ -59,9 +55,7 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
     values.defaultMetaDescription.trim() !==
       initial.current.defaultMetaDescription.trim() ||
     (values.defaultOgImage?.id ?? null) !==
-      (initial.current.defaultOgImage?.id ?? null) ||
-    values.googleSiteVerification.trim() !==
-      initial.current.googleSiteVerification.trim();
+      (initial.current.defaultOgImage?.id ?? null);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -71,7 +65,6 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
       defaultSeoTitle: orNull(values.defaultSeoTitle),
       defaultMetaDescription: orNull(values.defaultMetaDescription),
       defaultOgImageId: values.defaultOgImage?.id ?? null,
-      googleSiteVerification: orNull(values.googleSiteVerification),
     };
     mutation.mutate(body, {
       onSuccess: () => toast.success('SEO settings saved.'),
@@ -86,17 +79,12 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
         take priority over these.
       </SettingsNote>
 
-      <Field
-        label="Default Site Title"
-        htmlFor="settings-seo-title"
-        optional
-        hint={`The homepage's title in search results. Left empty, it is the site name, "${settings.siteName}".`}
-      >
+      <Field label="Default Site Title" htmlFor="settings-seo-title" optional>
         <Input
           id="settings-seo-title"
           value={values.defaultSeoTitle}
           maxLength={SETTINGS_SEO_TITLE_MAX}
-          placeholder={settings.siteName}
+          placeholder="Coastal Talk News — Local news you can trust"
           onChange={(event) =>
             setValues((current) => ({
               ...current,
@@ -120,12 +108,7 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
           maxLength={SETTINGS_META_DESCRIPTION_MAX}
           showCount
           value={values.defaultMetaDescription}
-          // What the homepage uses while this is empty: the tagline, else a
-          // built-in sentence (the reader site's siteDescription).
-          placeholder={
-            settings.tagline?.trim() ||
-            defaultSiteDescription(settings.siteName)
-          }
+          placeholder="A short description search engines show under your site's title."
           onChange={(event) =>
             setValues((current) => ({
               ...current,
@@ -133,11 +116,6 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
             }))
           }
         />
-        <p className="text-ink-subtle text-xs">
-          The homepage&rsquo;s description in search results, and the line under
-          its heading. Left empty, the sentence shown above is used. About
-          150&ndash;160 characters is recommended.
-        </p>
       </div>
 
       <SettingsImageField
@@ -148,27 +126,6 @@ export function SettingsSeoForm({ settings }: SettingsSeoFormProps) {
           setValues((current) => ({ ...current, defaultOgImage }))
         }
       />
-
-      <Field
-        label="Google Search Console Verification Code"
-        htmlFor="settings-google-verification"
-        optional
-        hint="From Search Console's HTML tag verification method. Paste the code, or the whole meta tag — only the code is kept. The tag is added to every page of the website, and removed again if you clear this."
-      >
-        <Input
-          id="settings-google-verification"
-          value={values.googleSiteVerification}
-          maxLength={SETTINGS_SITE_VERIFICATION_MAX}
-          placeholder="e.g. a1B2c3D4…"
-          spellCheck={false}
-          onChange={(event) =>
-            setValues((current) => ({
-              ...current,
-              googleSiteVerification: event.target.value,
-            }))
-          }
-        />
-      </Field>
 
       <div className="flex justify-end border-t border-hairline pt-6">
         <Button

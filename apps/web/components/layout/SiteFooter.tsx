@@ -5,16 +5,9 @@ import type {
   PublicSiteDto,
 } from '@coastal-talk-news/types';
 import { categoryName } from '../../lib/category-name';
-import { categoryPath } from '../../lib/routes';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { SocialLinks } from './SocialLinks';
-
-// Footer links don't prefetch. Next prefetches every link that scrolls into
-// view, and the footer lists every section and static page — about thirty
-// server requests on each page a reader scrolls to the bottom of, for links
-// rarely followed from there. They still load on click; the header's links,
-// which readers do use, keep prefetching.
 
 /** A group's sections, and theirs in turn — indented so a reader can see
  * which group a section belongs to rather than meeting one flat list. */
@@ -30,8 +23,7 @@ function SectionBranch({
   return categories.map((category) => (
     <li key={category.id}>
       <Link
-        prefetch={false}
-        href={categoryPath(category)}
+        href={`/category/${category.id}`}
         style={depth > 0 ? { paddingInlineStart: depth * 12 } : undefined}
         className="inline-block transition-colors hover:text-white"
       >
@@ -113,8 +105,7 @@ export function SiteFooter({
               {groups.map((group) => (
                 <div key={group.id} className="mb-5 break-inside-avoid">
                   <Link
-                    prefetch={false}
-                    href={categoryPath(group)}
+                    href={`/category/${group.id}`}
                     className="font-semibold text-white/90 transition-colors hover:text-white"
                   >
                     {categoryName(group, locale)}
@@ -158,7 +149,6 @@ export function SiteFooter({
             {quickLinks.map((link) => (
               <li key={link.href}>
                 <Link
-                  prefetch={false}
                   href={link.href}
                   className="transition-colors hover:text-white"
                 >
@@ -170,7 +160,6 @@ export function SiteFooter({
                 notice rather than another section of the site. */}
             <li className="pt-3">
               <Link
-                prefetch={false}
                 href="/privacy-policy"
                 className="font-serif font-semibold text-white transition-colors hover:text-white/80"
               >
@@ -179,7 +168,6 @@ export function SiteFooter({
             </li>
             <li>
               <Link
-                prefetch={false}
                 href="/terms-and-conditions"
                 className="font-serif font-semibold text-white transition-colors hover:text-white/80"
               >

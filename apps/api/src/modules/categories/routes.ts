@@ -9,7 +9,6 @@ import {
   PublicArticleCardSchema,
   PublicCategoryArticlesQuerySchema,
   PublicCategoryListQuerySchema,
-  PublicSlugParamsSchema,
   ReorderCategoriesBodySchema,
   SuccessResponse,
   UpdateCategoryBodySchema,
@@ -133,24 +132,6 @@ export const publicCategoryRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.listPublic,
-  );
-
-  // A static segment, so it never competes with the uuid-only `/:id` below.
-  app.get(
-    '/by-slug/:slug',
-    {
-      schema: {
-        tags: ['categories'],
-        summary: 'Get an active category by its address',
-        description: 'Unknown and hidden categories 404.',
-        params: PublicSlugParamsSchema,
-        response: {
-          200: SuccessResponse(CategorySchema),
-          ...commonErrorResponses,
-        },
-      },
-    },
-    controller.getPublicBySlug,
   );
 
   app.get(

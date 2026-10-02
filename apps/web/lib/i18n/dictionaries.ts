@@ -65,7 +65,6 @@ const en = {
     linkCopied: 'Link copied',
     shareHeading: 'Share this story',
     shareDescription: 'Pass it on to someone who should read it.',
-    updated: 'Updated',
     /** Prefixes the article link in the WhatsApp share text, e.g. "To read: <url>". */
     readLine: 'To read 👉 :',
     tagsLabel: 'Tagged',
@@ -120,9 +119,6 @@ const en = {
   about: {
     title: 'About Us',
     heading: (siteName: string) => `About ${siteName}`,
-    /** The page's search description while the newsroom hasn't set an intro. */
-    seoDescription: (siteName: string) =>
-      `Who we are at ${siteName}, the news we cover and how to reach us.`,
     eyebrow: 'About us',
     noDescriptionTitle: 'About text not added yet',
     noDescriptionDescription:
@@ -135,15 +131,11 @@ const en = {
     readNews: 'Read the latest news',
   },
   privacy: {
-    seoDescription: (siteName: string) =>
-      `How ${siteName} handles information about its readers: cookies, data and your choices.`,
     noContentTitle: 'Privacy policy not added yet',
     noContentDescription:
       'The newsroom hasn’t written a privacy policy in Settings yet.',
   },
   terms: {
-    seoDescription: (siteName: string) =>
-      `The terms that apply when you use ${siteName} and its news content.`,
     noContentTitle: 'Terms and conditions not added yet',
     noContentDescription:
       'The newsroom hasn’t written terms and conditions in Settings yet.',
@@ -246,7 +238,6 @@ const kn: typeof en = {
     linkCopied: 'ಲಿಂಕ್ ನಕಲಾಗಿದೆ',
     shareHeading: 'ಈ ಸುದ್ದಿಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ',
     shareDescription: 'ಓದಬೇಕಾದವರಿಗೆ ಇದನ್ನು ತಲುಪಿಸಿ.',
-    updated: 'ನವೀಕರಿಸಲಾಗಿದೆ',
     readLine: 'ಓದಲು ಈ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ 👉 :',
     tagsLabel: 'ಟ್ಯಾಗ್‌ಗಳು',
     channelInvite:
@@ -298,8 +289,6 @@ const kn: typeof en = {
   about: {
     title: 'ನಮ್ಮ ಬಗ್ಗೆ',
     heading: (siteName: string) => `${siteName} ಬಗ್ಗೆ`,
-    seoDescription: (siteName: string) =>
-      `${siteName} ಬಗ್ಗೆ: ನಾವು ಯಾರು, ಯಾವ ಸುದ್ದಿಗಳನ್ನು ನೀಡುತ್ತೇವೆ ಮತ್ತು ನಮ್ಮನ್ನು ಹೇಗೆ ಸಂಪರ್ಕಿಸಬಹುದು.`,
     eyebrow: 'ನಮ್ಮ ಬಗ್ಗೆ',
     noDescriptionTitle: 'ಬಗ್ಗೆ ಪಠ್ಯ ಇನ್ನೂ ಸೇರಿಸಿಲ್ಲ',
     noDescriptionDescription:
@@ -312,15 +301,11 @@ const kn: typeof en = {
     readNews: 'ಇತ್ತೀಚಿನ ಸುದ್ದಿ ಓದಿ',
   },
   privacy: {
-    seoDescription: (siteName: string) =>
-      `${siteName} ಓದುಗರ ಮಾಹಿತಿಯನ್ನು ಹೇಗೆ ನಿರ್ವಹಿಸುತ್ತದೆ: ಕುಕೀಗಳು, ದತ್ತಾಂಶ ಮತ್ತು ನಿಮ್ಮ ಆಯ್ಕೆಗಳು.`,
     noContentTitle: 'ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಇನ್ನೂ ಸೇರಿಸಿಲ್ಲ',
     noContentDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಇನ್ನೂ ಗೌಪ್ಯತಾ ನೀತಿಯನ್ನು ಬರೆದಿಲ್ಲ.',
   },
   terms: {
-    seoDescription: (siteName: string) =>
-      `${siteName} ಮತ್ತು ಅದರ ಸುದ್ದಿ ವಿಷಯವನ್ನು ಬಳಸುವಾಗ ಅನ್ವಯವಾಗುವ ನಿಯಮಗಳು.`,
     noContentTitle: 'ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳನ್ನು ಇನ್ನೂ ಸೇರಿಸಿಲ್ಲ',
     noContentDescription:
       'ಸುದ್ದಿ ವಿಭಾಗವು ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಇನ್ನೂ ನಿಯಮಗಳು ಮತ್ತು ಷರತ್ತುಗಳನ್ನು ಬರೆದಿಲ್ಲ.',

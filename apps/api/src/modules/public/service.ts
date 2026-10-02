@@ -6,9 +6,7 @@ import type {
   PublicHomeDto,
   PublicPageDto,
   PublicSiteDto,
-  PublicSitemapDto,
 } from '@coastal-talk-news/types';
-import { isUuid } from '@coastal-talk-news/validation/slug';
 import { NotFoundError } from '../../lib/errors.js';
 import * as articlesRepository from '../articles/repository.js';
 import type { PaginationParams } from '../../lib/pagination.js';
@@ -23,7 +21,6 @@ import {
   toPageContent,
   toSettings,
   withNavChildren,
-  withoutEmptyCategories,
   type ToPublicUrl,
 } from './mapper.js';
 import { deliverImage, hydrateContent, toLayout } from '../media/rich-text.js';
@@ -69,49 +66,15 @@ export async function presentArticle(
   return toArticleDetail(article, toPublicUrl, { content, coverImage });
 }
 
-/**
- * A published article by the segment of its address. A slug costs one indexed
- * query — old slugs are consulted only when it matches nothing. An id (from a
- * link shared before slugs) is looked up directly. Either way the article
- * comes back with its current slug, and the reader site redirects any other
- * address to it.
- */
 export async function getArticle(
   deps: PublicServiceDeps,
-  key: string,
+  id: string,
 ): Promise<PublicArticleDto> {
-  const { db } = deps;
-  let article = isUuid(key)
-    ? await repository.findPublishedArticle(db, { id: key })
-    : await repository.findPublishedArticle(db, { slug: key });
-  if (!article && !isUuid(key)) {
-    const id = await repository.findArticleIdBySlugRedirect(db, key);
-    if (id) article = await repository.findPublishedArticle(db, { id });
-  }
+  const article = await repository.findPublishedArticle(deps.db, id);
   if (!article) {
     throw new NotFoundError('Article');
   }
   return presentArticle(deps, article);
-}
-
-/** A row without a slug yet is listed under the id it is reachable by. */
-export async function getSitemap({
-  db,
-}: PublicServiceDeps): Promise<PublicSitemapDto> {
-  const [articles, categories] = await Promise.all([
-    repository.findSitemapArticles(db),
-    repository.findSitemapCategories(db),
-  ]);
-  return {
-    articles: articles.map((row) => ({
-      slug: row.slug ?? row.id,
-      updatedAt: row.updatedAt.toISOString(),
-    })),
-    categories: categories.map((row) => ({
-      slug: row.slug ?? row.id,
-      updatedAt: row.updatedAt.toISOString(),
-    })),
-  };
 }
 
 export async function getAdvertisement(
@@ -131,7 +94,6 @@ export async function getAdvertisement(
 
 export async function getSite({
   db,
-  storage,
   toPublicUrl,
 }: PublicServiceDeps): Promise<PublicSiteDto> {
   const now = new Date();
@@ -148,13 +110,9 @@ export async function getSite({
   }
 
   return {
-    settings: toSettings(settings, toPublicUrl, (storageKey, width) =>
-      storage.publicUrl(storageKey, { width }),
-    ),
+    settings: toSettings(settings, toPublicUrl),
     categories: withNavChildren(
-      withoutEmptyCategories(
-        categories.map((category) => toNavCategory(category, toPublicUrl)),
-      ),
+      categories.map((category) => toNavCategory(category, toPublicUrl)),
     ),
     breakingNews,
     advertisements: advertisements.map((advertisement) =>

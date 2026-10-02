@@ -11,8 +11,6 @@ import {
 } from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
-import { assertSlugAvailable, generateUniqueSlug } from '../../lib/slugs.js';
-import { normalizeSlugInput } from '@coastal-talk-news/validation/slug';
 import { purgeStorageObjects } from '../media/service.js';
 import { releaseMedia } from '../media/reference.js';
 import type { ObjectStorage } from '../media/storage.js';
@@ -32,9 +30,6 @@ export interface CreateCategoryInput {
   displayOrder?: number;
   parentId?: string | null;
   coverImageId?: string | null;
-  slug?: string;
-  seoTitle?: string | null;
-  metaDescription?: string | null;
 }
 
 export type UpdateCategoryInput = Partial<CreateCategoryInput>;
@@ -149,17 +144,6 @@ export async function getPublic({ db }: CategoryServiceDeps, id: string) {
   return category;
 }
 
-export async function getPublicBySlug(
-  { db }: CategoryServiceDeps,
-  slug: string,
-) {
-  const category = await repository.findBySlug(db, slug);
-  if (!category || !category.isActive) {
-    throw new NotFoundError('Category');
-  }
-  return category;
-}
-
 export async function listPublicArticles(
   deps: CategoryServiceDeps,
   categoryId: string,
@@ -198,9 +182,6 @@ export async function create(
   if (parentId) {
     await assertValidParent(db, parentId);
   }
-  const slug = input.slug
-    ? await assertSlugAvailable(db, normalizeSlugInput(input.slug))
-    : await generateUniqueSlug(db, name);
 
   return repository.create(db, {
     name,
@@ -211,9 +192,6 @@ export async function create(
       input.displayOrder ?? (await repository.nextDisplayOrder(db, parentId)),
     parentId,
     mediaId: input.coverImageId ?? null,
-    slug,
-    seoTitle: input.seoTitle?.trim() || null,
-    metaDescription: input.metaDescription?.trim() || null,
   });
 }
 
@@ -246,13 +224,6 @@ export async function update(
   const coverImageChanged =
     input.coverImageId !== undefined && input.coverImageId !== existing.mediaId;
 
-  // A rename never touches the slug, so links to the section keep working;
-  // only a slug the editor sends changes it.
-  const slug =
-    input.slug !== undefined
-      ? await assertSlugAvailable(db, normalizeSlugInput(input.slug), id)
-      : undefined;
-
   const { category, orphanedKeys } = await db.$transaction(async (tx) => {
     const category = await repository.update(tx, id, {
       ...(name !== undefined ? { name } : {}),
@@ -276,13 +247,6 @@ export async function update(
           : {}),
       ...(input.coverImageId !== undefined
         ? { mediaId: input.coverImageId }
-        : {}),
-      ...(slug !== undefined ? { slug } : {}),
-      ...(input.seoTitle !== undefined
-        ? { seoTitle: input.seoTitle?.trim() || null }
-        : {}),
-      ...(input.metaDescription !== undefined
-        ? { metaDescription: input.metaDescription?.trim() || null }
         : {}),
     });
 
