@@ -125,10 +125,19 @@ function list<T>(value: T[] | undefined): T[] {
   return Array.isArray(value) ? value : [];
 }
 
+/** Matches SiteSettings.articleCacheMinutes's own column default, for a
+ *  settings row saved before that column existed. */
+const DEFAULT_ARTICLE_CACHE_MINUTES = 60;
+
 export async function getSite(): Promise<PublicSiteDto> {
   const site = await fetchPublic<PublicSiteDto>('/site');
   return {
     ...site,
+    settings: {
+      ...site.settings,
+      articleCacheMinutes:
+        site.settings.articleCacheMinutes ?? DEFAULT_ARTICLE_CACHE_MINUTES,
+    },
     categories: list(site.categories),
     breakingNews: list(site.breakingNews),
     advertisements: list(site.advertisements),
