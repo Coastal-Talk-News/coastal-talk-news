@@ -33,6 +33,10 @@ export interface SiteSettingsDto {
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;
   defaultOgImage: MediaSummaryDto | null;
+  /** How long a reader-site article page is cached, in minutes, before
+   *  re-checking it - a backstop, since publishing/editing invalidates its
+   *  cache immediately regardless. */
+  articleCacheMinutes: number;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }
@@ -66,4 +70,5 @@ export interface UpdateSiteSettingsRequest {
   defaultSeoTitle?: string | null;
   defaultMetaDescription?: string | null;
   defaultOgImageId?: Id | null;
+  articleCacheMinutes?: number;
 }

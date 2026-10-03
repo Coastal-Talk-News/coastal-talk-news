@@ -9,6 +9,8 @@ import { getLocale } from '../../lib/i18n/server';
 import { buildMetadata } from '../../lib/seo';
 import { getOrigin } from '../../lib/site-url';
 
+export const dynamic = 'force-dynamic';
+
 // A denser grid than the category page's — search results skew toward
 // scanning many candidates rather than a curated front-of-section layout.
 const RESULTS_PER_PAGE = 12;

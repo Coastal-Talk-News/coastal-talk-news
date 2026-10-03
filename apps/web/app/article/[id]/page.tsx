@@ -16,12 +16,12 @@ export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
   const { id } = await params;
-  const [article, { settings }, locale, origin] = await Promise.all([
-    getArticle(id),
+  const [{ settings }, locale, origin] = await Promise.all([
     getSite(),
     getLocale(),
     getOrigin(),
   ]);
+  const article = await getArticle(id, settings.articleCacheMinutes);
   if (!article) return { title: 'Article not found' };
 
   // Each value falls back to the newsroom's default inside buildMetadata, so
@@ -41,11 +41,8 @@ export async function generateMetadata({
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
   const { id } = await params;
-  const [article, { settings }, locale] = await Promise.all([
-    getArticle(id),
-    getSite(),
-    getLocale(),
-  ]);
+  const [{ settings }, locale] = await Promise.all([getSite(), getLocale()]);
+  const article = await getArticle(id, settings.articleCacheMinutes);
   if (!article) notFound();
 
   // Half the read time the CMS shows: the reader has to stay past this for

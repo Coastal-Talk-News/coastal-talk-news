@@ -27,6 +27,12 @@ export const SETTINGS_HOURS_MAX = 120;
 export const SETTINGS_SEO_TITLE_MAX = 60;
 export const SETTINGS_META_DESCRIPTION_MAX = 160;
 
+/** 5 minutes to 7 days - below that isn't worth caching, above it risks a
+ *  correction sitting live too long if the automatic on-save invalidation
+ *  were ever missed. */
+export const SETTINGS_ARTICLE_CACHE_MINUTES_MIN = 5;
+export const SETTINGS_ARTICLE_CACHE_MINUTES_MAX = 10_080;
+
 export const PASSWORD_MIN_LENGTH = 8;
 /** bcrypt reads only the first 72 bytes of its input and silently ignores the
  *  rest, so a longer password would be weaker than it looks. */

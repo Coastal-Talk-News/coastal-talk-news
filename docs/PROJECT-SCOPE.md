@@ -368,6 +368,9 @@ scheduled sweep in V1. The admin deletes those from the library, or triggers the
   per user per 15 minutes. (`POST /api/v1/cms/auth/change-password`; a wrong current
   password is a `400 INVALID_CURRENT_PASSWORD`, never a 401, so the CMS doesn't mistake a
   typo for an expired session.)
+- **Advanced** (added 2026-10-02) — the reader-site article cache duration
+  (`Site Settings.article_cache_minutes`) and a manual "Clear article cache" button. See
+  "Reader-site page caching" in `docs/DEVELOPMENT.md` §9 for the full caching architecture.
 
 No CMS-side "Language Settings" screen is needed: the reader's UI-language choice is
 per-visitor (a cookie set by the header toggle), not a site-wide setting an admin

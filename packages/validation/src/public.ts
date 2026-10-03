@@ -75,6 +75,7 @@ export const PublicSiteSettingsSchema = Type.Object({
   defaultSeoTitle: Nullable(Type.String()),
   defaultMetaDescription: Nullable(Type.String()),
   defaultOgImage: Type.Union([MediaSummarySchema, Type.Null()]),
+  articleCacheMinutes: Type.Integer(),
   contactEmail: Nullable(Type.String()),
   contactPhone: Nullable(Type.String()),
   contactAddress: Nullable(Type.String()),

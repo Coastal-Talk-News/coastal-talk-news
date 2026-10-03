@@ -5,6 +5,7 @@ import {
   UpdateSiteSettingsBodySchema,
   commonErrorResponses,
 } from '@coastal-talk-news/validation';
+import { Type } from '@sinclair/typebox';
 import * as controller from './controller.js';
 
 export const cmsSettingsRoutes: FastifyPluginAsyncTypebox = async (app) => {
@@ -39,5 +40,20 @@ export const cmsSettingsRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.update,
+  );
+
+  app.post(
+    '/clear-article-cache',
+    {
+      schema: {
+        tags: ['settings'],
+        summary: 'Drop every cached reader-site article page immediately',
+        response: {
+          204: Type.Null(),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.clearArticleCache,
   );
 };

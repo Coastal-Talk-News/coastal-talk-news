@@ -70,6 +70,11 @@ const EnvSchema = Type.Object({
   // reported. Once reached, new uploads are refused until something is
   // deleted or this is raised.
   MEDIA_STORAGE_CAP_MB: Type.Integer({ default: 5000, minimum: 1 }),
+
+  // Lets this server drop the reader site's cache on publish/edit. Both
+  // optional - caching just falls back to its own TTL without them.
+  WEB_BASE_URL: Type.Optional(Type.String({ minLength: 1 })),
+  WEB_REVALIDATE_SECRET: Type.Optional(Type.String({ minLength: 16 })),
 });
 
 export type Env = Static<typeof EnvSchema> & {

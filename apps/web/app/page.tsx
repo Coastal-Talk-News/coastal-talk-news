@@ -10,6 +10,8 @@ import { getDictionary } from '../lib/i18n/dictionaries';
 import { getLocale } from '../lib/i18n/server';
 import { gridColumnsFor } from '../lib/layout';
 
+export const dynamic = 'force-dynamic';
+
 // Below this, a sidebar column would run out of stories long before the hero
 // beside it runs out of height, so the few there are go under it at full
 // width instead of leaving a tall empty gutter.

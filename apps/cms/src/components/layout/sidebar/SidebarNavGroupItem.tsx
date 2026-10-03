@@ -1,6 +1,6 @@
 import { cn } from '@coastal-talk-news/ui/cn';
 import { ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { matchPath, NavLink, useLocation } from 'react-router-dom';
 import { SIDEBAR_GUTTER, sidebarRow } from './layout.js';
 import { SidebarLabel } from './SidebarLabel.js';
@@ -27,6 +27,16 @@ export function SidebarNavGroupItem({
   const { pathname } = useLocation();
   const groupActive = children.some((child) => isChildActive(child, pathname));
   const [expanded, setExpanded] = useState(groupActive);
+
+  // The sidebar never unmounts across navigation, so the initial state above
+  // only covers landing here on first mount - arriving at a child route any
+  // other way (a Quick Action, a direct link, a refresh after navigating
+  // elsewhere first) left this stuck closed. Force it open whenever a child
+  // route becomes active; a manual collapse while already on one still
+  // works, since this only re-fires on that transition, not every render.
+  useEffect(() => {
+    if (groupActive) setExpanded(true);
+  }, [groupActive]);
 
   if (collapsed) {
     return (

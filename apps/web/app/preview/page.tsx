@@ -4,6 +4,9 @@ import { getLocale } from '../../lib/i18n/server';
 import { getOrigin } from '../../lib/site-url';
 import { PreviewTab } from './PreviewTab';
 
+// Stateless live preview - must never be cached.
+export const dynamic = 'force-dynamic';
+
 // A draft has no business in a search index, whoever finds the link.
 export const metadata: Metadata = {
   title: 'Preview',

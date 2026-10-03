@@ -84,6 +84,8 @@ export interface PublicSiteSettingsDto {
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;
   defaultOgImage: MediaSummaryDto | null;
+  /** How long an article page is cached, in minutes, before re-checking it. */
+  articleCacheMinutes: number;
   contactEmail: string | null;
   contactPhone: string | null;
   contactAddress: string | null;

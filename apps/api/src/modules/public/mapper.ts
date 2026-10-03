@@ -197,6 +197,7 @@ interface SettingsRow {
   defaultUiLanguage: Language;
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;
+  articleCacheMinutes: number;
   logo: MediaRow | null;
   favicon: MediaRow | null;
   defaultOgImage: MediaRow | null;

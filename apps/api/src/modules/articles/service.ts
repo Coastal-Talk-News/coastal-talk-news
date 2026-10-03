@@ -10,6 +10,10 @@ import { BadRequestError, NotFoundError } from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
 import { extractPlainText } from '../../lib/tiptap-text.js';
+import {
+  revalidateArticle,
+  type WebRevalidateConfig,
+} from '../../lib/webRevalidate.js';
 import { releaseMedia, syncArticleMedia } from '../media/reference.js';
 import {
   hydrateContent,
@@ -25,6 +29,7 @@ export interface ArticleServiceDeps {
   db: Database;
   storage: ObjectStorage;
   logger: FastifyBaseLogger;
+  webRevalidate: WebRevalidateConfig;
 }
 
 export interface CreateArticleInput {
@@ -181,6 +186,7 @@ export async function create(
     imageIds: mediaIds,
   });
 
+  await revalidateArticle(deps.webRevalidate, deps.logger, article.id);
   return forEditor(deps, article);
 }
 
@@ -273,6 +279,7 @@ export async function update(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
+  await revalidateArticle(deps.webRevalidate, deps.logger, article.id);
   return forEditor(deps, article);
 }
 
@@ -301,4 +308,5 @@ export async function remove(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
+  await revalidateArticle(deps.webRevalidate, deps.logger, id);
 }

@@ -11,6 +11,10 @@ import {
 } from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
+import {
+  revalidateCategory,
+  type WebRevalidateConfig,
+} from '../../lib/webRevalidate.js';
 import { purgeStorageObjects } from '../media/service.js';
 import { releaseMedia } from '../media/reference.js';
 import type { ObjectStorage } from '../media/storage.js';
@@ -20,6 +24,7 @@ export interface CategoryServiceDeps {
   db: Database;
   storage: ObjectStorage;
   logger: FastifyBaseLogger;
+  webRevalidate: WebRevalidateConfig;
 }
 
 export interface CreateCategoryInput {
@@ -258,6 +263,7 @@ export async function update(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
+  await revalidateCategory(deps.webRevalidate, deps.logger, id);
   return category;
 }
 
@@ -321,4 +327,5 @@ export async function remove(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
+  await revalidateCategory(deps.webRevalidate, deps.logger, id);
 }
