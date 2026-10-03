@@ -55,6 +55,7 @@ export const LoginResultSchema = Type.Object({
     Type.Literal('two_factor_required'),
     Type.Literal('two_factor_setup_required'),
   ]),
+  emailOtpAvailable: Type.Boolean(),
 });
 
 const TwoFactorCodeSchema = Type.String({
@@ -83,7 +84,12 @@ export const TwoFactorEnrollmentSchema = Type.Object({
 export const TwoFactorSignInSchema = Type.Object({
   user: CmsUserSchema,
   usedRecoveryCode: Type.Boolean(),
+  usedEmailCode: Type.Boolean(),
   recoveryCodesRemaining: Type.Integer(),
+});
+
+export const EmailCodeSentSchema = Type.Object({
+  sent: Type.Boolean(),
 });
 
 export const TwoFactorEnrolledSchema = Type.Object({

@@ -1,3 +1,4 @@
+import { randomInt, timingSafeEqual } from 'node:crypto';
 import type { Database, TransactionClient } from '@coastal-talk-news/db';
 import type {
   TwoFactorEnrollmentDto,
@@ -8,6 +9,7 @@ import {
   InvalidTwoFactorCodeError,
   TwoFactorLockedError,
 } from '../../lib/errors.js';
+import type { Mailer } from '../../lib/mailer.js';
 import {
   RECOVERY_CODE_COUNT,
   generateRecoveryCode,
@@ -21,7 +23,7 @@ import {
   matchTotp,
   otpauthUri,
 } from '../../lib/totp.js';
-import type { ChallengeStore } from '../auth/challenge-store.js';
+import type { Challenge, ChallengeStore } from '../auth/challenge-store.js';
 import { assertCurrentPassword } from '../auth/service.js';
 import * as repository from './repository.js';
 
@@ -29,9 +31,10 @@ export interface TwoFactorDeps {
   db: Database;
   box: SecretBox;
   challenges: ChallengeStore;
+  mailer: Mailer | null;
 }
 
-export type SecondFactorMethod = 'totp' | 'recovery';
+export type SecondFactorMethod = 'totp' | 'recovery' | 'email';
 
 /** Shown in authenticator apps next to the account name. */
 const ISSUER = 'Coastal Talk News';
@@ -146,6 +149,77 @@ async function checkCode(
     if (spent.count === 1) return 'recovery';
   }
   throw new InvalidTwoFactorCodeError();
+}
+
+/** Five minutes - shorter than the ten-minute challenge it rides on, so a
+ *  stale emailed code can't linger as long as the sign-in attempt itself. */
+const EMAIL_CODE_TTL_MS = 5 * 60 * 1000;
+
+function generateEmailCode(): string {
+  return randomInt(1_000_000).toString().padStart(6, '0');
+}
+
+/**
+ * Emails a one-time code for the pending sign-in and holds its digest on the
+ * challenge itself - nothing is written to the database, the same reasoning
+ * as the setup secret `beginSetup` holds there. Only reachable once Resend is
+ * configured (see env.emailOtpEnabled); the service checks `deps.mailer`
+ * itself rather than trusting the route not to be called otherwise.
+ */
+export async function sendEmailCode(
+  deps: TwoFactorDeps,
+  challenge: Challenge,
+  email: string,
+): Promise<void> {
+  assertNotLocked(deps, challenge.userId);
+  if (!deps.mailer) {
+    throw new ConflictError('Email sign-in codes are not turned on.');
+  }
+
+  const code = generateEmailCode();
+  await deps.mailer.sendTwoFactorCode(email, code);
+  challenge.emailCode = {
+    hash: deps.box.digest(code),
+    expiresAt: Date.now() + EMAIL_CODE_TTL_MS,
+  };
+}
+
+/**
+ * The sign-in step's second factor: an emailed code just sent for this
+ * challenge, if one is pending and still fresh, otherwise an authenticator or
+ * recovery code exactly as before. Only this wrapper knows about emailed
+ * codes - `verifySecondFactor` below, and everything that calls it directly
+ * (reauthentication), is unchanged.
+ */
+export async function verifySignInCode(
+  deps: TwoFactorDeps,
+  challenge: Challenge,
+  submitted: string,
+): Promise<{ method: SecondFactorMethod; recoveryCodesRemaining: number }> {
+  const pending = challenge.emailCode;
+  const compact = submitted.replace(/\s/g, '');
+
+  if (
+    pending &&
+    pending.expiresAt > Date.now() &&
+    /^\d{6}$/.test(compact) &&
+    timingSafeEqual(
+      Buffer.from(deps.box.digest(compact)),
+      Buffer.from(pending.hash),
+    )
+  ) {
+    challenge.emailCode = undefined;
+    deps.challenges.clearFailures(challenge.userId);
+    return {
+      method: 'email',
+      recoveryCodesRemaining: await repository.countUnusedRecoveryCodes(
+        deps.db,
+        challenge.userId,
+      ),
+    };
+  }
+
+  return verifySecondFactor(deps, challenge.userId, submitted);
 }
 
 /**

@@ -2,8 +2,9 @@ import type { TwoFactorSignInDto } from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, ShieldCheck } from 'lucide-react';
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { authApi } from '../../api/auth.js';
+import { EmailCodeStatus } from './EmailCodeStatus.js';
 import { OTP_LENGTH } from './OtpInput.js';
 import {
   SecondFactorField,
@@ -12,6 +13,8 @@ import {
 import { describeTwoFactorError } from './twoFactorError.js';
 
 interface TwoFactorChallengeProps {
+  /** Whether the server has email sign-in codes turned on at all. */
+  emailOtpAvailable: boolean;
   onSignedIn: (result: TwoFactorSignInDto) => void;
   /** The pending sign-in ran out; the password has to be entered again. */
   onRestart: (message: string) => void;
@@ -23,7 +26,10 @@ function isCompleteRecoveryCode(value: string): boolean {
   return value.replace(/[^A-Za-z0-9]/g, '').length >= 10;
 }
 
+const EMAIL_RESEND_COOLDOWN_SECONDS = 30;
+
 export function TwoFactorChallenge({
+  emailOtpAvailable,
   onSignedIn,
   onRestart,
   onBack,
@@ -31,6 +37,7 @@ export function TwoFactorChallenge({
   const [mode, setMode] = useState<SecondFactorMode>('code');
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | undefined>();
+  const [emailCooldown, setEmailCooldown] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const verify = useMutation({
@@ -45,6 +52,20 @@ export function TwoFactorChallenge({
       inputRef.current?.focus();
     },
   });
+
+  const sendEmailCode = useMutation({
+    mutationFn: () => authApi.twoFactor.sendEmailCode(),
+    onSuccess: () => setEmailCooldown(EMAIL_RESEND_COOLDOWN_SECONDS),
+  });
+
+  useEffect(() => {
+    if (emailCooldown === 0) return;
+    const timer = setTimeout(
+      () => setEmailCooldown((seconds) => seconds - 1),
+      1000,
+    );
+    return () => clearTimeout(timer);
+  }, [emailCooldown]);
 
   function submit(code: string) {
     if (verify.isPending) return;
@@ -61,12 +82,16 @@ export function TwoFactorChallenge({
     setMode(next);
     setValue('');
     setError(undefined);
+    // Switching to the email screen is the request to send one - the same
+    // way GitHub and similar sign-ins send the moment you pick that method,
+    // rather than making it a second click once you're already there.
+    if (next === 'email') sendEmailCode.mutate();
   }
 
   const canSubmit =
-    mode === 'code'
-      ? value.length === OTP_LENGTH
-      : isCompleteRecoveryCode(value);
+    mode === 'recovery'
+      ? isCompleteRecoveryCode(value)
+      : value.length === OTP_LENGTH;
 
   return (
     <div>
@@ -94,6 +119,15 @@ export function TwoFactorChallenge({
           error={error}
           inputRef={inputRef}
           autoFocus
+          emailOtpAvailable={emailOtpAvailable}
+          emailStatus={
+            <EmailCodeStatus
+              pending={sendEmailCode.isPending}
+              failed={sendEmailCode.isError}
+              cooldown={emailCooldown}
+              onResend={() => sendEmailCode.mutate()}
+            />
+          }
         />
 
         <Button

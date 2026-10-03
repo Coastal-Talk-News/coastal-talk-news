@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 import type { Env } from '../config/env.js';
 import { SignInExpiredError, UnauthorizedError } from '../lib/errors.js';
+import { createMailer, type Mailer } from '../lib/mailer.js';
 import { SecretBox } from '../lib/secret-box.js';
 import {
   CHALLENGE_TTL_MS,
@@ -38,6 +39,9 @@ declare module 'fastify' {
     ) => Promise<void>;
     challenges: ChallengeStore;
     secretBox: SecretBox;
+    /** Null unless RESEND_API_KEY/EMAIL_OTP_FROM are both set - the one place
+     *  every layer checks whether email sign-in codes are turned on. */
+    mailer: Mailer | null;
     issueChallenge: (
       request: FastifyRequest,
       reply: FastifyReply,
@@ -78,6 +82,12 @@ async function authPlugin(
   app.decorate('sessions', sessions);
   app.decorate('challenges', challenges);
   app.decorate('secretBox', new SecretBox(env.totpKey));
+  app.decorate(
+    'mailer',
+    env.RESEND_API_KEY && env.EMAIL_OTP_FROM
+      ? createMailer(env.RESEND_API_KEY, env.EMAIL_OTP_FROM)
+      : null,
+  );
 
   const cookieOptions = {
     path: '/',

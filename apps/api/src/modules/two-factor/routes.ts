@@ -1,6 +1,7 @@
 import type { FastifyPluginAsyncTypebox } from '@fastify/type-provider-typebox';
 import {
   AuthenticatorResetSchema,
+  EmailCodeSentSchema,
   RecoveryCodesSchema,
   SuccessResponse,
   TwoFactorCodeBodySchema,
@@ -27,6 +28,10 @@ const REAUTH_RATE_LIMIT = {
   keyGenerator: (request: { session: { userId: string } }) =>
     request.session.userId,
 };
+
+/** Sending real email is costlier to abuse than guessing a code already
+ *  rate-limited above, so this gets its own tighter cap. */
+const EMAIL_SEND_RATE_LIMIT = { max: 3, timeWindow: '10 minutes' };
 
 export const twoFactorRoutes: FastifyPluginAsyncTypebox = async (app) => {
   await app.register(import('@fastify/rate-limit'), { global: false });
@@ -98,6 +103,25 @@ export const twoFactorRoutes: FastifyPluginAsyncTypebox = async (app) => {
       },
     },
     controller.verifySignIn,
+  );
+
+  app.post(
+    '/verify/email',
+    {
+      preHandler: app.requireChallenge('verify'),
+      config: { rateLimit: EMAIL_SEND_RATE_LIMIT },
+      schema: {
+        tags: ['two-factor'],
+        summary: 'Email a one-time code for the pending sign-in',
+        description:
+          'Only available when the server has email sign-in turned on. Enter the mailed code where an authenticator code is asked for.',
+        response: {
+          200: SuccessResponse(EmailCodeSentSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.sendEmailCode,
   );
 
   /* With a session */

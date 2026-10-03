@@ -12,7 +12,11 @@ import { useAuth } from './useAuth.js';
 
 interface CredentialsFormProps {
   /** Email and password were right; the second step is what the status names. */
-  onContinue: (status: LoginStatus, email: string) => void;
+  onContinue: (
+    status: LoginStatus,
+    email: string,
+    emailOtpAvailable: boolean,
+  ) => void;
   /** Why the person is back here, when they were sent back mid-way. */
   notice?: string | null;
 }
@@ -25,7 +29,8 @@ export function CredentialsForm({ onContinue, notice }: CredentialsFormProps) {
 
   const login = useMutation({
     mutationFn: () => authApi.login({ email: email.trim(), password }),
-    onSuccess: ({ status }) => onContinue(status, email.trim()),
+    onSuccess: ({ status, emailOtpAvailable }) =>
+      onContinue(status, email.trim(), emailOtpAvailable),
   });
 
   function handleSubmit(event: FormEvent) {

@@ -17,8 +17,8 @@ import * as authService from '../auth/service.js';
 import * as service from './service.js';
 
 function depsOf(request: FastifyRequest): service.TwoFactorDeps {
-  const { prisma, secretBox, challenges } = request.server;
-  return { db: prisma, box: secretBox, challenges };
+  const { prisma, secretBox, challenges, mailer } = request.server;
+  return { db: prisma, box: secretBox, challenges, mailer };
 }
 
 /**
@@ -115,11 +115,7 @@ export async function verifySignIn(
     request,
     challenge,
     () =>
-      service.verifySecondFactor(
-        depsOf(request),
-        challenge.userId,
-        request.body.code,
-      ),
+      service.verifySignInCode(depsOf(request), challenge, request.body.code),
     () => exhaustedSignIn(request, reply),
   );
 
@@ -133,8 +129,23 @@ export async function verifySignIn(
   return dataEnvelope({
     user,
     usedRecoveryCode: method === 'recovery',
+    usedEmailCode: method === 'email',
     recoveryCodesRemaining,
   });
+}
+
+/** Emails a one-time code for the pending sign-in. Rate-limited tighter than
+ *  code-guessing (see routes.ts) - this sends real mail, not a check. */
+export async function sendEmailCode(request: FastifyRequest) {
+  const { challenge } = request;
+  const user = await authRepository.findPublicById(
+    request.server.prisma,
+    challenge.userId,
+  );
+  if (!user) throw new SignInExpiredError();
+
+  await service.sendEmailCode(depsOf(request), challenge, user.email);
+  return dataEnvelope({ sent: true });
 }
 
 function exhaustedSignIn(request: FastifyRequest, reply: FastifyReply): Error {

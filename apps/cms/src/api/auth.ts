@@ -2,6 +2,7 @@ import type {
   AuthenticatorResetDto,
   ChangePasswordRequest,
   CmsUserDto,
+  EmailCodeSentDto,
   LoginRequest,
   LoginResultDto,
   PasswordChangedDto,
@@ -38,6 +39,7 @@ export const authApi = {
       api.post<TwoFactorEnrolledDto>(`${BASE}/2fa/setup/confirm`, { code }),
     verify: (code: string) =>
       api.post<TwoFactorSignInDto>(`${BASE}/2fa/verify`, { code }),
+    sendEmailCode: () => api.post<EmailCodeSentDto>(`${BASE}/2fa/verify/email`),
 
     status: (signal?: AbortSignal) =>
       api.get<TwoFactorStatusDto>(`${BASE}/2fa`, signal),
