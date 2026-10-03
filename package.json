@@ -11,7 +11,7 @@
     "dev:api": "turbo dev --filter=api",
     "dev:cms": "turbo dev --filter=cms",
     "dev:web": "turbo dev --filter=web",
-    "start:api": "turbo start --filter=api",
+    "start:api": "pnpm --filter api start",
     "preview:cms": "turbo preview --filter=cms",
     "start:web": "turbo start --filter=web",
     "serve": "turbo run serve --parallel",
