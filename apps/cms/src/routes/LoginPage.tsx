@@ -93,6 +93,7 @@ export function LoginPage() {
   const [stage, setStage] = useState<Stage>('credentials');
   const [email, setEmail] = useState('');
   const [notice, setNotice] = useState<string | null>(null);
+  const [emailOtpAvailable, setEmailOtpAvailable] = useState(false);
 
   if (!isLoading && user) {
     return <Navigate to="/" replace />;
@@ -169,9 +170,10 @@ export function LoginPage() {
             {stage === 'credentials' && (
               <CredentialsForm
                 notice={notice}
-                onContinue={(status, typedEmail) => {
+                onContinue={(status, typedEmail, canEmailOtp) => {
                   setEmail(typedEmail);
                   setNotice(null);
+                  setEmailOtpAvailable(canEmailOtp);
                   setStage(
                     status === 'two_factor_required' ? 'verify' : 'setup',
                   );
@@ -181,6 +183,7 @@ export function LoginPage() {
 
             {stage === 'verify' && (
               <TwoFactorChallenge
+                emailOtpAvailable={emailOtpAvailable}
                 onSignedIn={(result) => {
                   enter(result.user);
                   if (result.usedRecoveryCode) {

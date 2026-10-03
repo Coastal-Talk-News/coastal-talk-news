@@ -46,6 +46,7 @@ export async function login(
     status: user.twoFactorEnabled
       ? 'two_factor_required'
       : 'two_factor_setup_required',
+    emailOtpAvailable: Boolean(request.server.mailer),
   } satisfies LoginResultDto);
 }
 

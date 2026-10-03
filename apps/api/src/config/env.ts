@@ -75,11 +75,19 @@ const EnvSchema = Type.Object({
   // optional - caching just falls back to its own TTL without them.
   WEB_BASE_URL: Type.Optional(Type.String({ minLength: 1 })),
   WEB_REVALIDATE_SECRET: Type.Optional(Type.String({ minLength: 16 })),
+
+  // Lets two-factor sign-in offer a one-time code by email, alongside the
+  // authenticator app. Both optional - leaving them unset keeps two-factor
+  // authenticator-only exactly as before; see the per-pair check in
+  // loadEnv().
+  RESEND_API_KEY: Type.Optional(Type.String({ minLength: 1 })),
+  EMAIL_OTP_FROM: Type.Optional(Type.String({ minLength: 1 })),
 });
 
 export type Env = Static<typeof EnvSchema> & {
   corsOrigins: string[];
   totpKey: Buffer;
+  emailOtpEnabled: boolean;
 };
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
@@ -112,8 +120,14 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
   }
 
   requireStorageProviderConfig(parsed);
+  requireEmailOtpConfig(parsed);
 
-  return { ...parsed, corsOrigins, totpKey };
+  return {
+    ...parsed,
+    corsOrigins,
+    totpKey,
+    emailOtpEnabled: Boolean(parsed.RESEND_API_KEY),
+  };
 }
 
 /**
@@ -146,5 +160,15 @@ function requireStorageProviderConfig(env: Static<typeof EnvSchema>): void {
       'S3_SECRET_ACCESS_KEY',
       'S3_PUBLIC_URL',
     ]);
+  }
+}
+
+/** The pair stands or falls together - sending mail needs both, and a lone
+ *  one set is almost certainly a typo, not an intentional half-feature. */
+function requireEmailOtpConfig(env: Static<typeof EnvSchema>): void {
+  if (Boolean(env.RESEND_API_KEY) !== Boolean(env.EMAIL_OTP_FROM)) {
+    throw new Error(
+      'RESEND_API_KEY and EMAIL_OTP_FROM must both be set, or both left unset.',
+    );
   }
 }

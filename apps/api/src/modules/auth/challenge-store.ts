@@ -27,6 +27,10 @@ export interface Challenge {
    *  until a code proves the authenticator has it; never written to the database
    *  before then. */
   secret?: string;
+  /** A one-time code just emailed for this sign-in, held only as its HMAC
+   *  digest and a short expiry of its own - email sign-in codes are never
+   *  written to the database, the same reasoning as the setup secret above. */
+  emailCode?: { hash: string; expiresAt: number };
 }
 
 function hashToken(token: string): string {

@@ -39,6 +39,9 @@ export type LoginStatus = 'two_factor_required' | 'two_factor_setup_required';
 
 export interface LoginResultDto {
   status: LoginStatus;
+  /** Whether the server has email sign-in codes turned on, so the second
+   *  step can offer it alongside the authenticator app. */
+  emailOtpAvailable: boolean;
 }
 
 /** A six-digit authenticator code, or a recovery code where one is accepted. */
@@ -58,7 +61,13 @@ export interface TwoFactorSignInDto {
   user: CmsUserDto;
   /** True when a recovery code was spent instead of an authenticator code. */
   usedRecoveryCode: boolean;
+  /** True when a mailed code was used instead of an authenticator code. */
+  usedEmailCode: boolean;
   recoveryCodesRemaining: number;
+}
+
+export interface EmailCodeSentDto {
+  sent: boolean;
 }
 
 /** Shown once: the codes are stored only as hashes. */
