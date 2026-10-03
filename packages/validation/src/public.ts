@@ -11,15 +11,18 @@ import {
   ImageWidthPercentSchema,
   MediaSummarySchema,
 } from './media.js';
+import { ARTICLE_SLUG_MAX, SLUG_MAX } from './slug.js';
 
 const PublicCategoryRefSchema = Type.Object({
   id: Type.String(),
+  slug: Type.String(),
   name: Type.String(),
   nameKannada: Type.Union([Type.String(), Type.Null()]),
 });
 
 export const PublicArticleCardSchema = Type.Object({
   id: Type.String(),
+  slug: Type.String(),
   headline: Type.String(),
   summary: Type.String(),
   language: LanguageSchema,
@@ -30,6 +33,30 @@ export const PublicArticleCardSchema = Type.Object({
 
 export const PublicArticleParamsSchema = Type.Object({
   id: Type.String({ format: 'uuid' }),
+});
+
+/** Category lookup by address. Only the length is bounded here: a malformed
+ * slug simply matches nothing and 404s. */
+export const PublicSlugParamsSchema = Type.Object({
+  slug: Type.String({ minLength: 1, maxLength: SLUG_MAX }),
+});
+
+/** One article lookup serves both address forms: the slug every link
+ * uses, and the id old shared links still carry (which then redirects). */
+export const PublicArticleKeyParamsSchema = Type.Object({
+  key: Type.Union([
+    Type.String({ format: 'uuid' }),
+    Type.String({ minLength: 1, maxLength: ARTICLE_SLUG_MAX }),
+  ]),
+});
+
+export const PublicSitemapSchema = Type.Object({
+  articles: Type.Array(
+    Type.Object({ slug: Type.String(), updatedAt: IsoDateTime }),
+  ),
+  categories: Type.Array(
+    Type.Object({ slug: Type.String(), updatedAt: IsoDateTime }),
+  ),
 });
 
 export const PublicBreakingNewsSchema = Type.Object({
@@ -76,6 +103,7 @@ export const PublicSiteSettingsSchema = Type.Object({
   defaultMetaDescription: Nullable(Type.String()),
   defaultOgImage: Type.Union([MediaSummarySchema, Type.Null()]),
   articleCacheMinutes: Type.Integer(),
+  googleSiteVerification: Nullable(Type.String()),
   contactEmail: Nullable(Type.String()),
   contactPhone: Nullable(Type.String()),
   contactAddress: Nullable(Type.String()),
@@ -89,6 +117,7 @@ export const PublicSiteSettingsSchema = Type.Object({
 
 const publicNavCategoryFields = {
   id: Type.String(),
+  slug: Type.String(),
   name: Type.String(),
   nameKannada: Type.Union([Type.String(), Type.Null()]),
   description: Nullable(Type.String()),
@@ -125,6 +154,7 @@ export const PublicArticleSchema = Type.Composite([
     seoTitle: Nullable(Type.String()),
     metaDescription: Nullable(Type.String()),
     ogImage: Type.Union([MediaSummarySchema, Type.Null()]),
+    updatedAt: IsoDateTime,
   }),
 ]);
 

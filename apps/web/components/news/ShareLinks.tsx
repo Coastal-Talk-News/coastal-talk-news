@@ -31,6 +31,17 @@ const KANNADA_CHANNEL_LABEL = 'ಕನ್ನಡ ಗ್ರೂಪ್ ಲಿಂಕ�
 
 const ICON = 'size-4';
 
+/** A Kannada address as people read and paste it, not as a column of %E0%B2…
+ * escapes. Chat apps and browsers turn it back into the encoded form
+ * themselves; Facebook and X are given the encoded one. */
+function readableUrl(url: string): string {
+  try {
+    return decodeURI(url);
+  } catch {
+    return url;
+  }
+}
+
 const BASE =
   'inline-flex shrink-0 items-center justify-center gap-2 rounded-full border transition-colors';
 const IDLE = 'border-rule text-ink-muted';
@@ -55,6 +66,7 @@ export function ShareLinks({
 }: ShareLinksProps) {
   const dictionary = getDictionary(locale).article;
   const encodedUrl = encodeURIComponent(url);
+  const shownUrl = readableUrl(url);
   const encodedText = encodeURIComponent(headline);
   const isPanel = variant === 'panel';
 
@@ -74,7 +86,7 @@ export function ShareLinks({
   // link detector doesn't reliably linkify one that trails inline text.
   const whatsappMessage = [
     whatsappBold(headline),
-    `${whatsappBold(dictionary.readLine)}\n${url}`,
+    `${whatsappBold(dictionary.readLine)}\n${shownUrl}`,
     channelLines &&
       `${whatsappBold(dictionary.channelInvite)}\n${channelLines}`,
   ]
@@ -172,7 +184,7 @@ export function ShareLinks({
       ))}
 
       <CopyLinkButton
-        url={url}
+        url={shownUrl}
         label={dictionary.copyLink}
         copiedLabel={dictionary.linkCopied}
         iconOnly={!isPanel}

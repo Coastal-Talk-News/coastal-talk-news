@@ -74,6 +74,22 @@ model MediaAsset {
 /// timestamp — the analytics page's Today/Week/Month/Year figures are a
 /// count of these rows in a date range. No reader information: this is the
 /// same anonymous event the running total already represents, just dated.
+/// A slug a published article used to have, so links shared before the
+/// editor changed it still arrive: the old address redirects to the current
+/// one. Always points at the article, never at another old slug, so there are
+/// no chains. Goes with the article when it is deleted — a deleted article's
+/// links 404 rather than redirecting somewhere else.
+model ArticleSlugRedirect {
+  slug      String   @id
+  articleId String   @map("article_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@map("article_slug_redirects")
+}
+
 model ArticleView {
   id        String   @id @default(uuid(7))
   articleId String   @map("article_id")
@@ -103,6 +119,15 @@ model Category {
   /// DB. Cycle prevention (a category can't become its own ancestor) is also
   /// service-layer only.
   parentId     String?  @map("parent_id")
+  /// The section's address: /category/<slug>. Made from the name when the
+  /// category is created and never changed by renaming it, so links stay
+  /// valid; an editor can change it by hand. Nullable only so rows written
+  /// before slugs existed stay valid; the public site falls back to the id.
+  slug            String?  @unique
+  /// Search-result title and description for the section page; the public
+  /// site falls back to "<name> News | <site>" and a generic line.
+  seoTitle        String?  @map("seo_title")
+  metaDescription String?  @map("meta_description")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -141,9 +166,19 @@ model Article {
   status          ArticleStatus   @default(DRAFT)
   /// Null until first published.
   publicationDate DateTime?       @map("publication_date")
+  /// Optional scheduled end: from this moment the article is off the public
+  /// site, though it stays Published in the CMS. Like breaking news, the time
+  /// is the source of truth, so nothing has to flip a stored status.
+  endAt           DateTime?       @map("end_at")
 
   seoTitle        String? @map("seo_title")
   metaDescription String? @map("meta_description")
+  /// The public address: /article/<slug>, in the headline's own language (a
+  /// Kannada headline gives a Kannada slug). Made from the headline when none
+  /// is given, and never changed by a headline edit. Nullable only for rows
+  /// from before slugs; the id stays the primary key and every relation's
+  /// target.
+  slug            String? @unique
 
   /// Reads counted by the public site: one per visit, once the reader has
   /// stayed for half the article's estimated read time. A running total;
@@ -152,6 +187,8 @@ model Article {
   viewCount Int @default(0) @map("view_count")
 
   views ArticleView[]
+
+  slugRedirects ArticleSlugRedirect[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -406,6 +443,9 @@ model SiteSettings {
   defaultSeoTitle        String? @map("default_seo_title")
   defaultMetaDescription String? @map("default_meta_description")
   defaultOgImageId       String? @map("default_og_image_id")
+  /// The content of Google Search Console's verification meta tag. Emitted on
+  /// the reader site only when set.
+  googleSiteVerification String? @map("google_site_verification")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")

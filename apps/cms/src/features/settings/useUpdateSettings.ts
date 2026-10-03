@@ -16,6 +16,8 @@ export function useUpdateSettings() {
     mutationFn: (body: UpdateSiteSettingsRequest) => settingsApi.update(body),
     onSuccess: (settings) => {
       queryClient.setQueryData(queryKeys.settings, settings);
+      // The SEO page's checks read several of these fields.
+      void queryClient.invalidateQueries({ queryKey: queryKeys.seoHealth });
     },
     onError: (error) =>
       toast.error(messageFor(error, 'Could not save these settings.')),

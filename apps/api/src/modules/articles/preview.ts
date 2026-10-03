@@ -43,7 +43,7 @@ export async function buildPreview(
     input.categoryId
       ? db.category.findUnique({
           where: { id: input.categoryId },
-          select: { id: true, name: true, nameKannada: true },
+          select: { id: true, slug: true, name: true, nameKannada: true },
         })
       : null,
     input.featuredImageId
@@ -57,6 +57,8 @@ export async function buildPreview(
 
   const source: ArticleDetailSource = {
     id: 'preview',
+    slug: null,
+    updatedAt: new Date(),
     headline: input.headline?.trim() || 'Untitled article',
     summary: input.summary?.trim() ?? '',
     language: input.language ?? 'ENGLISH',

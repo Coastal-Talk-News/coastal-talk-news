@@ -37,6 +37,9 @@ export interface SiteSettingsDto {
    *  re-checking it - a backstop, since publishing/editing invalidates its
    *  cache immediately regardless. */
   articleCacheMinutes: number;
+  /** Google Search Console's verification token; the reader site emits the
+   * meta tag only when this is set. */
+  googleSiteVerification: string | null;
   createdAt: IsoDateTime;
   updatedAt: IsoDateTime;
 }
@@ -71,4 +74,7 @@ export interface UpdateSiteSettingsRequest {
   defaultMetaDescription?: string | null;
   defaultOgImageId?: Id | null;
   articleCacheMinutes?: number;
+  /** The token, or the whole meta tag Search Console shows: the API keeps
+   * just the token either way. */
+  googleSiteVerification?: string | null;
 }

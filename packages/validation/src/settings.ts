@@ -16,6 +16,7 @@ import {
   SETTINGS_META_DESCRIPTION_MAX,
   SETTINGS_ARTICLE_CACHE_MINUTES_MIN,
   SETTINGS_ARTICLE_CACHE_MINUTES_MAX,
+  SETTINGS_SITE_VERIFICATION_MAX,
 } from './limits.js';
 
 export {
@@ -32,6 +33,7 @@ export {
   SETTINGS_META_DESCRIPTION_MAX,
   SETTINGS_ARTICLE_CACHE_MINUTES_MIN,
   SETTINGS_ARTICLE_CACHE_MINUTES_MAX,
+  SETTINGS_SITE_VERIFICATION_MAX,
 };
 
 const ArticleCacheMinutes = Type.Integer({
@@ -81,6 +83,7 @@ export const SiteSettingsSchema = Type.Object({
   defaultMetaDescription: Type.Union([Type.String(), Type.Null()]),
   defaultOgImage: NullableMedia,
   articleCacheMinutes: ArticleCacheMinutes,
+  googleSiteVerification: Type.Union([Type.String(), Type.Null()]),
   createdAt: IsoDateTime,
   updatedAt: IsoDateTime,
 });
@@ -140,6 +143,9 @@ export const UpdateSiteSettingsBodySchema = Type.Object(
     ),
     defaultOgImageId: Type.Optional(NullableId),
     articleCacheMinutes: Type.Optional(ArticleCacheMinutes),
+    googleSiteVerification: Type.Optional(
+      nullableString(SETTINGS_SITE_VERIFICATION_MAX),
+    ),
   },
   {
     minProperties: 1,

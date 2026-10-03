@@ -42,12 +42,17 @@ async function callRevalidate(
   }
 }
 
-export function revalidateArticle(
+/** Invalidates both the id tag and the slug tag (when the article has one) -
+ *  a reader's cached page may have been fetched by either, depending on
+ *  which address they followed. */
+export async function revalidateArticle(
   config: WebRevalidateConfig,
   logger: FastifyBaseLogger,
   articleId: string,
+  slug?: string | null,
 ): Promise<void> {
-  return callRevalidate(config, logger, `article:${articleId}`);
+  await callRevalidate(config, logger, `article:${articleId}`);
+  if (slug) await callRevalidate(config, logger, `article:${slug}`);
 }
 
 export function revalidateAllArticles(
@@ -66,10 +71,13 @@ export function revalidateStandalonePages(
   return callRevalidate(config, logger, 'pages');
 }
 
-export function revalidateCategory(
+/** Invalidates both the id tag and the slug tag - see revalidateArticle. */
+export async function revalidateCategory(
   config: WebRevalidateConfig,
   logger: FastifyBaseLogger,
   categoryId: string,
+  slug?: string | null,
 ): Promise<void> {
-  return callRevalidate(config, logger, `category:${categoryId}`);
+  await callRevalidate(config, logger, `category:${categoryId}`);
+  if (slug) await callRevalidate(config, logger, `category:${slug}`);
 }

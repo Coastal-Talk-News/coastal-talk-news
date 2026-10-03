@@ -6,9 +6,21 @@ import type {
 } from '@coastal-talk-news/db';
 import type { ImageLayoutDto } from '@coastal-talk-news/types';
 import type { FastifyBaseLogger } from 'fastify';
-import { BadRequestError, NotFoundError } from '../../lib/errors.js';
+import {
+  BadRequestError,
+  ConflictError,
+  NotFoundError,
+} from '../../lib/errors.js';
 import type { PaginationParams } from '../../lib/pagination.js';
 import { toSkipTake } from '../../lib/pagination.js';
+import {
+  assertArticleSlugAvailable,
+  uniqueArticleSlug,
+} from '../../lib/slugs.js';
+import {
+  normalizeSlugInput,
+  suggestArticleSlug,
+} from '@coastal-talk-news/validation/slug';
 import { extractPlainText } from '../../lib/tiptap-text.js';
 import {
   revalidateArticle,
@@ -47,6 +59,8 @@ export interface CreateArticleInput {
   ogImageId?: string | null;
   seoTitle?: string | null;
   metaDescription?: string | null;
+  slug?: string;
+  endAt?: string | null;
 }
 
 export type UpdateArticleInput = Partial<Omit<CreateArticleInput, 'status'>> & {
@@ -145,6 +159,58 @@ export async function getForCms(deps: ArticleServiceDeps, id: string) {
   return forEditor(deps, article);
 }
 
+/**
+ * A slug from the headline (in its own language) or, failing that, the SEO
+ * title, made unique; null only when neither has a letter or digit in it.
+ */
+async function generatedSlug(
+  db: Database,
+  source: { headline: string; seoTitle?: string | null },
+  exceptId?: string,
+): Promise<string | null> {
+  const base = suggestArticleSlug(source);
+  return base ? uniqueArticleSlug(db, base, exceptId) : null;
+}
+
+/**
+ * An end must still be ahead when it is set: scheduling a moment that has
+ * passed would silently take the article off the site. Only a changed end is
+ * checked, so editing an article whose end has since passed is not blocked.
+ */
+function assertEndInFuture(endAt: Date | null, existing: Date | null) {
+  if (!endAt || endAt.getTime() === existing?.getTime()) return;
+  if (endAt.getTime() <= Date.now()) {
+    throw new BadRequestError('The end date and time must be in the future.');
+  }
+}
+
+/** Going live needs an address. */
+function assertPublishable(slug: string | null) {
+  if (!slug) {
+    throw new BadRequestError(
+      'Add a URL slug before publishing — the headline has no words to make one from.',
+    );
+  }
+}
+
+/**
+ * The unique index is the last word on a clash: another save can take the
+ * slug between the check and the write.
+ */
+async function withSlugGuard<T>(write: () => Promise<T>): Promise<T> {
+  try {
+    return await write();
+  } catch (error) {
+    if ((error as { code?: unknown }).code === 'P2002') {
+      throw new ConflictError(
+        'Another article took this URL slug a moment ago. Choose a different one.',
+        { field: 'slug' },
+      );
+    }
+    throw error;
+  }
+}
+
 export async function create(
   deps: ArticleServiceDeps,
   input: CreateArticleInput,
@@ -159,34 +225,49 @@ export async function create(
   }
 
   const status = input.status ?? 'DRAFT';
+  const endAt = input.endAt ? new Date(input.endAt) : null;
+  assertEndInFuture(endAt, null);
+  const slug = input.slug
+    ? await assertArticleSlugAvailable(db, normalizeSlugInput(input.slug))
+    : await generatedSlug(db, input);
+  if (status === 'PUBLISHED') assertPublishable(slug);
   const { content, mediaIds } = await prepareContent(db, input.content);
 
   // One write: the article and its picture links land together or not at all.
-  const article = await repository.create(db, {
-    categoryId: input.categoryId,
-    language: input.language,
-    headline: input.headline.trim(),
-    summary: input.summary.trim(),
-    content,
-    contentText: extractPlainText(content),
-    youtubeUrl: input.youtubeUrl?.trim() || null,
-    tags: input.tags ?? [],
-    priority: input.priority ?? 'NORMAL',
-    status,
-    // Stamped once, on the first publish.
-    publicationDate: status === 'PUBLISHED' ? new Date() : null,
-    mediaId: input.featuredImageId ?? null,
-    featuredImageLayout:
-      input.featuredImageId && input.featuredImageLayout
-        ? toStoredLayout(input.featuredImageLayout)
-        : {},
-    ogImageId: input.ogImageId ?? null,
-    seoTitle: input.seoTitle?.trim() || null,
-    metaDescription: input.metaDescription?.trim() || null,
-    imageIds: mediaIds,
-  });
+  const article = await withSlugGuard(() =>
+    repository.create(db, {
+      categoryId: input.categoryId,
+      language: input.language,
+      headline: input.headline.trim(),
+      summary: input.summary.trim(),
+      content,
+      contentText: extractPlainText(content),
+      youtubeUrl: input.youtubeUrl?.trim() || null,
+      tags: input.tags ?? [],
+      priority: input.priority ?? 'NORMAL',
+      status,
+      // Stamped once, on the first publish.
+      publicationDate: status === 'PUBLISHED' ? new Date() : null,
+      endAt,
+      mediaId: input.featuredImageId ?? null,
+      featuredImageLayout:
+        input.featuredImageId && input.featuredImageLayout
+          ? toStoredLayout(input.featuredImageLayout)
+          : {},
+      ogImageId: input.ogImageId ?? null,
+      seoTitle: input.seoTitle?.trim() || null,
+      metaDescription: input.metaDescription?.trim() || null,
+      slug,
+      imageIds: mediaIds,
+    }),
+  );
 
-  await revalidateArticle(deps.webRevalidate, deps.logger, article.id);
+  await revalidateArticle(
+    deps.webRevalidate,
+    deps.logger,
+    article.id,
+    article.slug,
+  );
   return forEditor(deps, article);
 }
 
@@ -224,62 +305,123 @@ export async function update(
   const publicationDate =
     willBePublished && !existing.publicationDate ? new Date() : undefined;
 
+  // A headline edit never touches an existing slug: links already shared
+  // must keep working. Only a slug the editor sends changes it; an article
+  // without one yet gets one as soon as its headline or title allows.
+  const slug =
+    input.slug !== undefined
+      ? await assertArticleSlugAvailable(db, normalizeSlugInput(input.slug), id)
+      : existing.slug === null
+        ? await generatedSlug(
+            db,
+            {
+              headline: input.headline ?? existing.headline,
+              seoTitle:
+                input.seoTitle !== undefined
+                  ? input.seoTitle
+                  : existing.seoTitle,
+            },
+            id,
+          )
+        : undefined;
+  if (willBePublished) assertPublishable(slug ?? existing.slug);
+  const endAt =
+    input.endAt === undefined
+      ? undefined
+      : input.endAt
+        ? new Date(input.endAt)
+        : null;
+  if (endAt !== undefined) assertEndInFuture(endAt, existing.endAt);
+  // Only an address readers could have seen needs to keep working.
+  const movedFrom =
+    slug && existing.slug && slug !== existing.slug && existing.publicationDate
+      ? existing.slug
+      : null;
+
   const body =
     input.content !== undefined
       ? await prepareContent(db, input.content)
       : undefined;
   const featuredImageLayout = resolveLayout(input, existing);
 
-  const { article, orphanedKeys } = await db.$transaction(async (tx) => {
-    const article = await repository.update(tx, id, {
-      ...(input.categoryId !== undefined
-        ? { categoryId: input.categoryId }
-        : {}),
-      ...(input.language !== undefined ? { language: input.language } : {}),
-      ...(input.headline !== undefined
-        ? { headline: input.headline.trim() }
-        : {}),
-      ...(input.summary !== undefined ? { summary: input.summary.trim() } : {}),
-      ...(body
-        ? { content: body.content, contentText: extractPlainText(body.content) }
-        : {}),
-      ...(featuredImageLayout !== undefined ? { featuredImageLayout } : {}),
-      ...(input.youtubeUrl !== undefined
-        ? { youtubeUrl: input.youtubeUrl?.trim() || null }
-        : {}),
-      ...(input.tags !== undefined ? { tags: input.tags } : {}),
-      ...(input.priority !== undefined ? { priority: input.priority } : {}),
-      ...(input.status !== undefined ? { status: input.status } : {}),
-      ...(publicationDate !== undefined ? { publicationDate } : {}),
-      ...(input.featuredImageId !== undefined
-        ? { mediaId: input.featuredImageId }
-        : {}),
-      ...(input.ogImageId !== undefined ? { ogImageId: input.ogImageId } : {}),
-      ...(input.seoTitle !== undefined
-        ? { seoTitle: input.seoTitle?.trim() || null }
-        : {}),
-      ...(input.metaDescription !== undefined
-        ? { metaDescription: input.metaDescription?.trim() || null }
-        : {}),
-    });
+  const { article, orphanedKeys } = await withSlugGuard(() =>
+    db.$transaction(async (tx) => {
+      const article = await repository.update(tx, id, {
+        ...(input.categoryId !== undefined
+          ? { categoryId: input.categoryId }
+          : {}),
+        ...(input.language !== undefined ? { language: input.language } : {}),
+        ...(input.headline !== undefined
+          ? { headline: input.headline.trim() }
+          : {}),
+        ...(input.summary !== undefined
+          ? { summary: input.summary.trim() }
+          : {}),
+        ...(body
+          ? {
+              content: body.content,
+              contentText: extractPlainText(body.content),
+            }
+          : {}),
+        ...(featuredImageLayout !== undefined ? { featuredImageLayout } : {}),
+        ...(input.youtubeUrl !== undefined
+          ? { youtubeUrl: input.youtubeUrl?.trim() || null }
+          : {}),
+        ...(input.tags !== undefined ? { tags: input.tags } : {}),
+        ...(input.priority !== undefined ? { priority: input.priority } : {}),
+        ...(input.status !== undefined ? { status: input.status } : {}),
+        ...(publicationDate !== undefined ? { publicationDate } : {}),
+        ...(input.featuredImageId !== undefined
+          ? { mediaId: input.featuredImageId }
+          : {}),
+        ...(input.ogImageId !== undefined
+          ? { ogImageId: input.ogImageId }
+          : {}),
+        ...(input.seoTitle !== undefined
+          ? { seoTitle: input.seoTitle?.trim() || null }
+          : {}),
+        ...(input.metaDescription !== undefined
+          ? { metaDescription: input.metaDescription?.trim() || null }
+          : {}),
+        ...(slug ? { slug } : {}),
+        ...(endAt !== undefined ? { endAt } : {}),
+      });
+      if (movedFrom && slug) {
+        await repository.recordSlugChange(tx, id, movedFrom, slug);
+      }
 
-    const orphanedKeys: string[] = [];
-    if (body) {
-      const dropped = await syncArticleMedia(tx, id, body.mediaIds);
-      orphanedKeys.push(...(await releaseMedia(tx, dropped)));
-    }
-    if (mediaChanged) {
-      orphanedKeys.push(...(await releaseMedia(tx, [existing.mediaId])));
-    }
-    if (ogImageChanged) {
-      orphanedKeys.push(...(await releaseMedia(tx, [existing.ogImageId])));
-    }
+      const orphanedKeys: string[] = [];
+      if (body) {
+        const dropped = await syncArticleMedia(tx, id, body.mediaIds);
+        orphanedKeys.push(...(await releaseMedia(tx, dropped)));
+      }
+      if (mediaChanged) {
+        orphanedKeys.push(...(await releaseMedia(tx, [existing.mediaId])));
+      }
+      if (ogImageChanged) {
+        orphanedKeys.push(...(await releaseMedia(tx, [existing.ogImageId])));
+      }
 
-    return { article, orphanedKeys };
-  });
+      return { article, orphanedKeys };
+    }),
+  );
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
-  await revalidateArticle(deps.webRevalidate, deps.logger, article.id);
+  await revalidateArticle(
+    deps.webRevalidate,
+    deps.logger,
+    article.id,
+    article.slug,
+  );
+  // A changed slug leaves a stale cache entry under the old one too.
+  if (existing.slug && existing.slug !== article.slug) {
+    await revalidateArticle(
+      deps.webRevalidate,
+      deps.logger,
+      article.id,
+      existing.slug,
+    );
+  }
   return forEditor(deps, article);
 }
 
@@ -308,5 +450,5 @@ export async function remove(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
-  await revalidateArticle(deps.webRevalidate, deps.logger, id);
+  await revalidateArticle(deps.webRevalidate, deps.logger, id, existing.slug);
 }

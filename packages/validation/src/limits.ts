@@ -25,6 +25,10 @@ export const SETTINGS_PAGE_INTRO_MAX = 300;
 export const SETTINGS_HOURS_MAX = 120;
 
 export const SETTINGS_SEO_TITLE_MAX = 60;
+/** Search Console's token is ~43 characters; room for a pasted tag's extras. */
+export const SETTINGS_SITE_VERIFICATION_MAX = 200;
+export const CATEGORY_SEO_TITLE_MAX = 70;
+export const CATEGORY_META_DESCRIPTION_MAX = 300;
 export const SETTINGS_META_DESCRIPTION_MAX = 160;
 
 /** 5 minutes to 7 days - below that isn't worth caching, above it risks a

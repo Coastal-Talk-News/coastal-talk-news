@@ -115,14 +115,64 @@ scale with the page; in a window narrower than 640px pictures never wrap text an
 half the column.
 
 **View / copy link.** For a published article, the Publish card and the article list row both
-get a View live article link (opens the real `/article/<id>` page) and a Copy link button. Draft
+get a View live article link (opens the real `/article/<slug>` page) and a Copy link button. Draft
 and archived articles get neither, since there is no live URL yet.
 
 ### Category page
 
 One page per active category: name, optional cover image, optional description, its
 published articles (newest first, filtered to the active UI-language same as the homepage),
-ads in defined locations.
+ads in defined locations. Its address is `/category/<slug>`; the old `/category/<id>` address
+redirects there permanently, page number included.
+
+### Search engines (SEO)
+
+Added 2026-10-01, revised 2026-10-02, from `docs/SEO.md`. Built on the existing pages and the
+existing navbar — the navbar's sections, labels, order and design are unchanged; only its
+section links now use slugs.
+
+- **Article addresses are `/article/<slug>`**, in the headline's language — a Kannada article
+  has a Kannada slug (decision of 2026-10-02, overriding `docs/SEO.md`'s ASCII-only rule). One lookup per page, by slug. Older addresses redirect permanently
+  (308) to the current one in a single hop, from the same lookup: `/article/<id>` (links shared
+  before slugs), a slug the editor has since changed, and links a chat app damaged (a full stop
+  or the next word run into it, or upper-cased). Archived and deleted articles return a real
+  404 — never a redirect to the homepage.
+- **One canonical address per page.** Every absolute URL — canonical tags, Open Graph, structured
+  data, the sitemap, share links — is built on `PUBLIC_SITE_URL` (`https://www.coastaltalknews.com`
+  in production), never on the request's host. Query strings are never canonical. That host must
+  be Vercel's primary domain, with the bare domain redirecting to it.
+- **Homepage.** Title is exactly the site's name (SEO → Search defaults → Default Site Title, else the
+  site name). Description is SEO → Search defaults → Default Meta Description, else the tagline ("News
+  and Narratives from Coastal Karnataka"). The one H1 is the masthead's site name — on the
+  homepage only; elsewhere it is plain text and the page has its own H1 — with the tagline
+  under it as ordinary text. No extra visible or hidden SEO text. WebSite and Organization
+  structured data (logo and the configured social profiles only).
+- **Articles.** Title is the SEO title as written, else "<headline> | <site name>"; description
+  the meta description, else the summary. Open Graph type `article` with published and modified
+  times and section; Twitter `summary_large_image`. NewsArticle structured data (author is the
+  newsroom itself — articles carry no byline) and BreadcrumbList (Home › sections › article),
+  using only live sections. A visible "Updated" time when the article was edited more than an
+  hour after publishing. The cover picture's alt text is the headline.
+- **Sections.** Title and description from the category's own SEO fields (the seven navbar
+  sections were given the wording from `docs/SEO.md`), else the generic fallback. The H1 is the
+  section's name; BreadcrumbList structured data matches the visible breadcrumb.
+- **sitemap.xml** lists the homepage, every live section, the static pages and every published
+  article (`/article/<slug>`), with last-edit dates; never search, previews, drafts or hidden
+  sections. Served from cache and rebuilt at most every ten minutes, so a new article appears
+  without a redeploy; article and section pages never build it.
+- **robots.txt** allows everything public, images included, and disallows `/api/`, `/search` and
+  `/preview/`, naming the sitemap. Static in production.
+- **Requests.** SEO adds no browser requests: metadata, canonical, Open Graph and JSON-LD are
+  rendered on the server from the data the page already loads (generateMetadata and the page
+  share one cached fetch). Footer links don't prefetch (they list every section; see
+  SiteFooter); the header's do. The favicon is linked once.
+- **Kept as they were:** search results are `noindex, follow`; previews are `noindex, nofollow`
+  with no canonical; unknown articles and sections return a real 404. The `lang` attribute follows
+  the UI language; no hreflang, since the two languages share URLs.
+- **Not changed:** the viewport stays at the fixed 1280px layout chosen for phones (see Article
+  page) — switching to `device-width` is a separate design decision.
+- **Google Search Console:** an optional verification code in SEO → Search defaults emits the
+  `google-site-verification` meta tag on every page; nothing is emitted when it's empty.
 
 ### Lead Stories & Featured pages
 
@@ -216,6 +266,28 @@ above). This is the only reader analytics: no referrers, devices or locations, a
 Read section on the public site.
 The privacy policy text (edited in the CMS) should say that reads are counted anonymously.
 
+### SEO
+
+A CMS page directly below Analytics in the sidebar. At the top, **Search defaults** edits the
+site-wide SEO settings (moved here from Settings on 2026-10-02): default SEO title, default meta
+description, default social image, and the Google Search Console verification code (the whole
+meta tag can be pasted; only the code is kept) — one save request, and the checks below refresh
+after it. Below that, read-only checks list what the website tells
+search engines (homepage title and description, favicon, logo, social image, social profiles,
+Search Console tag, links to the live sitemap.xml and robots.txt) and, from the database, which
+published articles lack an SEO title, meta description or featured image and which live
+sections lack an SEO title, meta description or slug — each linking to where it is fixed. Both
+lists are paginated with the shared page-size control: articles 10 a page (fetched a page at a
+time, newest first), sections 5 a page (paged in the browser — there are only a few dozen). Facts
+only: no score, and nothing claims to predict rankings. A missing SEO title or description is a
+prompt, not an error, since the reader site falls back to the headline and summary.
+
+The article editor's SEO Settings show the URL slug (made from the headline when left empty —
+Kannada stays Kannada; editable), the resulting canonical URL, a search-result preview drawn locally as the fields are typed — no request
+until Save — with the note "Search preview only — Google may display a different title or
+snippet", and length guidance (about 50–60 characters for a title, 150–160 for a description)
+— guidance only.
+
 ### News (list/manage)
 
 View, search, and filter articles by language (All / English / Kannada), status (Draft /
@@ -237,10 +309,12 @@ Published / Archived — `Scheduled` no longer exists), and category.
 | Tags                                      | No       | free text, author-entered; no controlled taxonomy, no filtering in V1            |
 | Editorial priority                        | —        | Lead Story / Featured / Normal — drives homepage placement, see Homepage section |
 | Status                                    | —        | Draft or Published — no Scheduled option                                         |
+| Scheduling: end date & time               | No       | optional; after it the article leaves the website (stays Published in the CMS)   |
 | SEO title / meta description / OG image   | No       | set alongside the article, no separate screen                                    |
+| URL slug                                  | No       | from the headline (any language) when empty; editable; duplicates refused        |
 
-No URL slug field — public article URLs aren't scoped yet. No other fields beyond this
-table.
+No other fields beyond this table. Changing a published article's slug keeps the old address
+redirecting to the new one.
 
 **Publishing**: Save as Draft, or Publish (immediate — sets `publication_date` to now).
 Published articles remain editable afterward.
@@ -253,7 +327,10 @@ UI affordances.
 ### Categories
 
 Create, edit, activate/deactivate, order, description, cover image. Changes flow straight
-into public nav, category pages, and homepage category rows.
+into public nav, category pages, and homepage category rows. A "Search engines" block sets the
+URL slug (made from the name when left empty), SEO title and meta description, with a
+search-result preview drawn locally while typing; all of it is saved in the category's one
+save request.
 
 **Deletion rule**: a category cannot be deleted while any article still references it. The
 admin must reassign or remove those articles first. This is enforced **on the backend** —
@@ -357,7 +434,6 @@ scheduled sweep in V1. The admin deletes those from the library, or triggers the
 ### Settings
 
 - **General** — site name, tagline, description, logo, favicon, contact email/phone/address, social links (Facebook, Instagram, YouTube, X)
-- **SEO** — default SEO title, default meta description, default OG image
 - **Password & Security** — change the signed-in user's own password. Needs the current
   password. The new one must have at least 8 characters (72 at most, bcrypt's limit) with
   an uppercase letter, a lowercase letter, a number and a special character, and differ
@@ -412,7 +488,9 @@ search no-results, mobile menu behavior, image responsiveness.
 - Separate News vs. Video search
 - Contact form
 - Separate desktop/tablet/mobile advertisement image variants
-- A dedicated SEO management section (SEO lives inside the Article editor and Settings)
+- SEO scores, keyword tools or anything claiming to predict rankings. (The **SEO** page
+  added on 2026-10-01 holds the site's search defaults and factual checks — see CMS → SEO;
+  per-article and per-section SEO is edited in the Article editor and Categories.)
 - A complex advertisement platform: bidding, auctions, advertiser accounts, billing, or
   complex ad-performance analytics
 - Native mobile application

@@ -4,6 +4,7 @@ import type {
   TransactionClient,
 } from '@coastal-talk-news/db';
 import { activeWindowWhere } from '../../lib/schedule.js';
+import { liveArticleWhere } from '../../lib/article-visibility.js';
 
 const mediaSelect = {
   select: { id: true, storageKey: true, width: true, height: true },
@@ -14,11 +15,12 @@ const mediaSelect = {
 // looks identical whichever route it came from.
 export const cardSelect = {
   id: true,
+  slug: true,
   headline: true,
   summary: true,
   language: true,
   publicationDate: true,
-  category: { select: { id: true, name: true, nameKannada: true } },
+  category: { select: { id: true, slug: true, name: true, nameKannada: true } },
   media: mediaSelect,
 } as const;
 
@@ -31,6 +33,7 @@ const detailSelect = {
   seoTitle: true,
   metaDescription: true,
   ogImage: mediaSelect,
+  updatedAt: true,
 } as const;
 
 export type ArticleCardRow = Awaited<
@@ -40,18 +43,50 @@ export type NavCategoryRow = Awaited<
   ReturnType<typeof findNavCategories>
 >[number];
 
-const publishedWhere = { status: 'PUBLISHED' } as const;
-
 const newestFirst: Array<{ publicationDate?: 'desc'; createdAt?: 'desc' }> = [
   { publicationDate: 'desc' },
   { createdAt: 'desc' },
 ];
 
 /** Unpublished articles are absent, not forbidden: a stale link should 404, not 403. */
-export function findPublishedArticle(db: TransactionClient, id: string) {
+/** By id or by current slug: either is a single indexed lookup. */
+export function findPublishedArticle(
+  db: TransactionClient,
+  key: { id: string } | { slug: string },
+) {
   return db.article.findFirst({
-    where: { ...publishedWhere, id },
+    where: { ...liveArticleWhere(), ...key },
     select: detailSelect,
+  });
+}
+
+/** The article an old slug belonged to, if any. */
+export async function findArticleIdBySlugRedirect(
+  db: TransactionClient,
+  slug: string,
+): Promise<string | null> {
+  const redirect = await db.articleSlugRedirect.findUnique({
+    where: { slug },
+    select: { articleId: true },
+  });
+  return redirect?.articleId ?? null;
+}
+
+/** Just enough for sitemap.xml: every published article's address and last edit. */
+export function findSitemapArticles(db: TransactionClient) {
+  return db.article.findMany({
+    where: liveArticleWhere(),
+    orderBy: newestFirst,
+    select: { id: true, slug: true, updatedAt: true },
+  });
+}
+
+/** Hidden categories have no public page, so they stay out of the sitemap. */
+export function findSitemapCategories(db: TransactionClient) {
+  return db.category.findMany({
+    where: { isActive: true },
+    orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
+    select: { id: true, slug: true, updatedAt: true },
   });
 }
 
@@ -64,11 +99,14 @@ export async function recordArticleView(
   db: TransactionClient,
   id: string,
 ): Promise<void> {
-  const updated = await db.article.updateMany({
-    where: { ...publishedWhere, id },
-    data: { viewCount: { increment: 1 } },
-  });
-  if (updated.count > 0) {
+  // Raw SQL rather than an update through Prisma, which would also bump
+  // updated_at: that column is the article's dateModified for search
+  // engines and the CMS's "recently edited" order, and a reader isn't an edit.
+  const updated = await db.$executeRaw`
+    UPDATE articles SET view_count = view_count + 1
+    WHERE id = ${id} AND status = 'PUBLISHED'::"ArticleStatus"
+  `;
+  if (updated > 0) {
     await db.articleView.create({ data: { articleId: id } });
   }
 }
@@ -95,6 +133,7 @@ export function findSettings(db: TransactionClient) {
       defaultSeoTitle: true,
       defaultMetaDescription: true,
       articleCacheMinutes: true,
+      googleSiteVerification: true,
       logo: mediaSelect,
       favicon: mediaSelect,
       defaultOgImage: mediaSelect,
@@ -144,6 +183,7 @@ export function findNavCategories(
     orderBy: [{ displayOrder: 'asc' }, { name: 'asc' }],
     select: {
       id: true,
+      slug: true,
       name: true,
       nameKannada: true,
       description: true,
@@ -152,7 +192,7 @@ export function findNavCategories(
       _count: {
         select: {
           articles: {
-            where: { ...publishedWhere, ...(language && { language }) },
+            where: { ...liveArticleWhere(), ...(language && { language }) },
           },
         },
       },
@@ -235,7 +275,7 @@ export function findRecentForCategories(
 ) {
   return db.article.findMany({
     where: {
-      ...publishedWhere,
+      ...liveArticleWhere(),
       categoryId: { in: categoryIds },
       ...(language && { language }),
     },
@@ -253,7 +293,7 @@ export function findRecentByPriority(
 ) {
   return db.article.findMany({
     where: {
-      ...publishedWhere,
+      ...liveArticleWhere(),
       priority,
       ...(language && { language }),
     },
@@ -271,7 +311,7 @@ export function findPublishedSince(
 ) {
   return db.article.findMany({
     where: {
-      ...publishedWhere,
+      ...liveArticleWhere(),
       publicationDate: { gte: since },
       ...(language && { language }),
     },
@@ -288,7 +328,7 @@ export function findPublishedByPriority(
   page: { skip: number; take: number },
 ) {
   return db.article.findMany({
-    where: { ...publishedWhere, priority, ...(language && { language }) },
+    where: { ...liveArticleWhere(), priority, ...(language && { language }) },
     orderBy: newestFirst,
     select: cardSelect,
     ...page,
@@ -301,6 +341,6 @@ export function countPublishedByPriority(
   { language }: { language?: Language } = {},
 ) {
   return db.article.count({
-    where: { ...publishedWhere, priority, ...(language && { language }) },
+    where: { ...liveArticleWhere(), priority, ...(language && { language }) },
   });
 }

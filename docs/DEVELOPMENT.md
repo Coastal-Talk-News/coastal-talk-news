@@ -203,6 +203,32 @@ now" action triggered by the admin — don't build a background sweep unless ask
   `STORAGE_PROVIDER` toggle between Cloudinary and S3-compatible storage (AWS S3, Cloudflare R2)
   and what differs between them. Don't create redundant copies unless there's a real requirement.
 
+### 8.1 SEO rules for the reader site
+
+- **Links:** build every article and section link with `articlePath()` / `categoryPath()`
+  (`apps/web/lib/routes.ts`). Articles are `/article/<slug>` (headline's language; rules and the generator in
+  `@coastal-talk-news/validation/slug`), sections `/category/<slug>`. Never link to an article by
+  id: that address only exists to redirect old links.
+- **No extra requests for SEO:** metadata, JSON-LD and breadcrumbs are built on the server from
+  data the page already loads. `generateMetadata` and the page call the same `lib/api.ts`
+  function, which Next memoises and caches — never add an endpoint or a client fetch for SEO.
+- **Absolute URLs:** take the origin from `getOrigin()` (`apps/web/lib/site-url.ts`). It returns
+  `PUBLIC_SITE_URL` when set, so canonical tags never depend on the host a request came in on.
+- **Metadata:** one helper, `apps/web/lib/seo.ts`. The root layout uses `buildSiteMetadata`
+  (no canonical, so nothing leaks into not-found or previews); each page uses `buildMetadata`
+  with its own canonical `path`, never including a query string.
+- **Structured data:** build it with `apps/web/lib/structured-data.tsx` and render one `<JsonLd>`
+  per page. It drops unknown values, accepts only http(s) URLs and escapes `<`.
+- **Response schemas:** a field added to a public DTO must also be added to its TypeBox schema in
+  `packages/validation` — Fastify silently strips any field the response schema doesn't list,
+  and TypeScript cannot catch the mismatch.
+- **`updated_at`:** it is the article's `dateModified`. Writes that aren't edits (read counts,
+  backfills) use raw SQL so Prisma's `@updatedAt` doesn't bump it.
+- **Slugs:** the shared rules live in `@coastal-talk-news/validation/slug`. After deploying a
+  change that creates articles or categories through an older API, run `pnpm db:backfill-slugs`
+  in `apps/api` (safe to repeat; never touches an existing slug). It lists any article it can't
+  name (a headline with no words at all) for an editor to give a slug in the CMS.
+
 ## 9. Performance
 
 Prioritize efficient Prisma queries and appropriate indexes, optimized images, and avoiding
@@ -217,27 +243,31 @@ win is that a cache hit skips the call to `apps/api` (and so skips the Postgres 
 entirely; the page still re-renders, just from already-cached data. What's cached, chosen
 because an editor/CMS change to it should still appear immediately:
 
-- **Article pages** (`/article/[id]`) — window is `SiteSettings.articleCacheMinutes`,
-  editable at Settings → Advanced in the CMS (`SETTINGS_ARTICLE_CACHE_MINUTES_MIN/MAX` in
-  `packages/validation/src/limits.ts`). Tagged `articles` and `article:<id>`.
+- **Article pages** (`/article/[slug]`, addressed by slug or id - see `lib/routes.ts`) —
+  window is `SiteSettings.articleCacheMinutes`, editable at Settings → Advanced in the CMS
+  (`SETTINGS_ARTICLE_CACHE_MINUTES_MIN/MAX` in `packages/validation/src/limits.ts`). Tagged
+  `articles` and `article:<key>` (whichever of the id or slug the reader's URL actually used).
+  A publish/edit invalidates both the id tag and the slug tag, in case a reader has it cached
+  under either.
 - **About / Contact / Advertise / Privacy Policy / Terms and Conditions** — a fixed 1-hour
   backstop (`SLOW_CHANGING_REVALIDATE_SECONDS` in `apps/web/lib/api.ts`), since these change
   far less often than an article. All five share one `pages` tag, since their contact-detail
   fields overlap.
-- **A category's own metadata** (name, description, cover image — `getCategory()`) — same
-  1-hour backstop, tagged `categories` and `category:<id>`. Its article listing
-  (`getCategoryArticles()`) is deliberately **not** cached this way, for the same reason the
-  listing pages below aren't — a fresh publish needs to show up in it immediately.
+- **A category's own metadata** (name, description, cover image — `findCategory()`) — same
+  1-hour backstop and id-or-slug tagging as articles, tagged `categories` and
+  `category:<key>`. Its article listing (`getCategoryArticles()`) is deliberately **not**
+  cached this way, for the same reason the listing pages below aren't — a fresh publish needs
+  to show up in it immediately.
 
-Everything else (`/`, `/category/[id]`, `/search`, `/featured`, `/lead-stories`,
+Everything else (`/`, `/category/[slug]`, `/search`, `/featured`, `/lead-stories`,
 `/advertisements`, `/advertisement/[id]`, `/preview`) keeps `export const dynamic =
 'force-dynamic'` on the page itself — news listings and breaking news need to reflect a
 publish immediately, an advertisement's "running" state is computed from `start_at`/`end_at`
 at request time (§8) and must not be served stale, and `/preview` is the stateless
 live-preview flow and must never be cached. The root layout itself carries no `dynamic`
-export, so each page's own setting is what actually applies. Note `/category/[id]` is in
+export, so each page's own setting is what actually applies. Note `/category/[slug]` is in
 both lists: the page itself is `force-dynamic` (for its article listing), but the single
-`getCategory()` call within it still gets its own cache treatment — a fetch's own
+`findCategory()` call within it still gets its own cache treatment — a fetch's own
 `revalidate`/`tags` apply regardless of the page's `dynamic` setting.
 
 **Invalidation is automatic, not TTL-only.** `apps/api` calls `apps/web`'s

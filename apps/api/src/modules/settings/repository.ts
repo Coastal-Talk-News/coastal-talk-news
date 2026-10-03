@@ -46,6 +46,7 @@ export interface SiteSettingsWriteData {
   defaultMetaDescription?: string | null;
   defaultOgImageId?: string | null;
   articleCacheMinutes?: number;
+  googleSiteVerification?: string | null;
 }
 
 /** Clearing a nullable Json column needs Prisma's own null, not a bare one —

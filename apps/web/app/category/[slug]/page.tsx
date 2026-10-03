@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
+import { notFound, permanentRedirect } from 'next/navigation';
+import type { CategoryDto } from '@coastal-talk-news/types';
 import {
   SiblingLinks,
   SubcategoryGrid,
@@ -11,17 +11,16 @@ import { StoryCard } from '../../../components/news/StoryCard';
 import { StoryImage } from '../../../components/news/StoryImage';
 import { EmptyState } from '../../../components/ui/EmptyState';
 import { Pagination } from '../../../components/ui/Pagination';
-import {
-  ApiClientError,
-  getCategory,
-  getCategoryArticles,
-  getSite,
-} from '../../../lib/api';
+import { findCategory, getCategoryArticles, getSite } from '../../../lib/api';
 import { categoryName } from '../../../lib/category-name';
+import { ancestorsOf } from '../../../lib/category-trail';
 import { getDictionary } from '../../../lib/i18n/dictionaries';
+import type { Locale } from '../../../lib/i18n/types';
 import { getLocale } from '../../../lib/i18n/server';
+import { categoryPath, decodeParam } from '../../../lib/routes';
 import { buildMetadata } from '../../../lib/seo';
 import { getOrigin } from '../../../lib/site-url';
+import { JsonLd, breadcrumbJsonLd } from '../../../lib/structured-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +30,8 @@ export const dynamic = 'force-dynamic';
 const ARTICLES_PER_PAGE = 7;
 
 interface CategoryPageProps {
-  params: Promise<{ id: string }>;
+  /** The section's slug — or, on links made before slugs existed, its id. */
+  params: Promise<{ slug: string }>;
   searchParams: Promise<{ page?: string }>;
 }
 
@@ -40,67 +40,78 @@ function parsePage(value: string | undefined): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
-/** The groups this category sits under, outermost first. */
-function ancestorsOf(
-  id: string,
-  categories: PublicNavCategoryDto[],
-): PublicNavCategoryDto[] {
-  const byId = new Map(categories.map((category) => [category.id, category]));
-  const trail: PublicNavCategoryDto[] = [];
-  let parentId = byId.get(id)?.parentId ?? null;
-  while (parentId) {
-    const parent = byId.get(parentId);
-    if (!parent) break;
-    trail.unshift(parent);
-    parentId = parent.parentId;
-  }
-  return trail;
+async function loadCategory(params: CategoryPageProps['params']) {
+  const key = decodeParam((await params).slug);
+  return { key, category: await findCategory(key) };
+}
+
+/** A category saved before slugs existed is addressed by its id. */
+function pathOf(category: CategoryDto): string {
+  return categoryPath({ slug: category.slug ?? category.id });
+}
+
+/**
+ * The section's search-result title and description: the newsroom's own when
+ * set in the category editor, otherwise "<name> News" and a generic line.
+ */
+function sectionSeo(category: CategoryDto, locale: Locale, siteName: string) {
+  const name = categoryName(category, locale);
+  return {
+    absoluteTitle: category.seoTitle ?? undefined,
+    title: `${name} News`,
+    description:
+      category.metaDescription ??
+      category.description ??
+      `Latest ${name} news, updates and stories from ${siteName}.`,
+  };
 }
 
 export async function generateMetadata({
   params,
 }: CategoryPageProps): Promise<Metadata> {
-  try {
-    const { id } = await params;
-    const [category, { settings }, locale, origin] = await Promise.all([
-      getCategory(id),
-      getSite(),
-      getLocale(),
-      getOrigin(),
-    ]);
-    return buildMetadata({
-      settings,
-      locale,
-      origin,
-      title: categoryName(category, locale),
-      description: category.description,
-      image: category.coverImage,
-      path: `/category/${category.id}`,
-    });
-  } catch {
-    // An unknown id renders the not-found page; it needs no tags of its own.
-    return {};
-  }
+  const [{ category }, { settings }, locale, origin] = await Promise.all([
+    loadCategory(params),
+    getSite(),
+    getLocale(),
+    getOrigin(),
+  ]);
+  // An unknown section renders the not-found page; it needs no tags of its own.
+  if (!category) return {};
+
+  return buildMetadata({
+    settings,
+    locale,
+    origin,
+    ...sectionSeo(category, locale, settings.siteName),
+    image: category.coverImage,
+    // Every page of the archive shares the section's one canonical address.
+    path: pathOf(category),
+  });
 }
 
 export default async function CategoryPage({
   params,
   searchParams,
 }: CategoryPageProps) {
-  const { id } = await params;
   const page = parsePage((await searchParams).page);
-  const locale = await getLocale();
-  const dictionary = getDictionary(locale);
+  const [{ key, category }, { categories: navCategories }, locale, origin] =
+    await Promise.all([
+      loadCategory(params),
+      getSite(),
+      getLocale(),
+      getOrigin(),
+    ]);
+  if (!category) notFound();
 
-  let category;
-  try {
-    category = await getCategory(id);
-  } catch (error) {
-    if (error instanceof ApiClientError && error.status === 404) notFound();
-    throw error;
+  // One address per section: an old id link is sent permanently to the
+  // slug, keeping the page it asked for.
+  const path = pathOf(category);
+  if (key !== (category.slug ?? category.id)) {
+    permanentRedirect(page > 1 ? `${path}?page=${page}` : path);
   }
 
-  const { categories: navCategories } = await getSite();
+  const id = category.id;
+  const dictionary = getDictionary(locale);
   const self = navCategories.find((entry) => entry.id === id);
   const subcategories = self?.children ?? [];
   const isGroup = subcategories.length > 0;
@@ -133,8 +144,18 @@ export default async function CategoryPage({
   const [lead, ...rest] = articles;
   const gridArticles = isFirstPage ? rest : articles;
 
+  const breadcrumb = [
+    { name: dictionary.common.home, path: '/' },
+    ...ancestors.map((ancestor) => ({
+      name: categoryName(ancestor, locale),
+      path: categoryPath(ancestor),
+    })),
+    { name: categoryName(category, locale), path },
+  ];
+
   return (
     <div className="py-5 sm:py-6">
+      <JsonLd data={[breadcrumbJsonLd(breadcrumb, origin)]} />
       <nav
         aria-label="Breadcrumb"
         className="text-ink-subtle mb-4 flex flex-wrap items-center gap-1.5 text-sm"
@@ -146,7 +167,7 @@ export default async function CategoryPage({
           <span key={ancestor.id} className="flex items-center gap-1.5">
             <span aria-hidden>/</span>
             <Link
-              href={`/category/${ancestor.id}`}
+              href={categoryPath(ancestor)}
               className="hover:text-brand transition-colors"
             >
               {categoryName(ancestor, locale)}
@@ -228,9 +249,7 @@ export default async function CategoryPage({
           <Pagination
             currentPage={meta.page}
             totalPages={meta.totalPages}
-            href={(target) =>
-              target <= 1 ? `/category/${id}` : `/category/${id}?page=${target}`
-            }
+            href={(target) => (target <= 1 ? path : `${path}?page=${target}`)}
             locale={locale}
           />
         </>

@@ -5,6 +5,9 @@ import type { ImageLayoutDto, MediaSummaryDto } from './media.js';
 
 export interface PublicCategoryRefDto {
   id: Id;
+  /** The address segment: /category/<slug>. Falls back to the id for a
+   * category not yet given a slug, which the reader site also accepts. */
+  slug: string;
   name: string;
   /** Shown instead of `name` under the Kannada toggle; null falls back. */
   nameKannada: string | null;
@@ -13,6 +16,9 @@ export interface PublicCategoryRefDto {
 /** Everything a card, list row or hero needs — never the article body. */
 export interface PublicArticleCardDto {
   id: Id;
+  /** The address segment: /article/<slug>. Falls back to the id for an
+   * article without one yet, which the reader site also accepts. */
+  slug: string;
   headline: string;
   summary: string;
   language: Language;
@@ -41,6 +47,8 @@ export interface PublicArticleDto extends PublicArticleCardDto {
   seoTitle: string | null;
   metaDescription: string | null;
   ogImage: MediaSummaryDto | null;
+  /** Last edited — the article's dateModified for search engines. */
+  updatedAt: IsoDateTime;
 }
 
 export interface PublicBreakingNewsDto {
@@ -86,6 +94,7 @@ export interface PublicSiteSettingsDto {
   defaultOgImage: MediaSummaryDto | null;
   /** How long an article page is cached, in minutes, before re-checking it. */
   articleCacheMinutes: number;
+  googleSiteVerification: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
   contactAddress: string | null;

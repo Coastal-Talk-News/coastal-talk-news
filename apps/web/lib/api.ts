@@ -9,7 +9,9 @@ import type {
   PublicHomeDto,
   PublicPageDto,
   PublicSiteDto,
+  PublicSitemapDto,
 } from '@coastal-talk-news/types';
+import { isUuid } from '@coastal-talk-news/validation/slug';
 import type { Locale } from './i18n/types';
 
 /** Maps the UI-language toggle to the article-content language it now filters to. */
@@ -176,23 +178,10 @@ export async function recordArticleView(
   }
 }
 
-/**
- * Null when there is no such published article — either the id doesn't
- * resolve (404) or it isn't a well-formed id at all (400, from the route's
- * uuid check). Both mean the same thing to a reader following a stale link.
- *
- * `cacheMinutes` is Settings → Advanced's configurable cache window - a
- * backstop only, since a save invalidates this article's tag immediately.
- */
-export async function getArticle(
-  id: string,
-  cacheMinutes: number,
-): Promise<PublicArticleDto | null> {
+/** 404 and 400 both mean "no such page" to a reader following a link. */
+async function orNull<T>(load: Promise<T>): Promise<T | null> {
   try {
-    return await fetchPublic<PublicArticleDto>(`/articles/${id}`, {
-      revalidate: cacheMinutes * 60,
-      tags: ['articles', `article:${id}`],
-    });
+    return await load;
   } catch (error) {
     if (
       error instanceof ApiClientError &&
@@ -202,6 +191,60 @@ export async function getArticle(
     }
     throw error;
   }
+}
+
+/**
+ * A published article by slug (current or former) or by id — one request
+ * either way; the result carries the current slug. Null for a draft, an
+ * archived or deleted article, or a key that matches nothing. Called by both
+ * generateMetadata and the page: the identical fetch is made once per render
+ * and then served from the data cache, so the article is never requested
+ * twice.
+ *
+ * `cacheMinutes` is Settings → Advanced's configurable cache window - a
+ * backstop only, since saving the article invalidates both its id tag and
+ * its slug tag immediately (see webRevalidate.ts on the API side) - whichever
+ * one a reader's cached page actually used.
+ */
+export function getArticle(
+  key: string,
+  cacheMinutes: number,
+): Promise<PublicArticleDto | null> {
+  return orNull(
+    fetchPublic<PublicArticleDto>(`/articles/${encodeURIComponent(key)}`, {
+      revalidate: cacheMinutes * 60,
+      tags: ['articles', `article:${key}`],
+    }),
+  );
+}
+
+/** An active category by slug, or by the id that old links still carry. */
+export function findCategory(key: string): Promise<CategoryDto | null> {
+  return orNull(
+    fetchPublic<CategoryDto>(
+      isUuid(key)
+        ? `/categories/${key}`
+        : `/categories/by-slug/${encodeURIComponent(key)}`,
+      {
+        revalidate: SLOW_CHANGING_REVALIDATE_SECONDS,
+        tags: ['categories', `category:${key}`],
+      },
+    ),
+  );
+}
+
+/** `revalidate` matches sitemap.ts's own: a shorter fetch window would
+ * shorten the route's, rebuilding the sitemap every minute. */
+export async function getSitemap(
+  revalidate: number,
+): Promise<PublicSitemapDto> {
+  const sitemap = await fetchPublic<PublicSitemapDto>('/sitemap', {
+    revalidate,
+  });
+  return {
+    articles: list(sitemap.articles),
+    categories: list(sitemap.categories),
+  };
 }
 
 /**
@@ -225,14 +268,6 @@ export async function getAdvertisement(
     }
     throw error;
   }
-}
-
-/** Throws ApiClientError (404) for an unknown or deactivated category id. */
-export async function getCategory(id: string): Promise<CategoryDto> {
-  return fetchPublic<CategoryDto>(`/categories/${id}`, {
-    revalidate: SLOW_CHANGING_REVALIDATE_SECONDS,
-    tags: ['categories', `category:${id}`],
-  });
 }
 
 export interface CategoryArticlesPage {

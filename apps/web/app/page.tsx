@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CategoryPreviewRow } from '../components/news/CategoryPreviewRow';
 import { HeroStory } from '../components/news/HeroStory';
@@ -5,10 +6,17 @@ import { StoryCard } from '../components/news/StoryCard';
 import { TopStoriesPanel } from '../components/news/TopStoriesPanel';
 import { EmptyState } from '../components/ui/EmptyState';
 import { SectionHeading } from '../components/ui/SectionHeading';
-import { getHome } from '../lib/api';
+import { getHome, getSite } from '../lib/api';
 import { getDictionary } from '../lib/i18n/dictionaries';
 import { getLocale } from '../lib/i18n/server';
 import { gridColumnsFor } from '../lib/layout';
+import { buildMetadata, homeTitle, siteDescription } from '../lib/seo';
+import { getOrigin } from '../lib/site-url';
+import {
+  JsonLd,
+  organizationJsonLd,
+  websiteJsonLd,
+} from '../lib/structured-data';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,11 +29,43 @@ const MIN_SIDEBAR_STORIES = 3;
 // under the hero, filling the gap, and the sidebar keeps the rest.
 const STORIES_UNDER_HERO = 1;
 
+export async function generateMetadata(): Promise<Metadata> {
+  const [{ settings }, locale, origin] = await Promise.all([
+    getSite(),
+    getLocale(),
+    getOrigin(),
+  ]);
+  return buildMetadata({
+    settings,
+    locale,
+    origin,
+    // Exactly the site's name — never "Coastal Talk News | Coastal Talk News".
+    absoluteTitle: homeTitle(settings),
+    description: siteDescription(settings),
+    path: '/',
+  });
+}
+
 export default async function HomePage() {
   const locale = await getLocale();
-  const home = await getHome(locale);
+  const [home, { settings }, origin] = await Promise.all([
+    getHome(locale),
+    getSite(),
+    getOrigin(),
+  ]);
   const { leadStories, featured, topStories, categorySections } = home;
   const dictionary = getDictionary(locale);
+
+  // The page's one heading is the masthead's site name (see MastheadName),
+  // with the tagline under it; nothing is repeated here for search engines.
+  const intro = (
+    <JsonLd
+      data={[
+        websiteJsonLd(settings, origin),
+        organizationJsonLd(settings, origin),
+      ]}
+    />
+  );
 
   if (
     leadStories.length === 0 &&
@@ -35,6 +75,7 @@ export default async function HomePage() {
   ) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-12">
+        {intro}
         <EmptyState
           variant="page"
           title={dictionary.home.noStoriesTitle}
@@ -51,6 +92,8 @@ export default async function HomePage() {
 
   return (
     <div className="flex flex-col gap-10 py-5 sm:gap-12 sm:py-6">
+      {intro}
+
       {hero && home.hasMoreLeadStories && (
         <div className="-mb-6 flex justify-end sm:-mb-8">
           <Link

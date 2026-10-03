@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { PublicNavCategoryDto } from '@coastal-talk-news/types';
 import { categoryName } from '../../lib/category-name';
+import { categoryPath } from '../../lib/routes';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { StoryImage } from './StoryImage';
@@ -44,7 +45,7 @@ export function SubcategoryGrid({
         return (
           <li key={category.id}>
             <Link
-              href={`/category/${category.id}`}
+              href={categoryPath(category)}
               className="group border-rule bg-paper rounded-card hover:border-brand flex h-full flex-col overflow-hidden border transition-colors hover:shadow-md"
             >
               {category.image ? (
@@ -122,7 +123,7 @@ export function SiblingLinks({
         {categories.map((category) => (
           <li key={category.id}>
             <Link
-              href={`/category/${category.id}`}
+              href={categoryPath(category)}
               className="border-rule bg-paper hover:border-brand hover:text-brand block rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors"
             >
               {categoryName(category, locale)}
