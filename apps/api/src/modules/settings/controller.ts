@@ -1,4 +1,4 @@
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { dataEnvelope } from '../../lib/pagination.js';
 import { toSiteSettingsDto } from './mapper.js';
 import type {
@@ -12,6 +12,7 @@ function deps(request: FastifyRequest): SettingsServiceDeps {
     db: request.server.prisma,
     storage: request.server.storage,
     logger: request.log,
+    webRevalidate: request.server.webRevalidate,
   };
 }
 
@@ -30,4 +31,12 @@ export async function update(
 ) {
   const settings = await service.update(deps(request), request.body);
   return dataEnvelope(toSiteSettingsDto(settings, publicUrl(request)));
+}
+
+export async function clearArticleCache(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  await service.clearArticleCache(deps(request));
+  return reply.status(204).send(null);
 }

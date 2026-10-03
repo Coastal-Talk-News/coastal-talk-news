@@ -436,6 +436,10 @@ model SiteSettings {
 
   defaultUiLanguage Language @default(KANNADA) @map("default_ui_language")
 
+  /// Backstop cache window for a reader-site article page, in minutes - a
+  /// publish/edit invalidates it immediately regardless.
+  articleCacheMinutes Int @default(60) @map("article_cache_minutes")
+
   defaultSeoTitle        String? @map("default_seo_title")
   defaultMetaDescription String? @map("default_meta_description")
   defaultOgImageId       String? @map("default_og_image_id")

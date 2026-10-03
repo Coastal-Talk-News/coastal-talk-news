@@ -15,6 +15,7 @@ function deps(request: FastifyRequest): ArticleServiceDeps {
     db: request.server.prisma,
     storage: request.server.storage,
     logger: request.log,
+    webRevalidate: request.server.webRevalidate,
   };
 }
 

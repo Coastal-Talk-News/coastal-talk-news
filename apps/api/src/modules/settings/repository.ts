@@ -45,6 +45,7 @@ export interface SiteSettingsWriteData {
   defaultSeoTitle?: string | null;
   defaultMetaDescription?: string | null;
   defaultOgImageId?: string | null;
+  articleCacheMinutes?: number;
   googleSiteVerification?: string | null;
 }
 

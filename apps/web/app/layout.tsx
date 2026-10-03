@@ -21,8 +21,6 @@ import { buildSiteMetadata } from '../lib/seo';
 import { getOrigin } from '../lib/site-url';
 import './globals.css';
 
-export const dynamic = 'force-dynamic';
-
 const headline = Noto_Serif({
   subsets: ['latin'],
   weight: ['400', '600', '700'],

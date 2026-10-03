@@ -22,6 +22,8 @@ import { buildMetadata } from '../../../lib/seo';
 import { getOrigin } from '../../../lib/site-url';
 import { JsonLd, breadcrumbJsonLd } from '../../../lib/structured-data';
 
+export const dynamic = 'force-dynamic';
+
 // One big lead card plus two rows of three — matches the grid the rest of
 // the site already uses for a "cards" section (see the homepage's Top
 // Stories grid).

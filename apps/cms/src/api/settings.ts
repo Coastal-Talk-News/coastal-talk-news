@@ -10,4 +10,5 @@ export const settingsApi = {
   get: (signal?: AbortSignal) => api.get<SiteSettingsDto>(BASE, signal),
   update: (body: UpdateSiteSettingsRequest) =>
     api.patch<SiteSettingsDto>(BASE, body),
+  clearArticleCache: () => api.send(`${BASE}/clear-article-cache`, 'POST'),
 };

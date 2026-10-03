@@ -2,6 +2,11 @@ import type { Database, SitePage } from '@coastal-talk-news/db';
 import type { ArticleContent } from '@coastal-talk-news/types';
 import type { FastifyBaseLogger } from 'fastify';
 import { BadRequestError, NotFoundError } from '../../lib/errors.js';
+import {
+  revalidateAllArticles,
+  revalidateStandalonePages,
+  type WebRevalidateConfig,
+} from '../../lib/webRevalidate.js';
 import { releaseMedia, syncPageMedia } from '../media/reference.js';
 import { hydrateContent, prepareContent } from '../media/rich-text.js';
 import { purgeStorageObjects } from '../media/service.js';
@@ -12,6 +17,7 @@ export interface SettingsServiceDeps {
   db: Database;
   storage: ObjectStorage;
   logger: FastifyBaseLogger;
+  webRevalidate: WebRevalidateConfig;
 }
 
 export interface UpdateSiteSettingsInput {
@@ -43,7 +49,30 @@ export interface UpdateSiteSettingsInput {
   defaultSeoTitle?: string | null;
   defaultMetaDescription?: string | null;
   defaultOgImageId?: string | null;
+  articleCacheMinutes?: number;
   googleSiteVerification?: string | null;
+}
+
+const STANDALONE_PAGE_FIELDS = [
+  'aboutTitle',
+  'aboutIntro',
+  'aboutContent',
+  'aboutContentKannada',
+  'contactTitle',
+  'contactIntro',
+  'contactHours',
+  'advertiseTitle',
+  'advertiseIntro',
+  'advertiseContent',
+  'privacyContent',
+  'termsContent',
+  'contactEmail',
+  'contactPhone',
+  'contactAddress',
+] as const satisfies ReadonlyArray<keyof UpdateSiteSettingsInput>;
+
+function touchesStandalonePages(input: UpdateSiteSettingsInput): boolean {
+  return STANDALONE_PAGE_FIELDS.some((field) => input[field] !== undefined);
 }
 
 /** Search Console's tokens are letters, digits, '-' and '_'. */
@@ -288,6 +317,9 @@ export async function update(
       ...(input.defaultOgImageId !== undefined
         ? { defaultOgImageId: input.defaultOgImageId }
         : {}),
+      ...(input.articleCacheMinutes !== undefined
+        ? { articleCacheMinutes: input.articleCacheMinutes }
+        : {}),
       ...(googleSiteVerification !== undefined
         ? { googleSiteVerification }
         : {}),
@@ -309,5 +341,17 @@ export async function update(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
+  if (touchesStandalonePages(input)) {
+    await revalidateStandalonePages(deps.webRevalidate, deps.logger);
+  }
   return forEditor(deps, settings);
+}
+
+/** The client-facing "Clear article cache" action: every cached article page
+ *  on the reader site re-fetches on its next visit, regardless of how much
+ *  of its cache window is left. */
+export async function clearArticleCache(
+  deps: SettingsServiceDeps,
+): Promise<void> {
+  await revalidateAllArticles(deps.webRevalidate, deps.logger);
 }

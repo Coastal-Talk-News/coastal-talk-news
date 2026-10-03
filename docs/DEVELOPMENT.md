@@ -235,6 +235,51 @@ Prioritize efficient Prisma queries and appropriate indexes, optimized images, a
 unnecessary client-side JS or redundant API calls. Don't introduce caching layers or
 premature optimizations without a concrete, current bottleneck.
 
+**Reader-site caching (the one deliberate exception).** This caches individual `fetch()`
+calls via Next's Data Cache (`next: { revalidate, tags }` in `apps/web/lib/api.ts`) — it does
+**not** make any page statically generated/ISR'd; every route here still reads the locale
+cookie (`getLocale()`), which forces per-request dynamic rendering regardless of caching. The
+win is that a cache hit skips the call to `apps/api` (and so skips the Postgres query)
+entirely; the page still re-renders, just from already-cached data. What's cached, chosen
+because an editor/CMS change to it should still appear immediately:
+
+- **Article pages** (`/article/[slug]`, addressed by slug or id - see `lib/routes.ts`) —
+  window is `SiteSettings.articleCacheMinutes`, editable at Settings → Advanced in the CMS
+  (`SETTINGS_ARTICLE_CACHE_MINUTES_MIN/MAX` in `packages/validation/src/limits.ts`). Tagged
+  `articles` and `article:<key>` (whichever of the id or slug the reader's URL actually used).
+  A publish/edit invalidates both the id tag and the slug tag, in case a reader has it cached
+  under either.
+- **About / Contact / Advertise / Privacy Policy / Terms and Conditions** — a fixed 1-hour
+  backstop (`SLOW_CHANGING_REVALIDATE_SECONDS` in `apps/web/lib/api.ts`), since these change
+  far less often than an article. All five share one `pages` tag, since their contact-detail
+  fields overlap.
+- **A category's own metadata** (name, description, cover image — `findCategory()`) — same
+  1-hour backstop and id-or-slug tagging as articles, tagged `categories` and
+  `category:<key>`. Its article listing (`getCategoryArticles()`) is deliberately **not**
+  cached this way, for the same reason the listing pages below aren't — a fresh publish needs
+  to show up in it immediately.
+
+Everything else (`/`, `/category/[slug]`, `/search`, `/featured`, `/lead-stories`,
+`/advertisements`, `/advertisement/[id]`, `/preview`) keeps `export const dynamic =
+'force-dynamic'` on the page itself — news listings and breaking news need to reflect a
+publish immediately, an advertisement's "running" state is computed from `start_at`/`end_at`
+at request time (§8) and must not be served stale, and `/preview` is the stateless
+live-preview flow and must never be cached. The root layout itself carries no `dynamic`
+export, so each page's own setting is what actually applies. Note `/category/[slug]` is in
+both lists: the page itself is `force-dynamic` (for its article listing), but the single
+`findCategory()` call within it still gets its own cache treatment — a fetch's own
+`revalidate`/`tags` apply regardless of the page's `dynamic` setting.
+
+**Invalidation is automatic, not TTL-only.** `apps/api` calls `apps/web`'s
+`POST /api/revalidate` (`apps/api/src/lib/webRevalidate.ts`) after every article
+create/update/delete, after any Settings save that touches an About/Contact/Advertise/
+Privacy/Terms field, and after a category update/delete — the TTLs above are only the
+backstop if that call is ever missed. The CMS also exposes a manual "Clear article cache"
+button (Settings → Advanced) for the same `articles` tag. This needs `WEB_BASE_URL` and
+`WEB_REVALIDATE_SECRET` set identically on both
+apps (`apps/api/.env.example`, `apps/web/.env.example`); without them, caching still works,
+it just relies on its TTL rather than being invalidated immediately.
+
 ## 10. Two-developer collaboration protocol
 
 Both of you run Claude Code against the same repository and the same `CLAUDE.md`/`docs/`.

@@ -8,6 +8,9 @@ import { getLocale } from '../../lib/i18n/server';
 import { buildMetadata } from '../../lib/seo';
 import { getOrigin } from '../../lib/site-url';
 
+// "Running" is computed from start_at/end_at at request time, not stored.
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata(): Promise<Metadata> {
   const [{ settings }, locale, origin] = await Promise.all([
     getSite(),

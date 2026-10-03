@@ -25,6 +25,13 @@ const BASE_URL = process.env.API_BASE_URL ?? 'http://localhost:8000';
 /** Content changes on a publish, so a short window keeps pages fresh but cheap. */
 const REVALIDATE_SECONDS = 60;
 
+/** For content that changes rarely (an editor updating copy or a category's
+ *  name, not a newsroom publishing) - a long backstop is fine, since saving
+ *  it in the CMS invalidates its tag immediately regardless. Shared by the
+ *  standalone pages and category metadata (not a category's article list,
+ *  which still needs to reflect a fresh publish right away). */
+const SLOW_CHANGING_REVALIDATE_SECONDS = 60 * 60;
+
 export class ApiUnavailableError extends Error {
   constructor(path: string, cause?: unknown) {
     super(`Could not load ${path} from the news API.`);
@@ -55,14 +62,22 @@ export class ApiClientError extends Error {
  */
 const RETRY_DELAYS_MS = [2_000, 6_000, 12_000];
 
+interface CacheOptions {
+  revalidate?: number;
+  tags?: string[];
+}
+
 async function fetchPublicJson<T>(
   path: string,
-  revalidate = REVALIDATE_SECONDS,
+  cache?: CacheOptions,
   attempt = 0,
 ): Promise<T> {
   try {
     const response = await fetch(`${BASE_URL}/api/v1/public${path}`, {
-      next: { revalidate },
+      next: {
+        revalidate: cache?.revalidate ?? REVALIDATE_SECONDS,
+        tags: cache?.tags,
+      },
     });
     // A 4xx is a real answer (missing/deactivated resource, bad input) —
     // retrying it on a backoff would just delay a page that should resolve
@@ -85,12 +100,12 @@ async function fetchPublicJson<T>(
         : new ApiUnavailableError(path, error);
     }
     await new Promise((resolve) => setTimeout(resolve, delay));
-    return fetchPublicJson<T>(path, revalidate, attempt + 1);
+    return fetchPublicJson<T>(path, cache, attempt + 1);
   }
 }
 
-async function fetchPublic<T>(path: string, revalidate?: number): Promise<T> {
-  const payload = await fetchPublicJson<ApiSuccess<T>>(path, revalidate);
+async function fetchPublic<T>(path: string, cache?: CacheOptions): Promise<T> {
+  const payload = await fetchPublicJson<ApiSuccess<T>>(path, cache);
   return payload.data;
 }
 
@@ -131,6 +146,7 @@ export async function getPage(
   const language = locale ? ARTICLE_LANGUAGE_BY_LOCALE[locale] : undefined;
   return fetchPublic<PublicPageDto>(
     `/pages/${page}${language ? `?language=${language}` : ''}`,
+    { revalidate: SLOW_CHANGING_REVALIDATE_SECONDS, tags: ['pages'] },
   );
 }
 
@@ -184,10 +200,21 @@ async function orNull<T>(load: Promise<T>): Promise<T | null> {
  * generateMetadata and the page: the identical fetch is made once per render
  * and then served from the data cache, so the article is never requested
  * twice.
+ *
+ * `cacheMinutes` is Settings → Advanced's configurable cache window - a
+ * backstop only, since saving the article invalidates both its id tag and
+ * its slug tag immediately (see webRevalidate.ts on the API side) - whichever
+ * one a reader's cached page actually used.
  */
-export function getArticle(key: string): Promise<PublicArticleDto | null> {
+export function getArticle(
+  key: string,
+  cacheMinutes: number,
+): Promise<PublicArticleDto | null> {
   return orNull(
-    fetchPublic<PublicArticleDto>(`/articles/${encodeURIComponent(key)}`),
+    fetchPublic<PublicArticleDto>(`/articles/${encodeURIComponent(key)}`, {
+      revalidate: cacheMinutes * 60,
+      tags: ['articles', `article:${key}`],
+    }),
   );
 }
 
@@ -198,6 +225,10 @@ export function findCategory(key: string): Promise<CategoryDto | null> {
       isUuid(key)
         ? `/categories/${key}`
         : `/categories/by-slug/${encodeURIComponent(key)}`,
+      {
+        revalidate: SLOW_CHANGING_REVALIDATE_SECONDS,
+        tags: ['categories', `category:${key}`],
+      },
     ),
   );
 }
@@ -207,7 +238,9 @@ export function findCategory(key: string): Promise<CategoryDto | null> {
 export async function getSitemap(
   revalidate: number,
 ): Promise<PublicSitemapDto> {
-  const sitemap = await fetchPublic<PublicSitemapDto>('/sitemap', revalidate);
+  const sitemap = await fetchPublic<PublicSitemapDto>('/sitemap', {
+    revalidate,
+  });
   return {
     articles: list(sitemap.articles),
     categories: list(sitemap.categories),

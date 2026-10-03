@@ -2,6 +2,7 @@ import { ErrorState, LoadingState } from '@coastal-talk-news/ui/states';
 import { useQuery } from '@tanstack/react-query';
 import {
   FileCheck,
+  Gauge,
   Globe,
   Info,
   KeyRound,
@@ -13,6 +14,7 @@ import { useState } from 'react';
 import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { settingsApi } from '../api/settings.js';
 import { queryKeys } from '../api/queryKeys.js';
+import { SettingsAdvancedForm } from '../features/settings/SettingsAdvancedForm.js';
 import { SettingsContactForm } from '../features/settings/SettingsContactForm.js';
 import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js';
 import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
@@ -28,7 +30,8 @@ type Tab =
   | 'advertise'
   | 'privacy'
   | 'terms'
-  | 'security';
+  | 'security'
+  | 'advanced';
 
 // Each standalone page on the website gets its own tab, so an admin looking
 // for the About page's text finds it under About rather than buried in a
@@ -41,6 +44,7 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'privacy', label: 'Privacy Policy', icon: ShieldCheck },
   { value: 'terms', label: 'Terms and Conditions', icon: FileCheck },
   { value: 'security', label: 'Password & Security', icon: KeyRound },
+  { value: 'advanced', label: 'Advanced', icon: Gauge },
 ];
 
 export function SettingsPage() {
@@ -129,6 +133,9 @@ export function SettingsPage() {
               </div>
             </div>
           )}
+          <div hidden={tab !== 'advanced'}>
+            <SettingsAdvancedForm settings={data} />
+          </div>
         </div>
       </div>
     </div>

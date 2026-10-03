@@ -28,6 +28,7 @@ import authPlugin from './plugins/auth.js';
 import errorHandler from './plugins/error-handler.js';
 import prismaPlugin from './plugins/prisma.js';
 import storagePlugin from './plugins/storage.js';
+import webRevalidatePlugin from './plugins/webRevalidate.js';
 
 export async function buildApp(env: Env): Promise<FastifyInstance> {
   const app = Fastify({
@@ -104,6 +105,7 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
 
   await app.register(prismaPlugin, { env });
   await app.register(storagePlugin, { env });
+  await app.register(webRevalidatePlugin, { env });
   await app.register(authPlugin, { env });
 
   app.get(

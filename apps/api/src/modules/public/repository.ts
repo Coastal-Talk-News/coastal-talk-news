@@ -132,6 +132,7 @@ export function findSettings(db: TransactionClient) {
       defaultUiLanguage: true,
       defaultSeoTitle: true,
       defaultMetaDescription: true,
+      articleCacheMinutes: true,
       googleSiteVerification: true,
       logo: mediaSelect,
       favicon: mediaSelect,

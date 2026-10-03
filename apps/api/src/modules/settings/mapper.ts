@@ -34,6 +34,7 @@ export interface SiteSettingsEntity {
   whatsappKannadaUrl: string | null;
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;
+  articleCacheMinutes: number;
   googleSiteVerification: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -95,6 +96,7 @@ export function toSiteSettingsDto(
     defaultSeoTitle: settings.defaultSeoTitle,
     defaultMetaDescription: settings.defaultMetaDescription,
     defaultOgImage: toMediaSummary(settings.defaultOgImage, toPublicUrl),
+    articleCacheMinutes: settings.articleCacheMinutes,
     googleSiteVerification: settings.googleSiteVerification,
     createdAt: settings.createdAt.toISOString(),
     updatedAt: settings.updatedAt.toISOString(),

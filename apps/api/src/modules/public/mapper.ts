@@ -229,6 +229,7 @@ interface SettingsRow {
   defaultUiLanguage: Language;
   defaultSeoTitle: string | null;
   defaultMetaDescription: string | null;
+  articleCacheMinutes: number;
   googleSiteVerification: string | null;
   logo: MediaRow | null;
   favicon: MediaRow | null;

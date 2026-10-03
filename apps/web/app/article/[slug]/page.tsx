@@ -31,24 +31,34 @@ interface ArticlePageProps {
 /**
  * One lookup per request, shared by generateMetadata and the page (the same
  * fetch is made once and cached): the segment as typed, its tidy key, and
- * the article that key finds, if any.
+ * the article that key finds, if any. `cacheMinutes` is Settings →
+ * Advanced's configurable article cache window - needs settings loaded
+ * first, so this can't run in the same Promise.all as getSite() below.
  */
-async function loadArticle(params: ArticlePageProps['params']) {
+async function loadArticle(
+  params: ArticlePageProps['params'],
+  cacheMinutes: number,
+) {
   const segment = decodeParam((await params).slug);
   const key = articleKeyFrom(segment);
-  return { segment, article: key ? await getArticle(key) : null };
+  return {
+    segment,
+    article: key ? await getArticle(key, cacheMinutes) : null,
+  };
 }
 
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
-  const [{ segment, article }, { settings }, locale, origin] =
-    await Promise.all([
-      loadArticle(params),
-      getSite(),
-      getLocale(),
-      getOrigin(),
-    ]);
+  const [{ settings }, locale, origin] = await Promise.all([
+    getSite(),
+    getLocale(),
+    getOrigin(),
+  ]);
+  const { segment, article } = await loadArticle(
+    params,
+    settings.articleCacheMinutes,
+  );
   if (!article) return { title: 'Article not found' };
   // Any other address is redirected by the page; nothing to describe here.
   if (articleKey(article) !== segment) return {};
@@ -73,13 +83,15 @@ export async function generateMetadata({
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
-  const [{ segment, article }, { settings, categories }, locale, origin] =
-    await Promise.all([
-      loadArticle(params),
-      getSite(),
-      getLocale(),
-      getOrigin(),
-    ]);
+  const [{ settings, categories }, locale, origin] = await Promise.all([
+    getSite(),
+    getLocale(),
+    getOrigin(),
+  ]);
+  const { segment, article } = await loadArticle(
+    params,
+    settings.articleCacheMinutes,
+  );
   if (!article) notFound();
 
   // One address per article. An old id link, a slug the editor has since

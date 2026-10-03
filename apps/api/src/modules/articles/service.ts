@@ -22,6 +22,10 @@ import {
   suggestArticleSlug,
 } from '@coastal-talk-news/validation/slug';
 import { extractPlainText } from '../../lib/tiptap-text.js';
+import {
+  revalidateArticle,
+  type WebRevalidateConfig,
+} from '../../lib/webRevalidate.js';
 import { releaseMedia, syncArticleMedia } from '../media/reference.js';
 import {
   hydrateContent,
@@ -37,6 +41,7 @@ export interface ArticleServiceDeps {
   db: Database;
   storage: ObjectStorage;
   logger: FastifyBaseLogger;
+  webRevalidate: WebRevalidateConfig;
 }
 
 export interface CreateArticleInput {
@@ -257,6 +262,12 @@ export async function create(
     }),
   );
 
+  await revalidateArticle(
+    deps.webRevalidate,
+    deps.logger,
+    article.id,
+    article.slug,
+  );
   return forEditor(deps, article);
 }
 
@@ -396,6 +407,21 @@ export async function update(
   );
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
+  await revalidateArticle(
+    deps.webRevalidate,
+    deps.logger,
+    article.id,
+    article.slug,
+  );
+  // A changed slug leaves a stale cache entry under the old one too.
+  if (existing.slug && existing.slug !== article.slug) {
+    await revalidateArticle(
+      deps.webRevalidate,
+      deps.logger,
+      article.id,
+      existing.slug,
+    );
+  }
   return forEditor(deps, article);
 }
 
@@ -424,4 +450,5 @@ export async function remove(
   });
 
   await purgeStorageObjects(storage, logger, orphanedKeys);
+  await revalidateArticle(deps.webRevalidate, deps.logger, id, existing.slug);
 }

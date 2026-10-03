@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node --env-file=.env dist/server.js",
+    "serve": "node --env-file=.env dist/server.js",
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit",
     "db:backfill-article-views": "tsx --env-file-if-exists=.env src/scripts/backfill-article-views.ts",
