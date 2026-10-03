@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import {
   Merriweather,
   Noto_Sans,
@@ -72,10 +73,22 @@ export async function generateMetadata(): Promise<Metadata> {
       getLocale(),
       getOrigin(),
     ]);
-    return buildSiteMetadata({ settings, locale, origin });
+
+    const metadata = buildSiteMetadata({ settings, locale, origin });
+
+    return {
+      ...metadata,
+      verification: {
+        google: 'KxW4_-C6J-IHz8iMdcYiyAPis0bXAhs_SS70A1t81gM',
+      },
+    };
   } catch {
-    // Metadata must never be the reason a page fails to render.
-    return { title: 'News' };
+    return {
+      title: 'News',
+      verification: {
+        google: 'KxW4_-C6J-IHz8iMdcYiyAPis0bXAhs_SS70A1t81gM',
+      },
+    };
   }
 }
 
@@ -100,6 +113,18 @@ export default async function RootLayout({
         <meta name="google" content="notranslate" />
       </head>
       <body className="flex min-h-screen flex-col">
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-WXHGNXEB2V"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-WXHGNXEB2V');
+          `}
+        </Script>
         <DevToolsShortcutGuard />
         <SiteHeader site={site} locale={locale} />
         <BreakingTicker items={site.breakingNews} locale={locale} />
