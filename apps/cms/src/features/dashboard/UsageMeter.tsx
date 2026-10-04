@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@coastal-talk-news/ui/cn';
+import { useTheme } from '../theme/useTheme.js';
 
 interface UsageMeterProps {
   label: string;
@@ -20,10 +21,14 @@ export function UsageMeter({
   unit,
   pending = false,
 }: UsageMeterProps) {
+  const { palette } = useTheme();
   const percent = usage
     ? Math.min(100, Math.round((usage.used / usage.limit) * 100))
     : 0;
   const isHigh = usage !== null && usage.used >= usage.warnAt;
+  // Classic keeps its original literal blue, independent of any accent;
+  // every other theme uses one consistent accent instead.
+  const isClassic = palette === 'classic';
 
   return (
     <div className="border-hairline rounded-card border bg-surface p-5 shadow-sm">
@@ -33,7 +38,9 @@ export function UsageMeter({
             'grid size-11 shrink-0 place-items-center rounded-xl',
             isHigh
               ? 'bg-danger-soft text-danger-text'
-              : 'bg-blue-50 text-blue-600',
+              : isClassic
+                ? 'bg-blue-50 text-blue-600'
+                : 'bg-accent-soft text-accent-text',
           )}
         >
           <Icon className="size-5" aria-hidden />
@@ -82,7 +89,7 @@ export function UsageMeter({
         <div
           className={cn(
             'h-full rounded-full transition-all duration-500',
-            isHigh ? 'bg-danger' : 'bg-emerald-500',
+            isHigh ? 'bg-danger' : isClassic ? 'bg-emerald-500' : 'bg-accent',
           )}
           style={{ width: `${percent}%` }}
         />

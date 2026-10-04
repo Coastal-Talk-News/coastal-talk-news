@@ -2,19 +2,17 @@ import type { LucideIcon } from 'lucide-react';
 import { ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@coastal-talk-news/ui/cn';
+import { useTheme } from '../theme/useTheme.js';
 
-interface StatCardProps {
-  label: string;
-  value: number;
-  icon: LucideIcon;
-  tone: 'blue' | 'green' | 'amber' | 'slate' | 'red' | 'violet';
-  /** Without a destination or a click handler, the card is a plain figure. */
-  to?: string;
-  onClick?: () => void;
-  caption?: string;
-}
+export type StatTone = 'blue' | 'green' | 'amber' | 'slate' | 'red' | 'violet';
 
-const TONES: Record<StatCardProps['tone'], string> = {
+/** The exact per-card colours this app originally shipped with, kept only
+ *  for the Classic theme - literal hues, independent of any accent. Every
+ *  other theme ignores `tone` and uses one consistent accent instead (see
+ *  below): a row of several different hues reads as a template dashboard
+ *  rather than production software, but Classic is specifically the "keep
+ *  it exactly as it was" option, icons included. */
+const CLASSIC_TONES: Record<StatTone, string> = {
   blue: 'bg-blue-50 text-blue-600',
   green: 'bg-emerald-50 text-emerald-600',
   amber: 'bg-amber-50 text-amber-600',
@@ -22,6 +20,17 @@ const TONES: Record<StatCardProps['tone'], string> = {
   red: 'bg-danger-soft text-danger-text',
   violet: 'bg-violet-50 text-violet-600',
 };
+
+interface StatCardProps {
+  label: string;
+  value: number;
+  icon: LucideIcon;
+  tone: StatTone;
+  /** Without a destination or a click handler, the card is a plain figure. */
+  to?: string;
+  onClick?: () => void;
+  caption?: string;
+}
 
 export function StatCard({
   label,
@@ -32,12 +41,18 @@ export function StatCard({
   onClick,
   caption,
 }: StatCardProps) {
+  const { palette } = useTheme();
+  const chipClass =
+    palette === 'classic'
+      ? CLASSIC_TONES[tone]
+      : 'bg-accent-soft text-accent-text';
+
   const body = (
     <>
       <span
         className={cn(
           'grid size-11 shrink-0 place-items-center rounded-xl',
-          TONES[tone],
+          chipClass,
         )}
       >
         <Icon className="size-5" aria-hidden />

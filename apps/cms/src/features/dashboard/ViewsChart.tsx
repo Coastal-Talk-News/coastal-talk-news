@@ -1,4 +1,5 @@
 import { cn } from '@coastal-talk-news/ui/cn';
+import { useTheme } from '../theme/useTheme.js';
 
 export interface ViewsChartDatum {
   label: string;
@@ -23,7 +24,7 @@ const CHART_HEIGHT = 'h-40';
  *  anywhere, and these are a handful of bars at most (12 months, or a
  *  month's worth of weeks), which plain CSS draws perfectly well.
  *
- * Every bar always shows its number, not just on hover - a sliver of blue
+ * Every bar always shows its number, not just on hover - a sliver of colour
  * for "2 views" means nothing on its own without the figure next to it, and
  * a non-technical reader isn't going to discover a hover tooltip. A scale
  * on the left and two guide lines give the bars something to be read
@@ -31,6 +32,11 @@ const CHART_HEIGHT = 'h-40';
  * one "now" is in a run of history.
  */
 export function ViewsChart({ data }: ViewsChartProps) {
+  const { palette } = useTheme();
+  // Classic keeps its original literal blue bars, independent of any
+  // accent; every other theme uses one consistent accent instead.
+  const isClassic = palette === 'classic';
+
   if (data.length === 0) {
     return (
       <p className="text-ink-subtle py-8 text-center text-sm">
@@ -88,9 +94,13 @@ export function ViewsChart({ data }: ViewsChartProps) {
                   <div
                     className={cn(
                       'w-full rounded-t-sm transition-colors',
-                      d.isCurrent
-                        ? 'bg-blue-500'
-                        : 'bg-blue-500/45 hover:bg-blue-500/70',
+                      isClassic
+                        ? d.isCurrent
+                          ? 'bg-blue-500'
+                          : 'bg-blue-500/45 hover:bg-blue-500/70'
+                        : d.isCurrent
+                          ? 'bg-accent'
+                          : 'bg-accent/45 hover:bg-accent/70',
                     )}
                     style={{ height: `${heightPercent}%` }}
                   />
