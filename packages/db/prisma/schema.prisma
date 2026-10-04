@@ -86,11 +86,8 @@ model MediaAsset {
   featuredForArticles Article[]       @relation("ArticleFeaturedImage")
   ogImageForArticles  Article[]       @relation("ArticleOgImage")
   categories          Category[]
-  advertisements      Advertisement[]      @relation("AdvertisementImage")
-  detailForAds        Advertisement[]      @relation("AdvertisementDetailImage")
-  /// Another developer's in-progress, currently-unused work - see
-  /// AdvertisementLayer.
-  adLayers            AdvertisementLayer[]
+  advertisements      Advertisement[] @relation("AdvertisementImage")
+  detailForAds        Advertisement[] @relation("AdvertisementDetailImage")
   articleUses         ArticleMedia[]
   pageUses            SitePageMedia[]
   logoForSettings     SiteSettings[]  @relation("SettingsLogo")
@@ -346,39 +343,12 @@ model Advertisement {
 
   media       MediaAsset  @relation("AdvertisementImage", fields: [mediaId], references: [id], onDelete: Restrict)
   detailMedia MediaAsset? @relation("AdvertisementDetailImage", fields: [detailMediaId], references: [id], onDelete: Restrict)
-  /// Another developer's in-progress, currently-unused work (multiple
-  /// composed images per ad) - see AdvertisementLayer. No application code
-  /// reads or writes this relation.
-  layers      AdvertisementLayer[]
 
   @@index([startAt, endAt])
   // Covers a plain placement lookup too (leftmost prefix), so the separate
   // single-column index this replaced is redundant.
   @@index([placement, displayOrder])
   @@map("advertisements")
-}
-
-/// Another developer's in-progress, currently-unused work: composing one ad
-/// out of several images side by side, each its own width share, position,
-/// and crop. No application code in this repo reads or writes this table -
-/// kept here only so the schema matches what is actually live in the shared
-/// database, which already has it.
-model AdvertisementLayer {
-  id              String @id
-  advertisementId String @map("advertisement_id")
-  mediaId         String @map("media_id")
-  width           Float
-  displayOrder    Int    @default(0) @map("display_order")
-  offsetX         Int    @default(0) @map("offset_x")
-  offsetY         Int    @default(0) @map("offset_y")
-  zoom            Int    @default(100)
-
-  advertisement Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
-  media         MediaAsset    @relation(fields: [mediaId], references: [id], onDelete: Restrict)
-
-  @@index([advertisementId, displayOrder])
-  @@index([mediaId])
-  @@map("advertisement_layers")
 }
 
 /// Single-tier admin access — no role column by design.
