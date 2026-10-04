@@ -1,5 +1,8 @@
 import Link from 'next/link';
-import type { PublicAdvertisementDto } from '@coastal-talk-news/types';
+import {
+  visibleAdBox,
+  type PublicAdvertisementDto,
+} from '@coastal-talk-news/types';
 import { adHref, adImageTransform } from '../../lib/ads';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
@@ -18,7 +21,7 @@ interface MastheadAdProps {
  * site name and in the row under it alike. Mirrored by PLACEMENT_META in the
  * CMS.
  */
-const UNIT_ASPECT = '520 / 96';
+const UNIT_SLOT = { width: 520, height: 96 };
 
 /**
  * Held against the right edge and roughly as wide as the utility row above
@@ -29,8 +32,7 @@ const UNIT_ASPECT = '520 / 96';
  * where the nav collapses, and the masthead needs the rest to stay on one
  * line at its full size.
  */
-const UNIT_WIDTH = 520;
-const UNIT_MAX_WIDTH = 'min(calc(min(6rem, 20vh) * 520 / 96), 40%)';
+const UNIT_MAX_HEIGHT = 'min(6rem, 20vh)';
 
 /**
  * Below md the nav collapses into the menu button and the site name has the
@@ -39,7 +41,22 @@ const UNIT_MAX_WIDTH = 'min(calc(min(6rem, 20vh) * 520 / 96), 40%)';
  * has, expressed as a width so it can't change the slot's shape — it bites
  * on a short window, not on an ordinary phone or tablet.
  */
-const BAND_MAX_WIDTH = 'calc(18vh * 520 / 96)';
+const BAND_MAX_HEIGHT = '18vh';
+
+/**
+ * Every other fit mode draws the fixed 520x96 unit; FIT_SHRINK is the one
+ * exception - its box takes the shape of whatever is actually visible at
+ * the ad's own zoom, so the slot is only ever as big as the creative
+ * actually fills, with nothing left over. Mirrors AdBand's slotBox.
+ */
+function slotBox(ad: PublicAdvertisementDto): {
+  width: number;
+  height: number;
+} {
+  return ad.fitMode === 'FIT_SHRINK'
+    ? visibleAdBox(ad.image, UNIT_SLOT, ad.zoom)
+    : UNIT_SLOT;
+}
 
 export function MastheadAd({
   advertisements,
@@ -51,6 +68,8 @@ export function MastheadAd({
 
   const { advertisement } = getDictionary(locale).common;
   const isInline = variant === 'inline';
+  const box = slotBox(ad);
+  const aspect = box.width / box.height;
 
   return (
     <aside
@@ -61,7 +80,12 @@ export function MastheadAd({
           : 'border-rule flex justify-center border-t px-4 py-2 md:hidden'
       }
       style={
-        isInline ? { width: UNIT_WIDTH, maxWidth: UNIT_MAX_WIDTH } : undefined
+        isInline
+          ? {
+              width: box.width,
+              maxWidth: `min(calc(${UNIT_MAX_HEIGHT} * ${aspect}), 40%)`,
+            }
+          : undefined
       }
     >
       <Link
@@ -71,8 +95,10 @@ export function MastheadAd({
         aria-label={`${advertisement}: ${ad.advertiserName}`}
         className="block w-full min-w-0 overflow-hidden rounded-sm transition-opacity hover:opacity-90"
         style={{
-          aspectRatio: UNIT_ASPECT,
-          ...(isInline ? {} : { maxWidth: BAND_MAX_WIDTH }),
+          aspectRatio: `${box.width} / ${box.height}`,
+          ...(isInline
+            ? {}
+            : { maxWidth: `calc(${BAND_MAX_HEIGHT} * ${aspect})` }),
         }}
       >
         <AdImage
@@ -80,9 +106,10 @@ export function MastheadAd({
           alt={ad.advertiserName}
           label={advertisement}
           priority
-          sizes={isInline ? `${UNIT_WIDTH}px` : '100vw'}
+          sizes={isInline ? `${UNIT_SLOT.width}px` : '100vw'}
           className="h-full w-full object-contain"
           style={adImageTransform(ad)}
+          backdrop={ad.fitMode === 'FIT_BACKGROUND'}
         />
       </Link>
     </aside>

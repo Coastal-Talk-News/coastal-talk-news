@@ -1,5 +1,5 @@
 import { Prisma } from '@coastal-talk-news/db';
-import type { AdPlacement, Database } from '@coastal-talk-news/db';
+import type { AdFitMode, AdPlacement, Database } from '@coastal-talk-news/db';
 import type { RichTextContent } from '@coastal-talk-news/types';
 import type { FastifyBaseLogger } from 'fastify';
 import {
@@ -29,6 +29,7 @@ export interface CreateAdvertisementInput {
   destinationUrl?: string | null;
   displayOrder?: number;
   placement?: AdPlacement;
+  fitMode?: AdFitMode;
   zoom?: number;
   offsetX?: number;
   offsetY?: number;
@@ -41,13 +42,17 @@ export type UpdateAdvertisementInput = Partial<CreateAdvertisementInput>;
 /** Zones sold by the slot. Sidebar is absent because it is uncapped. */
 const PLACEMENT_CAPACITY: Partial<Record<AdPlacement, number>> = {
   MASTHEAD: 1,
-  TOP: 3,
+  TOP: 4,
 };
 
 const PLACEMENT_LABEL: Record<AdPlacement, string> = {
   MASTHEAD: 'Masthead',
   TOP: 'Top',
   SIDEBAR: 'Right Side',
+  // Exists in the database (another developer's in-progress work) but has
+  // no application code wired to it yet - this label is only here so this
+  // map stays exhaustive over the DB enum; nothing ever creates one.
+  FOOTER: 'Footer',
 };
 
 async function assertMediaExists(db: Database, mediaId: string): Promise<void> {
@@ -92,6 +97,23 @@ async function assertPlacementCapacity(
 function normalizeUrl(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+/**
+ * Fit mode is a Masthead/Top concept (see AdFitMode) - Sidebar always gets
+ * FIT_SHRINK regardless of what's submitted, since it sets width alone and
+ * lets height follow the artwork, so there's never a gap to resolve. It is
+ * independent of the crop: zoom/offsetX/offsetY are the admin's choice for
+ * every mode - fitMode only decides what happens to whatever that crop
+ * doesn't cover.
+ */
+function normalizeFitMode(
+  placement: AdPlacement,
+  fitMode: AdFitMode | undefined,
+): AdFitMode {
+  return placement === 'TOP' || placement === 'MASTHEAD'
+    ? (fitMode ?? 'FIT_SHRINK')
+    : 'FIT_SHRINK';
 }
 
 /**
@@ -155,6 +177,7 @@ export async function create(
     displayOrder:
       input.displayOrder ?? (await repository.nextDisplayOrder(db, placement)),
     placement,
+    fitMode: normalizeFitMode(placement, input.fitMode),
     zoom: input.zoom ?? 100,
     offsetX: input.offsetX ?? 0,
     offsetY: input.offsetY ?? 0,
@@ -228,6 +251,15 @@ export async function update(
     replaced.push(existing.detailMedia.id);
   }
 
+  // Re-derived whenever placement or fitMode itself moves - a placement
+  // change can force fitMode back to FIT_SHRINK. The crop is unaffected:
+  // it's independent of fitMode, same as it already is for Masthead.
+  const fitModeTouched =
+    input.placement !== undefined || input.fitMode !== undefined;
+  const fitMode = fitModeTouched
+    ? normalizeFitMode(placement, input.fitMode ?? existing.fitMode)
+    : undefined;
+
   const { advertisement, orphanedKeys } = await db.$transaction(async (tx) => {
     const advertisement = await repository.update(tx, id, {
       ...(input.advertiserName !== undefined
@@ -240,6 +272,7 @@ export async function update(
         : {}),
       ...(displayOrder !== undefined ? { displayOrder } : {}),
       ...(input.placement !== undefined ? { placement: input.placement } : {}),
+      ...(fitMode !== undefined ? { fitMode } : {}),
       ...(input.zoom !== undefined ? { zoom: input.zoom } : {}),
       ...(input.offsetX !== undefined ? { offsetX: input.offsetX } : {}),
       ...(input.offsetY !== undefined ? { offsetY: input.offsetY } : {}),

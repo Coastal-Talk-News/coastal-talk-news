@@ -107,17 +107,21 @@ async function assertMediaExists(
   }
 }
 
-/** Each rich-text page and the settings fields that hold its body. */
+/**
+ * Each rich-text page and the settings fields that hold its body - every
+ * SitePage *except* Terms (see the comment below) and Footer, which exists
+ * in the DB enum as another developer's in-progress work with no fields
+ * of its own yet.
+ */
 const PAGE_FIELDS = {
   ABOUT: ['aboutContent', 'aboutContentKannada'],
   ADVERTISE: ['advertiseContent'],
   PRIVACY: ['privacyContent'],
-} as const satisfies Record<
-  SitePage,
-  ReadonlyArray<keyof UpdateSiteSettingsInput>
+} as const satisfies Partial<
+  Record<SitePage, ReadonlyArray<keyof UpdateSiteSettingsInput>>
 >;
 
-type ContentField = (typeof PAGE_FIELDS)[SitePage][number];
+type ContentField = (typeof PAGE_FIELDS)[keyof typeof PAGE_FIELDS][number];
 type ContentPatch = Partial<
   Record<ContentField | 'termsContent', object | null>
 >;
@@ -137,7 +141,7 @@ async function preparePages(
   const mediaByPage = new Map<SitePage, string[]>();
 
   for (const [page, fields] of Object.entries(PAGE_FIELDS) as Array<
-    [SitePage, ReadonlyArray<ContentField>]
+    [keyof typeof PAGE_FIELDS, ReadonlyArray<ContentField>]
   >) {
     if (fields.every((field) => input[field] === undefined)) continue;
 

@@ -26,7 +26,18 @@ export function Toggle({
         checked ? 'bg-accent' : 'bg-ink-subtle/40 hover:bg-ink-subtle/60',
       )}
     >
-      <Switch.Thumb className="block size-5 translate-x-0.5 rounded-full bg-white shadow-sm transition-transform duration-200 data-[state=checked]:translate-x-[22px]" />
+      <Switch.Thumb
+        className={cn(
+          'block size-5 translate-x-0.5 rounded-full shadow-sm transition-[transform,background-color] duration-200 data-[state=checked]:translate-x-[22px]',
+          // Plain white always reads against the unchecked track (a muted
+          // ink-subtle tint, never literally white itself), but the checked
+          // track is --accent, which some themes set close to white in dark
+          // mode (Graphite) - accent-fg is the token already designed to
+          // stay readable against --accent in every theme, so the thumb
+          // uses it only once it actually needs to.
+          checked ? 'bg-accent-fg' : 'bg-white',
+        )}
+      />
     </Switch.Root>
   );
 }

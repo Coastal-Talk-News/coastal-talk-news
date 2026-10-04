@@ -1,4 +1,5 @@
 import type {
+  AdFitMode,
   AdImageCrop,
   AdPlacement,
   AdvertisementDto,
@@ -20,8 +21,10 @@ import { MediaPickerDialog } from '../media/MediaPickerDialog.js';
 import { AdImageFrame } from './AdImageFrame.js';
 import { DEFAULT_CROP, clampCrop } from './crop.js';
 import {
+  DEFAULT_AD_FIT_MODE,
   PLACEMENTS,
   PLACEMENT_META,
+  offersFitMode,
   overlappingInPlacement,
 } from './placement.js';
 
@@ -32,6 +35,8 @@ interface FormValues {
   description: RichTextContent | null;
   destinationUrl: string;
   placement: AdPlacement;
+  /** Top only; every other placement is always FIT_SHRINK server-side. */
+  fitMode: AdFitMode;
   crop: AdImageCrop;
   startDate: string;
   startTime: string;
@@ -83,6 +88,7 @@ function toValues(
       description: null,
       destinationUrl: '',
       placement: defaultPlacement,
+      fitMode: DEFAULT_AD_FIT_MODE,
       crop: DEFAULT_CROP,
       startDate: start.date,
       startTime: start.time,
@@ -99,6 +105,7 @@ function toValues(
     description: item.description,
     destinationUrl: item.destinationUrl ?? '',
     placement: item.placement,
+    fitMode: item.fitMode,
     crop: { zoom: item.zoom, offsetX: item.offsetX, offsetY: item.offsetY },
     startDate: start.date,
     startTime: start.time,
@@ -167,6 +174,7 @@ export function AdvertisementSheet({
       JSON.stringify(initial.current.description) ||
     trimmedUrl !== initial.current.destinationUrl.trim() ||
     values.placement !== initial.current.placement ||
+    values.fitMode !== initial.current.fitMode ||
     values.crop.zoom !== initial.current.crop.zoom ||
     values.crop.offsetX !== initial.current.crop.offsetX ||
     values.crop.offsetY !== initial.current.crop.offsetY ||
@@ -229,6 +237,7 @@ export function AdvertisementSheet({
       description: isEmptyDoc(values.description) ? null : values.description,
       destinationUrl: trimmedUrl,
       placement: values.placement,
+      fitMode: values.fitMode,
       ...values.crop,
       startAt: startIso,
       endAt: endIso,
@@ -354,6 +363,12 @@ export function AdvertisementSheet({
                       return {
                         ...current,
                         placement,
+                        // The fit-mode choice only applies to Masthead and
+                        // Top; leaving both always resets it, matching what
+                        // the server enforces.
+                        fitMode: offersFitMode(placement)
+                          ? current.fitMode
+                          : DEFAULT_AD_FIT_MODE,
                         crop:
                           target && current.image
                             ? clampCrop(current.crop, current.image, target)
@@ -476,6 +491,13 @@ export function AdvertisementSheet({
                   onChange={(crop) =>
                     setValues((current) => ({ ...current, crop }))
                   }
+                  {...(offersFitMode(values.placement)
+                    ? {
+                        fitMode: values.fitMode,
+                        onFitModeChange: (fitMode: AdFitMode) =>
+                          setValues((current) => ({ ...current, fitMode })),
+                      }
+                    : {})}
                 />
               </div>
             )}

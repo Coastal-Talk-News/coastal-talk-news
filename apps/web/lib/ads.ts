@@ -20,7 +20,7 @@ export function adHref(id: string): string {
 
 /**
  * Every advertisement lands in exactly one zone, driven by its CMS-assigned
- * placement. Masthead holds 1 and Top 3, both capped server-side (apps/api);
+ * placement. Masthead holds 1 and Top 4, both capped server-side (apps/api);
  * Sidebar is uncapped. Within a zone, ads arrive from the API already in
  * their CMS-assigned order - Top and Sidebar are ordered independently of
  * each other, by dragging in the CMS, not by anything computed here.
@@ -36,7 +36,10 @@ export function adsForZone(
  * The slot is what the advertiser bought, so its size is fixed and the
  * artwork is framed inside it exactly as the CMS placed it: panned, then
  * enlarged from the whole image outwards. Anything that leaves the frame is
- * cropped, which is the point of the control.
+ * cropped, which is the point of the control - and showing the whole image
+ * uncropped, with the slot's own background around it, is just as valid a
+ * choice as filling it. Whichever the admin picked is shown exactly as they
+ * set it; nothing here second-guesses that choice.
  */
 export function adImageTransform(ad: PublicAdvertisementDto): CSSProperties {
   return {

@@ -1,5 +1,5 @@
 import type { Id, IsoDateTime, RichTextContent } from './api.js';
-import type { AdImageCrop, AdPlacement } from './advertisement.js';
+import type { AdFitMode, AdImageCrop, AdPlacement } from './advertisement.js';
 import type { ArticleContent, Language } from './article.js';
 import type { ImageLayoutDto, MediaSummaryDto } from './media.js';
 
@@ -69,6 +69,9 @@ export interface PublicAdvertisementDto extends AdImageCrop {
   id: Id;
   advertiserName: string;
   placement: AdPlacement;
+  /** Masthead and Top only; always FIT_SHRINK for Sidebar. Independent of
+   *  the inherited zoom/offsetX/offsetY - see AdFitMode. */
+  fitMode: AdFitMode;
   image: MediaSummaryDto;
 }
 

@@ -1,0 +1,7 @@
+-- Reconciliation migration: this file did not exist in git history, but the
+-- shared Supabase database's own `_prisma_migrations` table already recorded
+-- a migration with this exact name as applied (built by another developer,
+-- never committed). No net schema difference attributable to this name
+-- remains by the time this was reconciled (a later migration likely
+-- superseded it) - left empty deliberately, so migration history and the
+-- database's own bookkeeping agree without re-running anything.

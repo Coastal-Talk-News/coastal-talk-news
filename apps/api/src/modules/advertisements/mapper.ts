@@ -1,4 +1,4 @@
-import type { AdPlacement } from '@coastal-talk-news/db';
+import type { AdFitMode, AdPlacement } from '@coastal-talk-news/db';
 import type {
   AdvertisementDto,
   MediaSummaryDto,
@@ -20,6 +20,7 @@ export interface AdvertisementEntity {
   description: unknown;
   displayOrder: number;
   placement: AdPlacement;
+  fitMode: AdFitMode;
   zoom: number;
   offsetX: number;
   offsetY: number;
@@ -69,7 +70,15 @@ export function toAdvertisementDto(
     description: toRichText(item.description),
     destinationUrl: item.destinationUrl,
     displayOrder: item.displayOrder,
-    placement: item.placement,
+    // FOOTER exists in the DB enum (another developer's in-progress work,
+    // not wired to any application code) but never actually appears here -
+    // nothing creates one, and the response schema only allows the three
+    // placements this app supports.
+    placement: item.placement as AdvertisementDto['placement'],
+    // FILL is a leftover, unused DB enum value from an earlier design of
+    // this same feature (crop used to be gated behind it) - nothing ever
+    // writes it any more, so it's narrowed away the same way FOOTER is.
+    fitMode: item.fitMode as AdvertisementDto['fitMode'],
     zoom: item.zoom,
     offsetX: item.offsetX,
     offsetY: item.offsetY,

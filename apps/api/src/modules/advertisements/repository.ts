@@ -1,4 +1,5 @@
 import type {
+  AdFitMode,
   AdPlacement,
   Prisma,
   TransactionClient,
@@ -117,6 +118,7 @@ export interface AdvertisementWriteData {
   destinationUrl: string | null;
   displayOrder: number;
   placement: AdPlacement;
+  fitMode: AdFitMode;
   zoom: number;
   offsetX: number;
   offsetY: number;
