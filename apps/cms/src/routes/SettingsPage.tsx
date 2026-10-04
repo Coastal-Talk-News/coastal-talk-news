@@ -8,13 +8,15 @@ import {
   KeyRound,
   Mail,
   Megaphone,
+  Palette,
   ShieldCheck,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTabListKeys } from '../features/shortcuts/useTabListKeys.js';
 import { settingsApi } from '../api/settings.js';
 import { queryKeys } from '../api/queryKeys.js';
 import { SettingsAdvancedForm } from '../features/settings/SettingsAdvancedForm.js';
+import { SettingsAppearanceForm } from '../features/settings/SettingsAppearanceForm.js';
 import { SettingsContactForm } from '../features/settings/SettingsContactForm.js';
 import { SettingsGeneralForm } from '../features/settings/SettingsGeneralForm.js';
 import { SettingsPageForm } from '../features/settings/SettingsPageForm.js';
@@ -30,6 +32,7 @@ type Tab =
   | 'advertise'
   | 'privacy'
   | 'terms'
+  | 'appearance'
   | 'security'
   | 'advanced';
 
@@ -43,17 +46,39 @@ const TABS: { value: Tab; label: string; icon: typeof Globe }[] = [
   { value: 'advertise', label: 'Advertise', icon: Megaphone },
   { value: 'privacy', label: 'Privacy Policy', icon: ShieldCheck },
   { value: 'terms', label: 'Terms and Conditions', icon: FileCheck },
+  { value: 'appearance', label: 'Appearance', icon: Palette },
   { value: 'security', label: 'Password & Security', icon: KeyRound },
   { value: 'advanced', label: 'Advanced', icon: Gauge },
 ];
 
+/** An unknown or missing ?tab= (a fresh visit, an old bookmark) falls back
+ *  to General rather than rendering nothing. */
+function toTab(raw: string | null): Tab {
+  return TABS.some((candidate) => candidate.value === raw)
+    ? (raw as Tab)
+    : 'general';
+}
+
 export function SettingsPage() {
   const tabListKeys = useTabListKeys('vertical');
-  const [tab, setTab] = useState<Tab>('general');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = toTab(searchParams.get('tab'));
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: queryKeys.settings,
     queryFn: ({ signal }) => settingsApi.get(signal),
   });
+
+  function selectTab(next: Tab) {
+    setSearchParams(
+      (current) => {
+        const params = new URLSearchParams(current);
+        if (next === 'general') params.delete('tab');
+        else params.set('tab', next);
+        return params;
+      },
+      { replace: true },
+    );
+  }
 
   if (isPending) return <LoadingState label="Loading settings…" />;
   if (isError) {
@@ -90,7 +115,7 @@ export function SettingsPage() {
               type="button"
               role="tab"
               aria-selected={tab === value}
-              onClick={() => setTab(value)}
+              onClick={() => selectTab(value)}
               className={
                 tab === value
                   ? 'flex shrink-0 items-center gap-2.5 rounded-lg bg-accent-soft px-3.5 py-2.5 text-left text-sm font-medium whitespace-nowrap text-accent-text'
@@ -121,6 +146,9 @@ export function SettingsPage() {
           </div>
           <div hidden={tab !== 'terms'}>
             <SettingsTermsForm settings={data} />
+          </div>
+          <div hidden={tab !== 'appearance'}>
+            <SettingsAppearanceForm />
           </div>
           {/* Mounted only while open, so half-typed passwords are discarded the
               moment the admin leaves the tab rather than lingering in a form

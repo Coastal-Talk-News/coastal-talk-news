@@ -1,47 +1,53 @@
 /* Design tokens shared by the CMS and the reader site.
  *
- * Colours are declared twice: raw values on :root / .dark, and `@theme inline`
- * aliases that point at them. The indirection is what makes a single utility
- * like `bg-surface` resolve correctly in both themes — without it Tailwind
- * inlines the light value at build time and dark mode needs `dark:` everywhere.
+ * The neutral scale is Zinc - the pure, no-blue-undertone grey ui.shadcn.com
+ * itself is built on (not one of the colour presets its theme picker lets
+ * component consumers try; the docs site's own chrome has no accent colour
+ * in it at all). That scale is shared by every theme below except Classic
+ * (the original look this app shipped with, kept as its own self-contained
+ * palette rather than folded onto Zinc). For the Zinc-based themes, picking
+ * one is a *minute* change on top of that shared, already-professional
+ * base: only --accent (and, for Graphite, --action too, since Graphite's
+ * whole point is to have no colour at all, exactly like the real
+ * shadcn.com) differs between them.
  *
- * Two accents, kept separate on purpose:
- *   --accent  editorial red: brand mark, active nav, links, breaking news
- *   --action  near-black ink: primary buttons
- * Sharing one would make red mean both "confirm" and "delete" on one screen.
+ * --accent and --action are kept as separate tokens: --action is the
+ * primary button; --accent is one step quieter (active nav, links, soft
+ * highlight backgrounds). --danger already covers destructive actions on
+ * its own token, so this split is about visual weight, not about avoiding
+ * a "confirm vs delete" clash.
+ *
+ * Which theme is active is whichever `[data-palette="..."]` block below
+ * matches - set as an attribute on <html> by ThemeProvider (and, before it
+ * can run, by the inline script in index.html). Light/dark stays the
+ * existing `.dark` class toggle, combined with the palette attribute.
  */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --brand-50: #fdf4f2;
-  --brand-100: #fbe4e0;
-  --brand-200: #f6c9c0;
-  --brand-300: #eb9d8f;
-  --brand-400: #dc6d59;
-  --brand-500: #c74a35;
-  --brand-600: #a32d1d;
-  --brand-700: #862217;
-
-  --canvas: #faf8f5;
+  /* Zinc - a static fallback matching the default theme (graphite/light),
+   * so the page is never unstyled in the instant before ThemeProvider/
+   * index.html's inline script run. */
+  --canvas: #fafafa;
   --surface: #ffffff;
-  --surface-sunken: #f4f1ec;
+  --surface-sunken: #f4f4f5;
   --surface-raised: #ffffff;
 
-  --ink: #1a1512;
-  --ink-muted: #5a534d;
-  --ink-subtle: #8b837b;
-  --hairline: #e8e3dc;
+  --ink: #09090b;
+  --ink-muted: #52525b;
+  --ink-subtle: #71717a;
+  --hairline: #e4e4e7;
 
-  --accent: var(--brand-600);
-  --accent-hover: var(--brand-700);
-  --accent-fg: #ffffff;
-  --accent-soft: var(--brand-50);
-  --accent-text: var(--brand-700);
+  --accent: #09090b;
+  --accent-hover: #27272a;
+  --accent-fg: #fafafa;
+  --accent-soft: #f4f4f5;
+  --accent-text: #09090b;
 
-  --action: #1f1a16;
-  --action-hover: #332b25;
-  --action-fg: #faf8f5;
+  --action: #09090b;
+  --action-hover: #27272a;
+  --action-fg: #fafafa;
 
   --success-soft: #edf5ee;
   --success-text: #2f6b3c;
@@ -53,28 +59,17 @@
   --danger-text: #99201a;
 }
 
+/* Shared neutral scale - identical in every theme below. */
 .dark {
-  --canvas: #14100e;
-  --surface: #1c1714;
-  --surface-sunken: #171310;
-  --surface-raised: #241e1a;
+  --canvas: #09090b;
+  --surface: #18181b;
+  --surface-sunken: #27272a;
+  --surface-raised: #18181b;
 
-  --ink: #f2ede7;
-  --ink-muted: #a89f96;
-  --ink-subtle: #7a716a;
-  --hairline: #332b26;
-
-  /* brand-600 is unreadable on a dark ground; step up to 400/300. */
-  --accent: var(--brand-400);
-  --accent-hover: var(--brand-300);
-  --accent-fg: #1a1210;
-  --accent-soft: color-mix(in srgb, var(--brand-400) 16%, transparent);
-  --accent-text: var(--brand-300);
-
-  /* Inverted: a light button is the strongest call to action on a dark ground. */
-  --action: #f2ede7;
-  --action-hover: #ffffff;
-  --action-fg: #171310;
+  --ink: #fafafa;
+  --ink-muted: #a1a1aa;
+  --ink-subtle: #71717a;
+  --hairline: #27272a;
 
   --success-soft: color-mix(in srgb, #4ea862 16%, transparent);
   --success-text: #86d09a;
@@ -86,16 +81,181 @@
   --danger-text: #f0998f;
 }
 
-@theme inline {
-  --color-brand-50: var(--brand-50);
-  --color-brand-100: var(--brand-100);
-  --color-brand-200: var(--brand-200);
-  --color-brand-300: var(--brand-300);
-  --color-brand-400: var(--brand-400);
-  --color-brand-500: var(--brand-500);
-  --color-brand-600: var(--brand-600);
-  --color-brand-700: var(--brand-700);
+/* ---------------------------------------------------------------------
+ * Graphite - the default: the real ui.shadcn.com look, where --accent and
+ * --action are both the neutral scale itself. No colour anywhere in the
+ * chrome except real status (success/warn/danger).
+ * --------------------------------------------------------------------- */
 
+[data-palette='graphite'] {
+  --accent: #09090b;
+  --accent-hover: #27272a;
+  --accent-fg: #fafafa;
+  --accent-soft: #f4f4f5;
+  --accent-text: #09090b;
+
+  --action: #09090b;
+  --action-hover: #27272a;
+  --action-fg: #fafafa;
+}
+
+[data-palette='graphite'].dark {
+  --accent: #fafafa;
+  --accent-hover: #e4e4e7;
+  --accent-fg: #09090b;
+  --accent-soft: #27272a;
+  --accent-text: #fafafa;
+
+  --action: #fafafa;
+  --action-hover: #e4e4e7;
+  --action-fg: #09090b;
+}
+
+/* ---------------------------------------------------------------------
+ * Terracotta - shadcn's "Red" preset: the one spot of colour is the reader
+ * site's own brand red, so --action stays the neutral default button.
+ * --------------------------------------------------------------------- */
+
+[data-palette='terracotta'] {
+  --accent: #dc2626;
+  --accent-hover: #b91c1c;
+  --accent-fg: #fef2f2;
+  --accent-soft: #fef2f2;
+  --accent-text: #b91c1c;
+}
+
+[data-palette='terracotta'].dark {
+  --accent: #f87171;
+  --accent-hover: #fca5a5;
+  --accent-fg: #450a0a;
+  --accent-soft: color-mix(in srgb, #f87171 16%, transparent);
+  --accent-text: #fca5a5;
+}
+
+/* ---------------------------------------------------------------------
+ * Forest - shadcn's "Green" preset.
+ * --------------------------------------------------------------------- */
+
+[data-palette='forest'] {
+  --accent: #16a34a;
+  --accent-hover: #15803d;
+  --accent-fg: #f0fdf4;
+  --accent-soft: #f0fdf4;
+  --accent-text: #15803d;
+}
+
+[data-palette='forest'].dark {
+  --accent: #4ade80;
+  --accent-hover: #86efac;
+  --accent-fg: #052e16;
+  --accent-soft: color-mix(in srgb, #4ade80 16%, transparent);
+  --accent-text: #86efac;
+}
+
+/* ---------------------------------------------------------------------
+ * Plum - shadcn's "Violet" preset. Rose was too close to Terracotta's red
+ * at a glance; violet sits far enough around the colour wheel to always
+ * read as a distinct choice.
+ * --------------------------------------------------------------------- */
+
+[data-palette='plum'] {
+  --accent: #7c3aed;
+  --accent-hover: #6d28d9;
+  --accent-fg: #f5f3ff;
+  --accent-soft: #f5f3ff;
+  --accent-text: #6d28d9;
+}
+
+[data-palette='plum'].dark {
+  --accent: #a78bfa;
+  --accent-hover: #c4b5fd;
+  --accent-fg: #2e1065;
+  --accent-soft: color-mix(in srgb, #a78bfa 16%, transparent);
+  --accent-text: #c4b5fd;
+}
+
+/* ---------------------------------------------------------------------
+ * Classic - the original look this app shipped with, kept exactly as it
+ * was rather than folded onto the shared Zinc scale: its own warm cream
+ * surfaces and warm near-black ink, with the same brick-red accent
+ * "Terracotta" used to carry before that theme moved onto Zinc.
+ * --------------------------------------------------------------------- */
+
+[data-palette='classic'] {
+  --canvas: #faf8f5;
+  --surface: #ffffff;
+  --surface-sunken: #f4f1ec;
+  --surface-raised: #ffffff;
+
+  --ink: #1a1512;
+  --ink-muted: #5a534d;
+  --ink-subtle: #8b837b;
+  --hairline: #e8e3dc;
+
+  --accent: #a32d1d;
+  --accent-hover: #862217;
+  --accent-fg: #ffffff;
+  --accent-soft: #fdf4f2;
+  --accent-text: #862217;
+
+  --action: #1f1a16;
+  --action-hover: #332b25;
+  --action-fg: #faf8f5;
+}
+
+[data-palette='classic'].dark {
+  --canvas: #14100e;
+  --surface: #1c1714;
+  --surface-sunken: #171310;
+  --surface-raised: #241e1a;
+
+  --ink: #f2ede7;
+  --ink-muted: #a89f96;
+  --ink-subtle: #7a716a;
+  --hairline: #332b26;
+
+  /* The light accent is unreadable on a dark ground; step up to a lighter
+   * tint of the same brick red, same as every other theme's dark mode. */
+  --accent: #dc6d59;
+  --accent-hover: #eb9d8f;
+  --accent-fg: #1a1210;
+  --accent-soft: color-mix(in srgb, #dc6d59 16%, transparent);
+  --accent-text: #eb9d8f;
+
+  --action: #f2ede7;
+  --action-hover: #ffffff;
+  --action-fg: #171310;
+}
+
+/* ---------------------------------------------------------------------
+ * Custom - any colour the admin picks (Settings -> Appearance). Unlike the
+ * named themes above, which use hand-picked shades, --accent-base is a
+ * single value ThemeProvider sets inline, and hover/soft/text are *derived*
+ * from it with real colour math - pick any colour and every shade falls out
+ * correctly in both light and dark. --accent-fg (white or near-black text
+ * on top of a solid accent fill) is the one thing colour math can't decide
+ * on its own, so ThemeProvider computes that separately, from the chosen
+ * colour's luminance, and sets it alongside --accent-base.
+ * --------------------------------------------------------------------- */
+
+[data-palette='custom'] {
+  /* Fallback until ThemeProvider/index.html's inline script set the actual
+   * choice - same violet as early defaults elsewhere in this file's history. */
+  --accent-base: #09090b;
+  --accent: var(--accent-base);
+  --accent-hover: color-mix(in srgb, var(--accent-base) 85%, black);
+  --accent-fg: #fafafa;
+  --accent-soft: color-mix(in srgb, var(--accent-base) 10%, white);
+  --accent-text: color-mix(in srgb, var(--accent-base) 80%, black);
+}
+
+[data-palette='custom'].dark {
+  --accent-hover: color-mix(in srgb, var(--accent-base) 80%, white);
+  --accent-soft: color-mix(in srgb, var(--accent-base) 20%, transparent);
+  --accent-text: color-mix(in srgb, var(--accent-base) 65%, white);
+}
+
+@theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-surface-sunken: var(--surface-sunken);
