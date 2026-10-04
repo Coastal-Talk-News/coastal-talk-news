@@ -7,8 +7,11 @@ import { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX } from './limits.js';
 export { ADVERTISER_NAME_MAX, DESTINATION_URL_MAX };
 
 /** Percent. 100 fits the whole creative in the slot; above that it is
- *  enlarged and the slot crops it. */
-export const AdZoomSchema = Type.Integer({ minimum: 100, maximum: 300 });
+ *  enlarged and the slot crops it. The max (600) is high enough that even a
+ *  perfectly square image can still be zoomed to fully cover the widest
+ *  fixed slot (Masthead, 520x96 - needs ~542%) with no gap left over;
+ *  mirrors AD_ZOOM_MAX in @coastal-talk-news/types. */
+export const AdZoomSchema = Type.Integer({ minimum: 100, maximum: 600 });
 
 /** Pan, as a percentage of the slot's own width or height. The bound is
  *  what the deepest zoom can need; the CMS clamps to the exact overflow. */
@@ -20,6 +23,16 @@ export const AdPlacementSchema = Type.Union([
   Type.Literal('SIDEBAR'),
 ]);
 
+/** Masthead and Top only - see AdFitMode in @coastal-talk-news/types for
+ *  what each value means. Independent of AdZoomSchema/AdOffsetSchema below
+ *  - zoom applies the same way for every mode. Sidebar ads are always
+ *  FIT_SHRINK server-side. */
+export const AdFitModeSchema = Type.Union([
+  Type.Literal('FIT_SHRINK'),
+  Type.Literal('FIT_SPACE'),
+  Type.Literal('FIT_BACKGROUND'),
+]);
+
 const advertisementFields = {
   id: Type.String(),
   advertiserName: Type.String(),
@@ -29,6 +42,7 @@ const advertisementFields = {
   destinationUrl: Type.Union([Type.String(), Type.Null()]),
   displayOrder: Type.Integer(),
   placement: AdPlacementSchema,
+  fitMode: AdFitModeSchema,
   zoom: AdZoomSchema,
   offsetX: AdOffsetSchema,
   offsetY: AdOffsetSchema,
@@ -55,6 +69,7 @@ const writableAdvertisementFields = {
   ]),
   displayOrder: Type.Integer({ minimum: 0 }),
   placement: AdPlacementSchema,
+  fitMode: AdFitModeSchema,
   zoom: AdZoomSchema,
   offsetX: AdOffsetSchema,
   offsetY: AdOffsetSchema,
@@ -71,6 +86,7 @@ export const CreateAdvertisementBodySchema = Type.Object(
     destinationUrl: Type.Optional(writableAdvertisementFields.destinationUrl),
     displayOrder: Type.Optional(writableAdvertisementFields.displayOrder),
     placement: Type.Optional(writableAdvertisementFields.placement),
+    fitMode: Type.Optional(writableAdvertisementFields.fitMode),
     zoom: Type.Optional(writableAdvertisementFields.zoom),
     offsetX: Type.Optional(writableAdvertisementFields.offsetX),
     offsetY: Type.Optional(writableAdvertisementFields.offsetY),

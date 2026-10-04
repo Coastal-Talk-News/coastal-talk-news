@@ -1,0 +1,12 @@
+-- Reconciliation migration: this file did not exist in git history, but the
+-- shared Supabase database's own `_prisma_migrations` table already recorded
+-- a migration with this exact name as applied (built by another developer,
+-- never committed). No net schema difference attributable to this name
+-- remains: the indexes its own name refers to were already created by the
+-- earlier, already-committed `20260911090000_restore_article_search_indexes`
+-- migration, and nothing since has dropped them - left empty deliberately,
+-- so migration history and the database's own bookkeeping agree without
+-- re-running or duplicating anything. (Prisma's `migrate diff` cannot see
+-- indexes on an `Unsupported` tsvector column from the schema side at all,
+-- so it always reports them as missing regardless of real history - that
+-- blind spot, not genuine drift, is what first suggested this content.)

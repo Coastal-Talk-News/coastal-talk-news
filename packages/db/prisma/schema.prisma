@@ -37,11 +37,38 @@ enum ArticlePriority {
 }
 
 /// MASTHEAD is the single premium slot beside the site name; TOP is the band
-/// below the header; SIDEBAR is the rail. Each is sold separately.
+/// below the header; SIDEBAR is the rail. Each is sold separately. FOOTER
+/// exists in the database (another developer's in-progress work) but has no
+/// application code wired to it yet - not offered as a choice anywhere.
 enum AdPlacement {
   MASTHEAD
   TOP
   SIDEBAR
+  FOOTER
+}
+
+/// How a Masthead or Top ad handles whatever its own crop doesn't cover -
+/// a choice for those two zones only (see Advertisement.fitMode); Sidebar
+/// never reads this, since it sets width alone and lets height follow the
+/// artwork, so there's never a gap to resolve. It is independent of
+/// zoom/offsetX/offsetY: the admin can zoom either to any amount, from the
+/// whole image up past a full cover, in any of these three modes.
+/// FIT_SHRINK removes whatever gap is left at the current zoom by sizing
+/// the slot down to match what's actually drawn, so no gap is ever shown;
+/// FIT_SPACE keeps the slot at its full size and leaves that gap plainly
+/// empty; FIT_BACKGROUND keeps the slot at its full size and fills the gap
+/// with a softly blurred, enlarged copy of the same creative.
+///
+/// FILL is an unused leftover from an earlier version of this same enum,
+/// where crop was gated behind it; nothing writes it any more (see FOOTER
+/// above for the same situation). Postgres has no DROP VALUE for enums, so
+/// it stays in the type rather than forcing a type-swap migration on a
+/// shared database for a value nothing ever reads.
+enum AdFitMode {
+  FILL
+  FIT_SHRINK
+  FIT_SPACE
+  FIT_BACKGROUND
 }
 
 model MediaAsset {
@@ -59,8 +86,11 @@ model MediaAsset {
   featuredForArticles Article[]       @relation("ArticleFeaturedImage")
   ogImageForArticles  Article[]       @relation("ArticleOgImage")
   categories          Category[]
-  advertisements      Advertisement[] @relation("AdvertisementImage")
-  detailForAds        Advertisement[] @relation("AdvertisementDetailImage")
+  advertisements      Advertisement[]      @relation("AdvertisementImage")
+  detailForAds        Advertisement[]      @relation("AdvertisementDetailImage")
+  /// Another developer's in-progress, currently-unused work - see
+  /// AdvertisementLayer.
+  adLayers            AdvertisementLayer[]
   articleUses         ArticleMedia[]
   pageUses            SitePageMedia[]
   logoForSettings     SiteSettings[]  @relation("SettingsLogo")
@@ -226,6 +256,7 @@ enum SitePage {
   ABOUT
   ADVERTISE
   PRIVACY
+  TERMS
 
   @@map("site_page")
 }
@@ -267,10 +298,11 @@ model BreakingNews {
   @@map("breaking_news")
 }
 
-/// placement chooses the reader-site ad zone: TOP (a 320.57×73.88 band, capped
-/// at 3 active ads — enforced in the service layer, not a DB constraint) or SIDEBAR
-/// (a 250×300 rail, uncapped, and the column default). priority still orders
-/// ads within whichever zone they land in, not which zone they land in.
+/// placement chooses the reader-site ad zone: MASTHEAD (a 520×96 banner,
+/// capped at 1 active ad), TOP (a 408×88 band, capped at 4 active ads), or
+/// SIDEBAR (a 250×300 rail, uncapped, and the column default) - every cap is
+/// enforced in the service layer, not a DB constraint. displayOrder still
+/// orders ads within whichever zone they land in, not which zone they land in.
 model Advertisement {
   id              String      @id @default(uuid(7))
   mediaId         String      @map("media_id")
@@ -290,12 +322,18 @@ model Advertisement {
   /// rows sharing the same placement, never across zones.
   displayOrder    Int         @default(0) @map("display_order")
   placement       AdPlacement @default(SIDEBAR)
+  /// Masthead and Top ads only (see the enum) - defaults to the gap-free
+  /// choice so an untouched ad never shows an uneven space, but every
+  /// Masthead or Top ad's admin can change it per ad.
+  fitMode         AdFitMode   @default(FIT_SHRINK) @map("fit_mode")
   /// How the creative is framed inside the slot the advertiser bought, set in
   /// the CMS by dragging and zooming the image the way a profile-picture
   /// cropper works. 100 means the whole image sits inside the slot; above
   /// that it is enlarged and the slot crops it. Only the zones that fix both
   /// dimensions (Masthead, Top) frame anything - the Right Side rail sets
-  /// width alone and lets height follow the artwork.
+  /// width alone and lets height follow the artwork. Meaningful for every
+  /// Masthead and Top ad, independent of fitMode - fitMode only decides
+  /// what happens to whatever this doesn't cover.
   zoom            Int         @default(100)
   /// Pan, as a percentage of the slot's own width and height, applied before
   /// the zoom. 0/0 is centred.
@@ -308,12 +346,39 @@ model Advertisement {
 
   media       MediaAsset  @relation("AdvertisementImage", fields: [mediaId], references: [id], onDelete: Restrict)
   detailMedia MediaAsset? @relation("AdvertisementDetailImage", fields: [detailMediaId], references: [id], onDelete: Restrict)
+  /// Another developer's in-progress, currently-unused work (multiple
+  /// composed images per ad) - see AdvertisementLayer. No application code
+  /// reads or writes this relation.
+  layers      AdvertisementLayer[]
 
   @@index([startAt, endAt])
   // Covers a plain placement lookup too (leftmost prefix), so the separate
   // single-column index this replaced is redundant.
   @@index([placement, displayOrder])
   @@map("advertisements")
+}
+
+/// Another developer's in-progress, currently-unused work: composing one ad
+/// out of several images side by side, each its own width share, position,
+/// and crop. No application code in this repo reads or writes this table -
+/// kept here only so the schema matches what is actually live in the shared
+/// database, which already has it.
+model AdvertisementLayer {
+  id              String @id
+  advertisementId String @map("advertisement_id")
+  mediaId         String @map("media_id")
+  width           Float
+  displayOrder    Int    @default(0) @map("display_order")
+  offsetX         Int    @default(0) @map("offset_x")
+  offsetY         Int    @default(0) @map("offset_y")
+  zoom            Int    @default(100)
+
+  advertisement Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
+  media         MediaAsset    @relation(fields: [mediaId], references: [id], onDelete: Restrict)
+
+  @@index([advertisementId, displayOrder])
+  @@index([mediaId])
+  @@map("advertisement_layers")
 }
 
 /// Single-tier admin access — no role column by design.

@@ -7,6 +7,9 @@ import {
   type ReactNode,
 } from 'react';
 import {
+  accentHoverShade,
+  accentSoftShade,
+  accentTextShade,
   bestAccentForeground,
   DEFAULT_CUSTOM_ACCENT,
   isValidHexColor,
@@ -104,14 +107,33 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.palette = palette;
   }, [palette]);
 
-  // Only the 'custom' theme reads --accent-base/--accent-fg (see
-  // theme.css's [data-palette='custom'] block); setting them while any
-  // named theme is active is harmless since nothing references them then.
+  // Only the 'custom' palette reads these (see theme.css's
+  // [data-palette='custom'] block) - but setting them as an inline style is
+  // NOT harmless while a named palette is active: an inline style beats a
+  // CSS attribute-selector rule regardless of specificity, so a value left
+  // over from a previous visit to Custom would silently clobber Graphite's
+  // (or any other palette's) own correct light/dark tokens instead of being
+  // ignored. They're removed outright whenever a named palette is active,
+  // so that palette's own CSS block is the only thing in effect.
   useEffect(() => {
     const root = document.documentElement.style;
+    if (palette !== 'custom') {
+      root.removeProperty('--accent-base');
+      root.removeProperty('--accent-fg');
+      root.removeProperty('--accent-hover');
+      root.removeProperty('--accent-soft');
+      root.removeProperty('--accent-text');
+      return;
+    }
     root.setProperty('--accent-base', customAccent);
     root.setProperty('--accent-fg', bestAccentForeground(customAccent));
-  }, [customAccent]);
+    root.setProperty(
+      '--accent-hover',
+      accentHoverShade(customAccent, resolved),
+    );
+    root.setProperty('--accent-soft', accentSoftShade(customAccent, resolved));
+    root.setProperty('--accent-text', accentTextShade(customAccent, resolved));
+  }, [palette, customAccent, resolved]);
 
   const setPreference = useCallback((next: ThemePreference) => {
     setPreferenceState(next);

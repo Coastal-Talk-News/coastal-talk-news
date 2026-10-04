@@ -229,30 +229,31 @@
 
 /* ---------------------------------------------------------------------
  * Custom - any colour the admin picks (Settings -> Appearance). Unlike the
- * named themes above, which use hand-picked shades, --accent-base is a
- * single value ThemeProvider sets inline, and hover/soft/text are *derived*
- * from it with real colour math - pick any colour and every shade falls out
- * correctly in both light and dark. --accent-fg (white or near-black text
- * on top of a solid accent fill) is the one thing colour math can't decide
- * on its own, so ThemeProvider computes that separately, from the chosen
- * colour's luminance, and sets it alongside --accent-base.
+ * named themes above, which use hand-picked shades, every one of these
+ * (besides --accent itself) is computed in JS by ThemeProvider/accentColor.ts
+ * and set as an inline style: plain CSS colour-mix breaks down at the
+ * extremes (a picked colour already close to white or black has barely any
+ * lightness left for a mix toward the opposite end to work with, and stays
+ * washed-out instead of a readable, recognisably-tinted shade), so these
+ * are derived in HSL instead, with lightness clamped into a readable band
+ * and a saturation floor. The values below are only the fallback for the
+ * instant before that effect runs - matching Graphite's own hand-picked
+ * shades, since DEFAULT_CUSTOM_ACCENT is Graphite's own accent colour.
  * --------------------------------------------------------------------- */
 
 [data-palette='custom'] {
-  /* Fallback until ThemeProvider/index.html's inline script set the actual
-   * choice - same violet as early defaults elsewhere in this file's history. */
   --accent-base: #09090b;
   --accent: var(--accent-base);
-  --accent-hover: color-mix(in srgb, var(--accent-base) 85%, black);
+  --accent-hover: #27272a;
   --accent-fg: #fafafa;
-  --accent-soft: color-mix(in srgb, var(--accent-base) 10%, white);
-  --accent-text: color-mix(in srgb, var(--accent-base) 80%, black);
+  --accent-soft: #f4f4f5;
+  --accent-text: #09090b;
 }
 
 [data-palette='custom'].dark {
-  --accent-hover: color-mix(in srgb, var(--accent-base) 80%, white);
-  --accent-soft: color-mix(in srgb, var(--accent-base) 20%, transparent);
-  --accent-text: color-mix(in srgb, var(--accent-base) 65%, white);
+  --accent-hover: #e4e4e7;
+  --accent-soft: #27272a;
+  --accent-text: #fafafa;
 }
 
 @theme inline {

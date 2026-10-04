@@ -22,16 +22,23 @@ import { buildSiteMetadata } from '../lib/seo';
 import { getOrigin } from '../lib/site-url';
 import './globals.css';
 
+// Every font below is a variable font - `weight: 'variable'` loads the whole
+// range as one resource rather than one file per discrete weight, which the
+// CSS below still addresses normally (font-weight: 400/600/700, etc). A
+// discrete weight array (e.g. ['400','600','700']) triggers a Turbopack bug
+// on variable Google fonts: it generates one @font-face per weight and its
+// internal font-file resolver can't disambiguate them ("next/font/google
+// queries have exactly one entry"), failing the whole build.
 const headline = Noto_Serif({
   subsets: ['latin'],
-  weight: ['400', '600', '700'],
+  weight: 'variable',
   variable: '--font-headline',
   display: 'swap',
 });
 
 const article = Merriweather({
   subsets: ['latin'],
-  weight: ['400', '700'],
+  weight: 'variable',
   // Emphasis and quotations are common in articles; without the real italic
   // the browser slants the upright letters instead.
   style: ['normal', 'italic'],
@@ -41,21 +48,21 @@ const article = Merriweather({
 
 const headlineKannada = Noto_Serif_Kannada({
   subsets: ['kannada'],
-  weight: ['400', '600', '700'],
+  weight: 'variable',
   variable: '--font-headline-kannada',
   display: 'swap',
 });
 
 const body = Noto_Sans({
   subsets: ['latin'],
-  weight: ['400', '600'],
+  weight: 'variable',
   variable: '--font-body',
   display: 'swap',
 });
 
 const bodyKannada = Noto_Sans_Kannada({
   subsets: ['kannada'],
-  weight: ['400', '600'],
+  weight: 'variable',
   variable: '--font-body-kannada',
   display: 'swap',
 });

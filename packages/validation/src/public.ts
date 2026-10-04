@@ -1,5 +1,6 @@
 import { Type } from '@sinclair/typebox';
 import {
+  AdFitModeSchema,
   AdOffsetSchema,
   AdPlacementSchema,
   AdZoomSchema,
@@ -71,6 +72,7 @@ const publicAdvertisementFields = {
   advertiserName: Type.String(),
   placement: AdPlacementSchema,
   image: MediaSummarySchema,
+  fitMode: AdFitModeSchema,
   zoom: AdZoomSchema,
   offsetX: AdOffsetSchema,
   offsetY: AdOffsetSchema,

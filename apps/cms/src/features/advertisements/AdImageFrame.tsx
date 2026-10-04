@@ -1,8 +1,19 @@
-import type { AdImageCrop, MediaSummaryDto } from '@coastal-talk-news/types';
+import type {
+  AdFitMode,
+  AdImageCrop,
+  MediaSummaryDto,
+} from '@coastal-talk-news/types';
 import { Button } from '@coastal-talk-news/ui/button';
 import { cn } from '@coastal-talk-news/ui/cn';
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react';
-import { ZOOM_MAX, ZOOM_MIN, clampCrop, coverZoom } from './crop.js';
+import {
+  ZOOM_MAX,
+  ZOOM_MIN,
+  clampCrop,
+  coverZoom,
+  visibleAdBox,
+} from './crop.js';
+import { FIT_MODE_OPTIONS } from './placement.js';
 
 export interface AdSlot {
   width: number;
@@ -17,6 +28,16 @@ interface AdImageFrameProps {
   slot: AdSlot;
   crop: AdImageCrop;
   onChange: (crop: AdImageCrop) => void;
+  /**
+   * Masthead and Top ads only. When set, this frame also offers the
+   * three-way choice of what happens to whatever the crop above doesn't
+   * cover - independent of the crop itself, which works exactly the same
+   * as it does for every other placement. Sidebar never passes this - it
+   * sets width alone and lets height follow the artwork, so there's never
+   * a gap to resolve.
+   */
+  fitMode?: AdFitMode;
+  onFitModeChange?: (mode: AdFitMode) => void;
 }
 
 /**
@@ -30,6 +51,8 @@ export function AdImageFrame({
   slot,
   crop,
   onChange,
+  fitMode,
+  onFitModeChange,
 }: AdImageFrameProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; crop: AdImageCrop } | null>(null);
@@ -82,10 +105,60 @@ export function AdImageFrame({
     });
   }
 
+  // Both are legitimate, deliberate choices - showing the whole creative
+  // uncropped, or filling the slot exactly - not one "correct" default the
+  // admin has to override. Which one the advertiser needs depends on the
+  // artwork: a logo or anything with text near its edges often can't survive
+  // being cropped to fill an odd-shaped slot, so "whole image" has to stay a
+  // real, equally-supported option, not something this component decides on
+  // their behalf. Zoom is otherwise free between the two, same for every
+  // fit mode below - it is never gated behind any of them.
   const filled = coverZoom(image, slot);
+
+  const hasFitMode = fitMode !== undefined && onFitModeChange !== undefined;
+  // FIT_SHRINK's box always matches what is actually visible at the current
+  // zoom - at zoom 100 that's the plain contained image; past coverZoom
+  // there's no gap left to shrink away, so this is just the slot itself.
+  const box =
+    hasFitMode && fitMode === 'FIT_SHRINK'
+      ? visibleAdBox(image, slot, crop.zoom)
+      : slot;
 
   return (
     <div className="space-y-2">
+      {hasFitMode && (
+        <div className="space-y-1.5">
+          <span className="text-ink-muted block text-sm font-medium">
+            Leftover space
+          </span>
+          <div className="grid grid-cols-3 gap-2">
+            {FIT_MODE_OPTIONS.map((option) => {
+              const selected = fitMode === option.value;
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={selected}
+                  onClick={() => onFitModeChange?.(option.value)}
+                  className={cn(
+                    'rounded-lg border p-2 text-left text-xs transition-colors',
+                    selected
+                      ? 'border-accent bg-accent-soft'
+                      : 'border-hairline hover:border-ink-subtle/40',
+                  )}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-ink-subtle text-xs">
+            {FIT_MODE_OPTIONS.find((option) => option.value === fitMode)
+              ?.hint ?? ''}
+          </p>
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-ink-muted text-sm font-medium">
           Image placement
@@ -128,15 +201,24 @@ export function AdImageFrame({
           dragging ? 'cursor-grabbing' : 'cursor-grab',
         )}
         style={{
-          aspectRatio: `${slot.width} / ${slot.height}`,
-          maxWidth: slot.width,
+          aspectRatio: `${box.width} / ${box.height}`,
+          maxWidth: box.width,
         }}
       >
+        {hasFitMode && fitMode === 'FIT_BACKGROUND' && (
+          <img
+            src={image.url}
+            alt=""
+            draggable={false}
+            aria-hidden
+            className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover blur-2xl"
+          />
+        )}
         <img
           src={image.url}
           alt=""
           draggable={false}
-          className="pointer-events-none h-full w-full object-contain"
+          className="pointer-events-none relative h-full w-full object-contain"
           style={{
             transform: `translate(${crop.offsetX}%, ${crop.offsetY}%) scale(${crop.zoom / 100})`,
           }}

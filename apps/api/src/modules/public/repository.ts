@@ -224,6 +224,7 @@ const adCardSelect = {
   id: true,
   advertiserName: true,
   placement: true,
+  fitMode: true,
   zoom: true,
   offsetX: true,
   offsetY: true,

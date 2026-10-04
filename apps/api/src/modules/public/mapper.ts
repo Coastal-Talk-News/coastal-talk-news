@@ -1,4 +1,4 @@
-import type { AdPlacement, Language } from '@coastal-talk-news/db';
+import type { AdFitMode, AdPlacement, Language } from '@coastal-talk-news/db';
 import type {
   ArticleContent,
   PublicAdvertisementDetailDto,
@@ -164,6 +164,7 @@ interface AdvertisementRow {
   id: string;
   advertiserName: string;
   placement: AdPlacement;
+  fitMode: AdFitMode;
   zoom: number;
   offsetX: number;
   offsetY: number;
@@ -177,7 +178,15 @@ export function toAdvertisement(
   return {
     id: advertisement.id,
     advertiserName: advertisement.advertiserName,
-    placement: advertisement.placement,
+    // FOOTER exists in the DB enum (another developer's in-progress work,
+    // not wired to any application code) but never actually appears here -
+    // nothing creates one, and the response schema only allows the three
+    // placements this app supports.
+    placement: advertisement.placement as PublicAdvertisementDto['placement'],
+    // FILL is a leftover, unused DB enum value from an earlier design of
+    // this same feature (crop used to be gated behind it) - nothing ever
+    // writes it any more, so it's narrowed away the same way FOOTER is.
+    fitMode: advertisement.fitMode as PublicAdvertisementDto['fitMode'],
     zoom: advertisement.zoom,
     offsetX: advertisement.offsetX,
     offsetY: advertisement.offsetY,
