@@ -6,37 +6,41 @@ import { articlePath, categoryPath } from '../lib/routes';
 import { getOrigin } from '../lib/site-url';
 
 /**
- * Served from the cache and rebuilt in the background at most every ten
- * minutes: crawlers fetch it often, and rebuilding it on each of those would
- * be a server run and an API call apiece. A new article is listed within ten
- * minutes, with no redeploy. Article and section pages never touch it.
+ * Rebuild the sitemap at most every 10 minutes.
  */
 export const revalidate = 600;
 
-/** Public pages that aren't articles or sections. Search and previews are
- * deliberately absent: neither is a page search engines should index. */
+/**
+ * Public indexable pages that are not articles/categories.
+ *
+ * Search and preview pages are intentionally excluded.
+ */
 const STATIC_PATHS = [
-  '/featured',
-  '/lead-stories',
   '/about',
   '/contact',
   '/advertise',
-  '/advertisements',
   '/privacy-policy',
   '/terms-and-conditions',
 ];
 
 /**
- * A sleeping API must not fail the deploy, so at build time a failed fetch
- * gives a sitemap of the fixed pages, replaced on the first rebuild. After
- * that a failure throws, and Next keeps serving the last good sitemap.
+ * Fetch sitemap data.
+ *
+ * During production build, if the API is unavailable,
+ * return an empty dynamic sitemap so deployment does not fail.
  */
 async function loadSitemap(): Promise<PublicSitemapDto> {
   try {
     return await getSitemap(revalidate);
   } catch (error) {
-    if (process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD) throw error;
-    return { articles: [], categories: [] };
+    if (process.env.NEXT_PHASE !== PHASE_PRODUCTION_BUILD) {
+      throw error;
+    }
+
+    return {
+      articles: [],
+      categories: [],
+    };
   }
 }
 
@@ -45,35 +49,51 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     loadSitemap(),
     getOrigin(),
   ]);
+
   const url = (path: string) => `${origin}${path}`;
 
-  // Only drafts and archived articles are missing from the feed, so the
-  // newest published article dates the homepage's last change.
-  const newest = articles[0]?.updatedAt;
+  /**
+   * Use the newest article's updatedAt as the homepage
+   * lastModified value.
+   *
+   * articles[0] is expected to be the newest article.
+   */
+  const newestArticleUpdatedAt = articles[0]?.updatedAt;
 
   return [
+    /**
+     * Homepage
+     */
     {
       url: url('/'),
-      ...(newest ? { lastModified: newest } : {}),
-      changeFrequency: 'hourly',
-      priority: 1,
+      ...(newestArticleUpdatedAt
+        ? {
+            lastModified: newestArticleUpdatedAt,
+          }
+        : {}),
     },
+
+    /**
+     * Categories
+     */
     ...categories.map((category) => ({
       url: url(categoryPath(category)),
       lastModified: category.updatedAt,
-      changeFrequency: 'daily' as const,
-      priority: 0.8,
     })),
+
+    /**
+     * Static public pages
+     */
     ...STATIC_PATHS.map((path) => ({
       url: url(path),
-      changeFrequency: 'monthly' as const,
-      priority: 0.3,
     })),
+
+    /**
+     * Published articles
+     */
     ...articles.map((article) => ({
       url: url(articlePath(article)),
       lastModified: article.updatedAt,
-      changeFrequency: 'weekly' as const,
-      priority: 0.6,
     })),
   ];
 }
