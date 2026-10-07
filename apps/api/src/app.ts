@@ -25,6 +25,7 @@ import {
 } from './modules/public/routes.js';
 import { cmsSettingsRoutes } from './modules/settings/routes.js';
 import authPlugin from './plugins/auth.js';
+import cloudflarePlugin from './plugins/cloudflare.js';
 import errorHandler from './plugins/error-handler.js';
 import prismaPlugin from './plugins/prisma.js';
 import storagePlugin from './plugins/storage.js';
@@ -106,6 +107,7 @@ export async function buildApp(env: Env): Promise<FastifyInstance> {
   await app.register(prismaPlugin, { env });
   await app.register(storagePlugin, { env });
   await app.register(webRevalidatePlugin, { env });
+  await app.register(cloudflarePlugin, { env });
   await app.register(authPlugin, { env });
 
   app.get(

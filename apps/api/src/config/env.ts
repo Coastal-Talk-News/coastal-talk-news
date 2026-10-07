@@ -82,12 +82,20 @@ const EnvSchema = Type.Object({
   // loadEnv().
   RESEND_API_KEY: Type.Optional(Type.String({ minLength: 1 })),
   EMAIL_OTP_FROM: Type.Optional(Type.String({ minLength: 1 })),
+
+  // Lets the dashboard show today's Cloudflare Workers request count and
+  // Observability event count. Both optional - leaving them unset just
+  // leaves those two figures off the dashboard; see the per-pair check in
+  // loadEnv().
+  CLOUDFLARE_ACCOUNT_ID: Type.Optional(Type.String({ minLength: 1 })),
+  CLOUDFLARE_API_TOKEN: Type.Optional(Type.String({ minLength: 1 })),
 });
 
 export type Env = Static<typeof EnvSchema> & {
   corsOrigins: string[];
   totpKey: Buffer;
   emailOtpEnabled: boolean;
+  cloudflareEnabled: boolean;
 };
 
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
@@ -121,12 +129,14 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 
   requireStorageProviderConfig(parsed);
   requireEmailOtpConfig(parsed);
+  requireCloudflareConfig(parsed);
 
   return {
     ...parsed,
     corsOrigins,
     totpKey,
     emailOtpEnabled: Boolean(parsed.RESEND_API_KEY),
+    cloudflareEnabled: Boolean(parsed.CLOUDFLARE_ACCOUNT_ID),
   };
 }
 
@@ -169,6 +179,18 @@ function requireEmailOtpConfig(env: Static<typeof EnvSchema>): void {
   if (Boolean(env.RESEND_API_KEY) !== Boolean(env.EMAIL_OTP_FROM)) {
     throw new Error(
       'RESEND_API_KEY and EMAIL_OTP_FROM must both be set, or both left unset.',
+    );
+  }
+}
+
+/** Same reasoning as requireEmailOtpConfig - calling the Cloudflare API
+ *  needs both, and a lone one set is almost certainly a typo. */
+function requireCloudflareConfig(env: Static<typeof EnvSchema>): void {
+  if (
+    Boolean(env.CLOUDFLARE_ACCOUNT_ID) !== Boolean(env.CLOUDFLARE_API_TOKEN)
+  ) {
+    throw new Error(
+      'CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN must both be set, or both left unset.',
     );
   }
 }

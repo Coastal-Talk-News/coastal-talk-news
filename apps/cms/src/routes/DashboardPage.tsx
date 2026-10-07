@@ -23,6 +23,7 @@ import {
 import { Link } from 'react-router-dom';
 import { dashboardApi } from '../api/dashboard.js';
 import { queryKeys } from '../api/queryKeys.js';
+import { CloudflareUsageCard } from '../features/dashboard/CloudflareUsageCard.js';
 import { DashboardDate } from '../features/dashboard/DashboardDate.js';
 import { StatCard } from '../features/dashboard/StatCard.js';
 import { UsageMeter } from '../features/dashboard/UsageMeter.js';
@@ -100,6 +101,25 @@ export function DashboardPage() {
 
   const { stats, recentArticles, breakingNews, advertisements } = data;
 
+  // Shown as unavailable rather than left out while loading or on failure:
+  // the dashboard is worth opening without them. Before usage loads, both
+  // are assumed present (the common case) so Quick Actions' span below
+  // doesn't jump once the real answer arrives a moment later.
+  const showCloudinary = !usage || usage.storageProvider === 'cloudinary';
+  const showCloudflare = !usage || usage.cloudflareEnabled;
+  const usageCardCount =
+    (showCloudinary ? 1 : 0) + 2 + (showCloudflare ? 1 : 0);
+  // However many usage cards precede it, Quick Actions closes out their
+  // last row exactly - sized to whatever that row has left over, rather
+  // than leaving a gap or wrapping onto a half-empty row of its own.
+  const QUICK_ACTIONS_SPAN: Record<number, string> = {
+    2: 'sm:col-span-2 lg:col-span-1',
+    3: 'sm:col-span-1 lg:col-span-3',
+    4: 'sm:col-span-2 lg:col-span-2',
+  };
+  const quickActionsSpan =
+    QUICK_ACTIONS_SPAN[usageCardCount] ?? 'sm:col-span-2 lg:col-span-3';
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -145,61 +165,15 @@ export function DashboardPage() {
         />
       </div>
 
-      <div className="border-accent-soft bg-accent-soft rounded-card border p-5">
-        <p className="mb-3 flex items-center gap-2 font-semibold text-ink">
-          <Zap className="text-accent-text size-4" aria-hidden />
-          Quick Actions
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Link to="/articles/new">
-            <Button size="sm">
-              <Plus className="size-4" aria-hidden />
-              Create Article
-            </Button>
-          </Link>
-          <Link to="/latest-news">
-            <Button size="sm" variant="secondary">
-              <Bell className="size-4" aria-hidden />
-              Latest News
-            </Button>
-          </Link>
-          <Link to="/media">
-            <Button size="sm" variant="secondary">
-              <ImageIcon className="size-4" aria-hidden />
-              Upload Media
-            </Button>
-          </Link>
-          <Link to="/categories">
-            <Button size="sm" variant="secondary">
-              <LayoutGrid className="size-4" aria-hidden />
-              Categories
-            </Button>
-          </Link>
-          <Link to="/advertisements">
-            <Button size="sm" variant="secondary">
-              <Megaphone className="size-4" aria-hidden />
-              Advertisements
-            </Button>
-          </Link>
-          <Link to="/analytics">
-            <Button size="sm" variant="secondary">
-              <BarChart3 className="size-4" aria-hidden />
-              Analytics
-            </Button>
-          </Link>
-          <Link to="/settings">
-            <Button size="sm" variant="secondary">
-              <SettingsIcon className="size-4" aria-hidden />
-              Settings
-            </Button>
-          </Link>
-        </div>
-      </div>
-
+      {/*
+        Quick Actions lives inside this same grid, as its last cell, sized
+        to exactly fill whatever the usage cards before it leave open in
+        their last row - the number of usage cards varies (Cloudinary only
+        shows for that storage provider, Cloudflare only when configured),
+        so which span closes the row without a gap varies with it.
+      */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* Shown as unavailable rather than left out while loading or on
-            failure: the dashboard is worth opening without them. */}
-        {(!usage || usage.storageProvider === 'cloudinary') && (
+        {showCloudinary && (
           <UsageMeter
             label="Cloudinary credits"
             icon={Cloud}
@@ -222,6 +196,72 @@ export function DashboardPage() {
           unit="MB"
           pending={usageQuery.isPending}
         />
+        {/* Only shown once CLOUDFLARE_ACCOUNT_ID/CLOUDFLARE_API_TOKEN are
+            configured server-side - omitted entirely rather than shown as
+            unavailable, since most deployments won't have these set at all.
+            One card for both figures: they come from the same account and
+            reset together, so splitting them into two meters would read as
+            unrelated rather than the one Cloudflare usage picture they are. */}
+        {showCloudflare && (
+          <CloudflareUsageCard
+            requests={usage ? usage.cloudflareRequests : null}
+            events={usage ? usage.cloudflareObservabilityEvents : null}
+            pending={usageQuery.isPending}
+          />
+        )}
+
+        <div
+          className={`border-accent-soft bg-accent-soft rounded-card border p-5 ${quickActionsSpan}`}
+        >
+          <p className="mb-3 flex items-center gap-2 font-semibold text-ink">
+            <Zap className="text-accent-text size-4" aria-hidden />
+            Quick Actions
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/articles/new">
+              <Button size="sm">
+                <Plus className="size-4" aria-hidden />
+                Create Article
+              </Button>
+            </Link>
+            <Link to="/latest-news">
+              <Button size="sm" variant="secondary">
+                <Bell className="size-4" aria-hidden />
+                Latest News
+              </Button>
+            </Link>
+            <Link to="/media">
+              <Button size="sm" variant="secondary">
+                <ImageIcon className="size-4" aria-hidden />
+                Upload Media
+              </Button>
+            </Link>
+            <Link to="/categories">
+              <Button size="sm" variant="secondary">
+                <LayoutGrid className="size-4" aria-hidden />
+                Categories
+              </Button>
+            </Link>
+            <Link to="/advertisements">
+              <Button size="sm" variant="secondary">
+                <Megaphone className="size-4" aria-hidden />
+                Advertisements
+              </Button>
+            </Link>
+            <Link to="/analytics">
+              <Button size="sm" variant="secondary">
+                <BarChart3 className="size-4" aria-hidden />
+                Analytics
+              </Button>
+            </Link>
+            <Link to="/settings">
+              <Button size="sm" variant="secondary">
+                <SettingsIcon className="size-4" aria-hidden />
+                Settings
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">

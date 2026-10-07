@@ -1,4 +1,5 @@
 import type { Database } from '@coastal-talk-news/db';
+import type { CloudflareClient } from '../../lib/cloudflare.js';
 import { isActiveAt, isActiveAtOpenEnded } from '../../lib/schedule.js';
 import * as mediaRepository from '../media/repository.js';
 import type { ObjectStorage } from '../media/storage.js';
@@ -11,6 +12,9 @@ export interface DashboardDeps {
   storage: ObjectStorage;
   /** MEDIA_STORAGE_CAP_MB, in bytes. Only getUsage() needs this. */
   mediaStorageCapBytes: number;
+  /** Null when CLOUDFLARE_ACCOUNT_ID/CLOUDFLARE_API_TOKEN aren't
+   *  configured. Only getUsage() needs this. */
+  cloudflare: CloudflareClient | null;
 }
 
 function startOfToday(now: Date): Date {
@@ -87,11 +91,49 @@ async function readMediaStorage(db: Database, capBytes: number) {
   }
 }
 
+// Both Cloudflare figures reset at UTC midnight, so there's less runway to
+// react than a slower-moving storage meter - warn a bit earlier than those.
+const CLOUDFLARE_WARN_FRACTION = 0.8;
+
+async function readCloudflareRequests(cloudflare: CloudflareClient) {
+  try {
+    const { used, limit } = await cloudflare.requestsToday();
+    return {
+      used,
+      limit,
+      warnAt: Math.round(limit * CLOUDFLARE_WARN_FRACTION),
+    };
+  } catch {
+    // A usage meter is never worth failing the dashboard for.
+    return null;
+  }
+}
+
+async function readCloudflareObservabilityEvents(cloudflare: CloudflareClient) {
+  try {
+    const { used, limit } = await cloudflare.observabilityEventsToday();
+    return {
+      used,
+      limit,
+      warnAt: Math.round(limit * CLOUDFLARE_WARN_FRACTION),
+    };
+  } catch {
+    // A usage meter is never worth failing the dashboard for.
+    return null;
+  }
+}
+
 export async function getUsage(
-  { db, storage, mediaStorageCapBytes }: DashboardDeps,
+  { db, storage, mediaStorageCapBytes, cloudflare }: DashboardDeps,
   now = new Date(),
 ) {
-  const [cloudinary, supabase, mediaStorage] = await Promise.all([
+  const [
+    cloudinary,
+    supabase,
+    mediaStorage,
+    cloudflareRequests,
+    cloudflareObservabilityEvents,
+  ] = await Promise.all([
     // Cloudinary's own credit figure isn't a meaningful thing to show when
     // a different backend is actually storing the images.
     storage.provider === 'cloudinary'
@@ -99,12 +141,19 @@ export async function getUsage(
       : Promise.resolve(null),
     readSupabase(db),
     readMediaStorage(db, mediaStorageCapBytes),
+    cloudflare ? readCloudflareRequests(cloudflare) : Promise.resolve(null),
+    cloudflare
+      ? readCloudflareObservabilityEvents(cloudflare)
+      : Promise.resolve(null),
   ]);
   return {
     cloudinary,
     supabase,
     mediaStorage,
     storageProvider: storage.provider,
+    cloudflareEnabled: cloudflare !== null,
+    cloudflareRequests,
+    cloudflareObservabilityEvents,
   };
 }
 

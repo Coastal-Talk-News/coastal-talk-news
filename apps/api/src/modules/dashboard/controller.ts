@@ -8,6 +8,7 @@ export async function getUsage(request: FastifyRequest) {
       db: request.server.prisma,
       storage: request.server.storage,
       mediaStorageCapBytes: request.server.mediaStorageCapBytes,
+      cloudflare: request.server.cloudflare,
     }),
   );
 }
@@ -17,6 +18,7 @@ export async function getDashboard(request: FastifyRequest) {
     db: request.server.prisma,
     storage: request.server.storage,
     mediaStorageCapBytes: request.server.mediaStorageCapBytes,
+    cloudflare: request.server.cloudflare,
   });
   return dataEnvelope(data);
 }
