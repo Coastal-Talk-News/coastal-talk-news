@@ -53,6 +53,9 @@ export const DashboardUsageSchema = Type.Object({
   supabase: Type.Union([UsageMeterSchema, Type.Null()]),
   mediaStorage: Type.Union([UsageMeterSchema, Type.Null()]),
   storageProvider: Type.Union([Type.Literal('cloudinary'), Type.Literal('s3')]),
+  cloudflareEnabled: Type.Boolean(),
+  cloudflareRequests: Type.Union([UsageMeterSchema, Type.Null()]),
+  cloudflareObservabilityEvents: Type.Union([UsageMeterSchema, Type.Null()]),
 });
 
 export const DashboardSchema = Type.Object({

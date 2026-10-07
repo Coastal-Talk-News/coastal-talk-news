@@ -58,6 +58,17 @@ export interface DashboardUsageDto {
   mediaStorage: UsageMeterDto | null;
   /** Which backend is currently storing images. */
   storageProvider: 'cloudinary' | 's3';
+  /** False when CLOUDFLARE_ACCOUNT_ID/CLOUDFLARE_API_TOKEN aren't
+   *  configured - check this before rendering either figure below, the
+   *  same way storageProvider gates cloudinary. */
+  cloudflareEnabled: boolean;
+  /** Workers requests served today, against the Free plan's 100,000/day
+   *  cap. Null when cloudflareEnabled is false, or the API call failed. */
+  cloudflareRequests: UsageMeterDto | null;
+  /** Workers Observability events ingested today, against the Free plan's
+   *  200,000/day cap. Null when cloudflareEnabled is false, or the API
+   *  call failed. */
+  cloudflareObservabilityEvents: UsageMeterDto | null;
 }
 
 export interface DashboardDto {
