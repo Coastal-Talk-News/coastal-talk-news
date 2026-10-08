@@ -8,6 +8,7 @@ import {
   Noto_Serif_Kannada,
 } from 'next/font/google';
 import type { ReactNode } from 'react';
+import GoogleAdSenseScript from '../components/adsense/GoogleAdSenseScript';
 import { BreakingTicker } from '../components/layout/BreakingTicker';
 import { AdBand } from '../components/news/AdBand';
 import { AdColumn } from '../components/news/AdColumn';
@@ -118,6 +119,7 @@ export default async function RootLayout({
           both languages, so the prompt is noise. */}
       <head>
         <meta name="google" content="notranslate" />
+        <GoogleAdSenseScript />
       </head>
       <body className="flex min-h-screen flex-col">
         <Script
