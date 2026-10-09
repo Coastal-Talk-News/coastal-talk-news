@@ -36,3 +36,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# OpenNext and Cloudflare generated files
+apps/web/.open-next/
+apps/web/.wrangler/
