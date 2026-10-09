@@ -1,13 +1,13 @@
 import type { Metadata } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { estimateReadMinutes } from '@coastal-talk-news/types';
+import { ArticleLocaleSync } from '../../../components/layout/ArticleLocaleSync';
 import { ArticleView } from '../../../components/news/ArticleView';
 import { ViewTracker } from '../../../components/news/ViewTracker';
 import { getArticle, getSite } from '../../../lib/api';
 import { categoryName } from '../../../lib/category-name';
 import { ancestorsOf } from '../../../lib/category-trail';
 import { getDictionary } from '../../../lib/i18n/dictionaries';
-import { getLocale } from '../../../lib/i18n/server';
 import {
   articleKey,
   articleKeyFrom,
@@ -50,16 +50,14 @@ async function loadArticle(
 export async function generateMetadata({
   params,
 }: ArticlePageProps): Promise<Metadata> {
-  const [{ settings }, locale, origin] = await Promise.all([
-    getSite(),
-    getLocale(),
-    getOrigin(),
-  ]);
+  const [{ settings }, origin] = await Promise.all([getSite(), getOrigin()]);
   const { segment, article } = await loadArticle(
     params,
     settings.articleCacheMinutes,
   );
   if (!article) return { title: 'Article not found' };
+  const locale = article.language === 'KANNADA' ? 'kn' : 'en';
+
   // Any other address is redirected by the page; nothing to describe here.
   if (articleKey(article) !== segment) return {};
 
@@ -83,9 +81,8 @@ export async function generateMetadata({
 }
 
 export default async function ArticlePage({ params }: ArticlePageProps) {
-  const [{ settings, categories }, locale, origin] = await Promise.all([
+  const [{ settings, categories }, origin] = await Promise.all([
     getSite(),
-    getLocale(),
     getOrigin(),
   ]);
   const { segment, article } = await loadArticle(
@@ -100,6 +97,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
   const path = articlePath(article);
   if (articleKey(article) !== segment) permanentRedirect(path);
 
+  const locale = article.language === 'KANNADA' ? 'kn' : 'en';
   const dictionary = getDictionary(locale);
   // Only sections that are live: a hidden category's page 404s, and the
   // breadcrumb must not send search engines there.
@@ -125,6 +123,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   return (
     <>
+      <ArticleLocaleSync locale={locale} />
       <JsonLd
         data={[
           newsArticleJsonLd(article, settings, origin, path),
