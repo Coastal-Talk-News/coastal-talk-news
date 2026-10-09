@@ -8,13 +8,17 @@
     "build": "next build",
     "start": "next start",
     "serve": "next start",
-    "lint": "eslint --max-warnings 0",
-    "check-types": "next typegen && tsc --noEmit"
+    "lint": "eslint . --ignore-pattern '.open-next/**' --ignore-pattern '.wrangler/**' --max-warnings 0",
+    "check-types": "next typegen && tsc --noEmit",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare deploy"
   },
   "dependencies": {
     "@coastal-talk-news/types": "workspace:*",
     "@coastal-talk-news/ui": "workspace:*",
     "@coastal-talk-news/validation": "workspace:*",
+    "@opennextjs/cloudflare": "^1.20.9",
     "@tailwindcss/postcss": "^4.3.3",
     "next": "16.3.4",
     "postcss": "^8.5.28",
@@ -29,6 +33,7 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "eslint": "10.9.1",
-    "typescript": "7.0.2"
+    "typescript": "7.0.2",
+    "wrangler": "^4.148.0"
   }
 }
