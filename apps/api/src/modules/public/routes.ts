@@ -8,6 +8,7 @@ import {
   PublicArticleParamsSchema,
   PublicArticleSchema,
   PublicArticlesQuerySchema,
+  PublicRecentArticlesQuerySchema,
   PublicHomeQuerySchema,
   PublicHomeSchema,
   PublicPageParamsSchema,
@@ -114,6 +115,24 @@ export const publicSiteRoutes: FastifyPluginAsyncTypebox = async (app) => {
 
 export const publicArticleRoutes: FastifyPluginAsyncTypebox = async (app) => {
   await app.register(import('@fastify/rate-limit'), { global: false });
+
+  app.get(
+    '/recent',
+    {
+      schema: {
+        tags: ['public'],
+        summary: 'List recent published articles',
+        description:
+          'Published articles ordered newest first, optionally excluding the article currently being read.',
+        querystring: PublicRecentArticlesQuerySchema,
+        response: {
+          200: ListResponse(PublicArticleCardSchema),
+          ...commonErrorResponses,
+        },
+      },
+    },
+    controller.listRecentArticles,
+  );
 
   app.get(
     '',

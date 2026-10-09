@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Brand } from './Brand';
 import type {
   PublicNavCategoryDto,
@@ -9,6 +12,7 @@ import { categoryPath } from '../../lib/routes';
 import { getDictionary } from '../../lib/i18n/dictionaries';
 import type { Locale } from '../../lib/i18n/types';
 import { SocialLinks } from './SocialLinks';
+import { getClientLocale } from '../../lib/i18n/client';
 
 // Footer links don't prefetch. Next prefetches every link that scrolls into
 // view, and the footer lists every section and static page — about thirty
@@ -58,7 +62,18 @@ export function SiteFooter({
   locale: Locale;
 }) {
   const { settings, categories } = site;
-  const dictionary = getDictionary(locale);
+  const [activeLocale, setActiveLocale] = useState<Locale>(locale);
+
+  useEffect(() => {
+    setActiveLocale(getClientLocale());
+
+    const handleLocaleChange = () => setActiveLocale(getClientLocale());
+    window.addEventListener('ctn:locale-change', handleLocaleChange);
+    return () =>
+      window.removeEventListener('ctn:locale-change', handleLocaleChange);
+  }, [locale]);
+
+  const dictionary = getDictionary(activeLocale);
 
   // The list arrives flat, every depth mixed together, so a footer built
   // straight from it sets a group beside one of its own grandchildren. Each
@@ -90,7 +105,7 @@ export function SiteFooter({
           />
           <SocialLinks
             settings={settings}
-            locale={locale}
+            locale={activeLocale}
             tone="inverse"
             className="mt-4"
           />
@@ -117,13 +132,13 @@ export function SiteFooter({
                     href={categoryPath(group)}
                     className="font-semibold text-white/90 transition-colors hover:text-white"
                   >
-                    {categoryName(group, locale)}
+                    {categoryName(group, activeLocale)}
                   </Link>
                   <ul className="text-night-muted mt-2 space-y-1.5">
                     <SectionBranch
                       categories={group.children}
                       depth={0}
-                      locale={locale}
+                      locale={activeLocale}
                     />
                   </ul>
                 </div>
@@ -138,7 +153,7 @@ export function SiteFooter({
                     <SectionBranch
                       categories={ungrouped}
                       depth={0}
-                      locale={locale}
+                      locale={activeLocale}
                     />
                   </ul>
                 </div>

@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { Brand } from './Brand';
 import type { PublicSiteDto } from '@coastal-talk-news/types';
 import { MastheadAd } from '../news/MastheadAd';
@@ -12,6 +15,7 @@ import { LanguageToggle } from './LanguageToggle';
 import { SocialLinks } from './SocialLinks';
 import { CategoryNav } from './CategoryNav';
 import { HeaderSearchToggle } from './HeaderSearchToggle';
+import { getClientLocale } from '../../lib/i18n/client';
 
 export function SiteHeader({
   site,
@@ -21,7 +25,18 @@ export function SiteHeader({
   locale: Locale;
 }) {
   const { settings, categories, advertisements } = site;
-  const dictionary = getDictionary(locale);
+  const [activeLocale, setActiveLocale] = useState<Locale>(locale);
+
+  useEffect(() => {
+    setActiveLocale(getClientLocale());
+
+    const handleLocaleChange = () => setActiveLocale(getClientLocale());
+    window.addEventListener('ctn:locale-change', handleLocaleChange);
+    return () =>
+      window.removeEventListener('ctn:locale-change', handleLocaleChange);
+  }, [locale]);
+
+  const dictionary = getDictionary(activeLocale);
   const mastheadAds = adsForZone(advertisements, 'masthead');
 
   const utilityLinks = [
@@ -48,8 +63,8 @@ export function SiteHeader({
                 {link.label}
               </Link>
             ))}
-            <SocialLinks settings={settings} locale={locale} />
-            <LanguageToggle locale={locale} />
+            <SocialLinks settings={settings} locale={activeLocale} />
+            <LanguageToggle locale={activeLocale} />
           </div>
         </div>
       </div>
@@ -58,7 +73,7 @@ export function SiteHeader({
         <MobileNav
           categories={categories}
           settings={settings}
-          locale={locale}
+          locale={activeLocale}
         />
 
         <div className="min-w-0 flex-1">
@@ -75,11 +90,15 @@ export function SiteHeader({
         <MastheadAd
           advertisements={mastheadAds}
           variant="inline"
-          locale={locale}
+          locale={activeLocale}
         />
       </div>
 
-      <MastheadAd advertisements={mastheadAds} variant="band" locale={locale} />
+      <MastheadAd
+        advertisements={mastheadAds}
+        variant="band"
+        locale={activeLocale}
+      />
 
       {/* The two controls with no room in the masthead below md share one row
           rather than stacking two: the non-shrinking logo+name already fills a
@@ -87,9 +106,9 @@ export function SiteHeader({
           is hidden here. */}
       <div className="border-rule flex items-center gap-3 border-t px-4 py-2 md:hidden">
         <div className="min-w-0 flex-1">
-          <SearchField locale={locale} />
+          <SearchField locale={activeLocale} />
         </div>
-        <LanguageToggle locale={locale} className="ms-auto" />
+        <LanguageToggle locale={activeLocale} className="ms-auto" />
       </div>
 
       <div className="border-rule hidden border-t md:block">
@@ -101,11 +120,11 @@ export function SiteHeader({
               moreLabel={dictionary.header.more}
               moreAriaLabel={dictionary.header.moreSections}
               sectionsLabel={dictionary.header.sections}
-              locale={locale}
+              locale={activeLocale}
             />
           </div>
           <HeaderSearchToggle
-            locale={locale}
+            locale={activeLocale}
             searchLabel={dictionary.header.searchLabel}
           />
         </div>

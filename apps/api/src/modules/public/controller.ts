@@ -108,3 +108,23 @@ export async function listArticlesByPriority(
   );
   return listEnvelope(rows, pagination, total);
 }
+
+interface RecentArticlesQuery {
+  language?: Language;
+  excludeId?: string;
+  page: number;
+  limit: number;
+}
+
+export async function listRecentArticles(
+  request: FastifyRequest<{ Querystring: RecentArticlesQuery }>,
+) {
+  const { language, excludeId, page, limit } = request.query;
+  const pagination = { page, limit };
+  const { rows, total } = await service.getRecentArticles(
+    deps(request),
+    { language, excludeId },
+    pagination,
+  );
+  return listEnvelope(rows, pagination, total);
+}

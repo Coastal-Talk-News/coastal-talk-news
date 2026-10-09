@@ -359,6 +359,26 @@ export async function getArticlesByPriority(
   };
 }
 
+export async function getRecentArticles(
+  { db, toPublicUrl }: PublicServiceDeps,
+  filters: { language?: Language; excludeId?: string },
+  pagination: PaginationParams,
+) {
+  const [rows, total] = await Promise.all([
+    repository.findRecentPublished(
+      db,
+      filters.excludeId,
+      filters,
+      toSkipTake(pagination),
+    ),
+    repository.countRecentPublished(db, filters.excludeId, filters),
+  ]);
+  return {
+    rows: rows.map((row) => toArticleCard(row, toPublicUrl)),
+    total,
+  };
+}
+
 export async function search(
   { db, toPublicUrl }: PublicServiceDeps,
   filters: { search: string; language?: Language },

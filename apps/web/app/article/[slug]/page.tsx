@@ -4,7 +4,7 @@ import { estimateReadMinutes } from '@coastal-talk-news/types';
 import { ArticleLocaleSync } from '../../../components/layout/ArticleLocaleSync';
 import { ArticleView } from '../../../components/news/ArticleView';
 import { ViewTracker } from '../../../components/news/ViewTracker';
-import { getArticle, getSite } from '../../../lib/api';
+import { getArticle, getRecentArticles, getSite } from '../../../lib/api';
 import { categoryName } from '../../../lib/category-name';
 import { ancestorsOf } from '../../../lib/category-trail';
 import { getDictionary } from '../../../lib/i18n/dictionaries';
@@ -99,6 +99,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
 
   const locale = article.language === 'KANNADA' ? 'kn' : 'en';
   const dictionary = getDictionary(locale);
+  const { articles: recentArticles } = await getRecentArticles(article.id, {
+    page: 1,
+    limit: 3,
+    locale,
+  });
   // Only sections that are live: a hidden category's page 404s, and the
   // breadcrumb must not send search engines there.
   const section = categories.find(
@@ -139,6 +144,7 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
         settings={settings}
         locale={locale}
         shareUrl={`${origin}${path}`}
+        recentArticles={recentArticles}
       />
     </>
   );
