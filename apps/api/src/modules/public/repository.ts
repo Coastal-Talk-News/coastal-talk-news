@@ -212,6 +212,7 @@ export function findActiveBreakingNews(db: TransactionClient, now: Date) {
       headline: true,
       headlineKannada: true,
       articleUrl: true,
+      articleUrlKannada: true,
     },
     take: 10,
   });

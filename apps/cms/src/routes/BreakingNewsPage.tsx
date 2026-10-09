@@ -241,7 +241,9 @@ export function BreakingNewsPage() {
         saving={mutations.create.isPending || mutations.update.isPending}
         serverError={
           saveError instanceof ApiError
-            ? saveError.message
+            ? saveError.status === 400
+              ? 'Please check the highlighted fields and try again.'
+              : saveError.message
             : saveError
               ? 'Could not save this item.'
               : null

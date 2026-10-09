@@ -6,6 +6,7 @@ export interface BreakingNewsEntity {
   headline: string;
   headlineKannada: string | null;
   articleUrl: string;
+  articleUrlKannada: string | null;
   startAt: Date;
   endAt: Date | null;
   createdAt: Date;
@@ -22,6 +23,7 @@ export function toBreakingNewsDto(
     headline: item.headline,
     headlineKannada: item.headlineKannada,
     articleUrl: item.articleUrl,
+    articleUrlKannada: item.articleUrlKannada ?? '',
     startAt: item.startAt.toISOString(),
     endAt: item.endAt ? item.endAt.toISOString() : null,
     isActive,

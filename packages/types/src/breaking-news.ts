@@ -7,6 +7,8 @@ export interface BreakingNewsDto {
    * it was required — the reader site falls back to `headline` for those. */
   headlineKannada: string | null;
   articleUrl: string;
+  /** Empty when no Kannada-specific link is set; readers fall back to articleUrl. */
+  articleUrlKannada: string;
   startAt: IsoDateTime;
   endAt: IsoDateTime | null;
   isActive: boolean;
@@ -18,6 +20,7 @@ export interface CreateBreakingNewsRequest {
   headline: string;
   headlineKannada: string;
   articleUrl?: string;
+  articleUrlKannada?: string;
   startAt: IsoDateTime;
   endAt?: IsoDateTime | null;
 }

@@ -16,6 +16,7 @@ interface FormValues {
   headline: string;
   headlineKannada: string;
   articleUrl: string;
+  articleUrlKannada: string;
   startDate: string;
   startTime: string;
   hasEnd: boolean;
@@ -41,6 +42,15 @@ function combineToIso(date: string, time: string): string | null {
   return Number.isNaN(local.getTime()) ? null : local.toISOString();
 }
 
+function isValidRelatedLink(value: string): boolean {
+  if (!value) return true;
+  try {
+    return Boolean(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+}
+
 /** The actual current time - every minute is a selectable option in the
  * picker now, so there is no rounding to line up with. */
 function defaultStart(): { date: string; time: string } {
@@ -54,6 +64,7 @@ function toValues(item: BreakingNewsDto | null): FormValues {
       headline: '',
       headlineKannada: '',
       articleUrl: '',
+      articleUrlKannada: '',
       startDate: start.date,
       startTime: start.time,
       hasEnd: true,
@@ -67,6 +78,7 @@ function toValues(item: BreakingNewsDto | null): FormValues {
     headline: item.headline,
     headlineKannada: item.headlineKannada ?? '',
     articleUrl: item.articleUrl,
+    articleUrlKannada: item.articleUrlKannada,
     startDate: start.date,
     startTime: start.time,
     hasEnd: end !== null,
@@ -117,11 +129,23 @@ export function BreakingNewsSheet({
     Boolean(startIso) &&
     (!values.hasEnd ||
       Boolean(endIso && startIso && new Date(endIso) > new Date(startIso)));
+  const articleUrlError =
+    touched && !isValidRelatedLink(values.articleUrl)
+      ? 'Enter a valid link, for example https://example.com.'
+      : undefined;
+  const articleUrlKannadaError =
+    touched && !isValidRelatedLink(values.articleUrlKannada)
+      ? 'Enter a valid link, for example https://example.com.'
+      : undefined;
+  const articleUrlValid = isValidRelatedLink(values.articleUrl);
+  const articleUrlKannadaValid = isValidRelatedLink(values.articleUrlKannada);
 
   const isDirty =
     trimmedHeadline !== initial.current.headline.trim() ||
     values.headlineKannada.trim() !== initial.current.headlineKannada.trim() ||
     values.articleUrl.trim() !== initial.current.articleUrl.trim() ||
+    values.articleUrlKannada.trim() !==
+      initial.current.articleUrlKannada.trim() ||
     values.startDate !== initial.current.startDate ||
     values.startTime !== initial.current.startTime ||
     values.hasEnd !== initial.current.hasEnd ||
@@ -155,6 +179,8 @@ export function BreakingNewsSheet({
   const canSubmit =
     Boolean(trimmedHeadline) &&
     Boolean(trimmedHeadlineKannada) &&
+    articleUrlValid &&
+    articleUrlKannadaValid &&
     windowValid &&
     (isDirty || !editing);
 
@@ -169,6 +195,7 @@ export function BreakingNewsSheet({
       // for "no link", and undefined would be dropped from the body and read
       // as "leave unchanged".
       articleUrl: values.articleUrl.trim(),
+      articleUrlKannada: values.articleUrlKannada.trim(),
       startAt: startIso,
       endAt: values.hasEnd ? endIso : null,
     });
@@ -283,21 +310,48 @@ export function BreakingNewsSheet({
         </Field>
 
         <Field
-          label="Link"
+          label="Related link (English)"
           htmlFor="breaking-news-link"
           optional
-          hint="Link to the related news article or external source."
+          error={articleUrlError}
+          hint="Shown when the site is set to English."
         >
           <Input
             id="breaking-news-link"
             type="url"
             value={values.articleUrl}
+            invalid={Boolean(articleUrlError)}
             placeholder="https://"
             icon={<LinkIcon className="size-4" aria-hidden />}
+            onBlur={() => setTouched(true)}
             onChange={(event) =>
               setValues((current) => ({
                 ...current,
                 articleUrl: event.target.value,
+              }))
+            }
+          />
+        </Field>
+
+        <Field
+          label="Related link (Kannada)"
+          htmlFor="breaking-news-link-kannada"
+          optional
+          error={articleUrlKannadaError}
+          hint="Shown for Kannada readers. Leave empty to use the English link."
+        >
+          <Input
+            id="breaking-news-link-kannada"
+            type="url"
+            value={values.articleUrlKannada}
+            invalid={Boolean(articleUrlKannadaError)}
+            placeholder="https://"
+            icon={<LinkIcon className="size-4" aria-hidden />}
+            onBlur={() => setTouched(true)}
+            onChange={(event) =>
+              setValues((current) => ({
+                ...current,
+                articleUrlKannada: event.target.value,
               }))
             }
           />

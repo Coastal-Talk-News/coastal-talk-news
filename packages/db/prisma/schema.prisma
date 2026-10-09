@@ -130,22 +130,22 @@ model ArticleView {
 }
 
 model Category {
-  id           String   @id @default(uuid(7))
-  name         String   @unique
+  id              String   @id @default(uuid(7))
+  name            String   @unique
   /// Shown instead of `name` when a reader has the site set to Kannada. The
   /// API and CMS require it on every save; the column stays nullable so
   /// categories that predate it keep working, falling back to `name`.
-  nameKannada  String?  @map("name_kannada")
-  description  String?
-  isActive     Boolean  @default(true) @map("is_active")
-  displayOrder Int      @map("display_order")
-  mediaId      String?  @map("media_id")
+  nameKannada     String?  @map("name_kannada")
+  description     String?
+  isActive        Boolean  @default(true) @map("is_active")
+  displayOrder    Int      @map("display_order")
+  mediaId         String?  @map("media_id")
   /// Nullable — null means top-level. Grouping can nest to any depth, but a
   /// category can only hold articles directly (via Article.categoryId) or
   /// have children, never both — enforced in the service layer, not by the
   /// DB. Cycle prevention (a category can't become its own ancestor) is also
   /// service-layer only.
-  parentId     String?  @map("parent_id")
+  parentId        String?  @map("parent_id")
   /// The section's address: /category/<slug>. Made from the name when the
   /// category is created and never changed by renaming it, so links stay
   /// valid; an editor can change it by hand. Nullable only so rows written
@@ -155,8 +155,8 @@ model Category {
   /// site falls back to "<name> News | <site>" and a generic line.
   seoTitle        String?  @map("seo_title")
   metaDescription String?  @map("meta_description")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   media    MediaAsset? @relation(fields: [mediaId], references: [id], onDelete: Restrict)
   parent   Category?   @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
@@ -175,19 +175,19 @@ model Article {
   mediaId    String? @map("media_id")
   ogImageId  String? @map("og_image_id")
 
-  language    Language
-  headline    String
-  summary     String
+  language            Language
+  headline            String
+  summary             String
   /// Tiptap document JSON, not HTML. The public site renders it
   /// programmatically, so stored content cannot inject markup.
-  content     Json
+  content             Json
   /// How the featured image is framed on the article page: only what differs
   /// from the default (full width, centred, uncropped), so most rows hold `{}`.
-  featuredImageLayout Json @default("{}") @map("featured_image_layout")
+  featuredImageLayout Json     @default("{}") @map("featured_image_layout")
   /// Flattened plain text of content, maintained by the API for search.
-  contentText String   @map("content_text")
-  youtubeUrl  String?  @map("youtube_url")
-  tags        String[] @default([])
+  contentText         String   @map("content_text")
+  youtubeUrl          String?  @map("youtube_url")
+  tags                String[] @default([])
 
   priority        ArticlePriority @default(NORMAL)
   status          ArticleStatus   @default(DRAFT)
@@ -223,9 +223,9 @@ model Article {
   /// Generated column maintained by Postgres; GIN-indexed for article search.
   searchVector Unsupported("tsvector")? @map("search_vector")
 
-  category Category?   @relation(fields: [categoryId], references: [id], onDelete: Restrict)
-  media    MediaAsset? @relation("ArticleFeaturedImage", fields: [mediaId], references: [id], onDelete: Restrict)
-  ogImage  MediaAsset? @relation("ArticleOgImage", fields: [ogImageId], references: [id], onDelete: Restrict)
+  category Category?      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  media    MediaAsset?    @relation("ArticleFeaturedImage", fields: [mediaId], references: [id], onDelete: Restrict)
+  ogImage  MediaAsset?    @relation("ArticleOgImage", fields: [ogImageId], references: [id], onDelete: Restrict)
   images   ArticleMedia[]
 
   @@index([status, publicationDate(sort: Desc)])
@@ -262,7 +262,7 @@ enum SitePage {
 /// not referenced, because settings is a single row.
 model SitePageMedia {
   page    SitePage
-  mediaId String     @map("media_id")
+  mediaId String   @map("media_id")
 
   media MediaAsset @relation(fields: [mediaId], references: [id], onDelete: Restrict)
 
@@ -280,16 +280,18 @@ model SitePageMedia {
 /// state is startAt <= now <= (endAt ?? never), computed at query time
 /// (CLAUDE.md §13).
 model BreakingNews {
-  id         String    @id @default(uuid(7))
-  headline   String
+  id                String    @id @default(uuid(7))
+  headline          String
   /// Shown instead of `headline` when a reader has the site set to Kannada;
   /// null falls back to `headline`.
-  headlineKannada String? @map("headline_kannada")
-  articleUrl String    @map("article_url")
-  startAt    DateTime  @map("start_at")
-  endAt      DateTime? @map("end_at")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+  headlineKannada   String?   @map("headline_kannada")
+  articleUrl        String    @map("article_url")
+  /// Used for Kannada readers; null falls back to `articleUrl`.
+  articleUrlKannada String?   @map("article_url_kannada")
+  startAt           DateTime  @map("start_at")
+  endAt             DateTime? @map("end_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   @@index([startAt, endAt])
   @@map("breaking_news")
@@ -422,7 +424,7 @@ model CmsRecoveryCode {
 
 /// Effectively a singleton — exactly one row, created by the seed.
 model SiteSettings {
-  id          String  @id @default(uuid(7))
+  id       String  @id @default(uuid(7))
   siteName String  @map("site_name")
   tagline  String?
 
@@ -437,14 +439,14 @@ model SiteSettings {
   /// an empty field falls back to a site-wide value, so the pages render
   /// before anyone has filled them in. Contact details are not duplicated
   /// here — every page reads the single set above.
-  aboutTitle   String? @map("about_title")
-  aboutIntro   String? @map("about_intro")
+  aboutTitle          String? @map("about_title")
+  aboutIntro          String? @map("about_intro")
   /// Tiptap document JSON, same shape as Article.content — rendered by the
   /// reader site's own node renderer, never as HTML.
-  aboutContent Json?   @map("about_content")
+  aboutContent        Json?   @map("about_content")
   /// Kannada body for the About page. Null falls back to `aboutContent` (the
   /// English body) — see the reader-site service layer, not the DB.
-  aboutContentKannada Json? @map("about_content_kannada")
+  aboutContentKannada Json?   @map("about_content_kannada")
 
   contactTitle String? @map("contact_title")
   contactIntro String? @map("contact_intro")
@@ -459,10 +461,10 @@ model SiteSettings {
   privacyContent Json? @map("privacy_content")
   termsContent   Json? @map("terms_content")
 
-  facebookUrl  String? @map("facebook_url")
-  instagramUrl String? @map("instagram_url")
-  youtubeUrl   String? @map("youtube_url")
-  xUrl         String? @map("x_url")
+  facebookUrl        String? @map("facebook_url")
+  instagramUrl       String? @map("instagram_url")
+  youtubeUrl         String? @map("youtube_url")
+  xUrl               String? @map("x_url")
   /// Separate links because the newsroom runs distinct WhatsApp channels per
   /// content language, not one shared channel — matches Article.language.
   /// The reader site picks whichever matches its current UI-language toggle.

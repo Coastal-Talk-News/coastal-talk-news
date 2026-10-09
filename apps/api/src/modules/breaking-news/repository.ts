@@ -26,6 +26,7 @@ export function create(
     headline: string;
     headlineKannada: string;
     articleUrl: string;
+    articleUrlKannada: string;
     startAt: Date;
     endAt: Date | null;
   },
@@ -40,6 +41,7 @@ export function update(
     headline?: string;
     headlineKannada?: string;
     articleUrl?: string;
+    articleUrlKannada?: string;
     startAt?: Date;
     endAt?: Date | null;
   },
