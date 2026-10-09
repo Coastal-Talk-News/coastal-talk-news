@@ -65,6 +65,7 @@ export const PublicBreakingNewsSchema = Type.Object({
   headline: Type.String(),
   headlineKannada: Type.Union([Type.String(), Type.Null()]),
   articleUrl: Type.String(),
+  articleUrlKannada: Type.Union([Type.String(), Type.Null()]),
 });
 
 const publicAdvertisementFields = {

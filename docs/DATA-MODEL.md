@@ -142,15 +142,17 @@ directions are checked in the API's service layer at write time, not by the data
 
 ### Breaking News
 
-`id`, `headline`, `headline_kannada`, `article_url` (plain URL, **not** a foreign key —
-confirmed intentional: breaking news can point outside the article system), `start_at`,
+`id`, `headline`, `headline_kannada`, `article_url`, `article_url_kannada` (plain URLs,
+**not** foreign keys — confirmed intentional: breaking news can point outside the article system), `start_at`,
 `end_at`, `created_at`, `updated_at`
 
 `headline` is the English headline. `headline_kannada` is required by the API and the CMS
 for every new or edited item, but the column stays nullable so items saved before it was
 required keep working. When a reader has the site's English/Kannada toggle set to Kannada,
-the ticker shows it instead, and falls back to `headline` for those older items. Both headlines travel in the public site payload and the reader
-site picks one by locale, so no extra request is made when the toggle changes.
+the ticker shows it instead, and falls back to `headline` for those older items. The Kannada
+related link follows the same rule: it is used when set, otherwise the English `article_url`
+is used. Both headlines and links travel in the public site payload and the reader site picks
+one by locale, so no extra request is made when the toggle changes.
 
 There is **no `is_active` database field.** The backend derives the active state from the
 schedule:

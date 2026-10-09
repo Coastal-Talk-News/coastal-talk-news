@@ -4,11 +4,20 @@ import { BREAKING_NEWS_HEADLINE_MAX } from './limits.js';
 
 export { BREAKING_NEWS_HEADLINE_MAX };
 
+const RELATED_LINK_PATTERN = '^[A-Za-z][A-Za-z0-9+.-]*:[^\\s]+$';
+const RelatedLinkSchema = Type.Optional(
+  Type.Union([
+    Type.String({ maxLength: 2048, pattern: RELATED_LINK_PATTERN }),
+    Type.Literal(''),
+  ]),
+);
+
 export const BreakingNewsSchema = Type.Object({
   id: Type.String(),
   headline: Type.String(),
   headlineKannada: Type.Union([Type.String(), Type.Null()]),
   articleUrl: Type.String(),
+  articleUrlKannada: Type.String(),
   startAt: IsoDateTime,
   endAt: Type.Union([IsoDateTime, Type.Null()]),
   isActive: Type.Boolean(),
@@ -26,15 +35,10 @@ export const CreateBreakingNewsBodySchema = Type.Object(
       minLength: 1,
       maxLength: BREAKING_NEWS_HEADLINE_MAX,
     }),
-    // '' is how "no link" is stored, so it has to be accepted alongside a
-    // real URL — otherwise a cleared link fails the uri check and there is no
-    // way to remove a link once it has been saved.
-    articleUrl: Type.Optional(
-      Type.Union([
-        Type.String({ maxLength: 2048, format: 'uri' }),
-        Type.Literal(''),
-      ]),
-    ),
+    // Empty strings clear a saved link while absolute URLs support Unicode
+    // paths such as Kannada article slugs.
+    articleUrl: RelatedLinkSchema,
+    articleUrlKannada: RelatedLinkSchema,
     startAt: IsoDateTime,
     endAt: Type.Optional(Type.Union([IsoDateTime, Type.Null()])),
   },

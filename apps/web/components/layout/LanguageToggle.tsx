@@ -1,8 +1,8 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
-import { setClientLocale } from '../../lib/i18n/client';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState, useTransition } from 'react';
+import { getClientLocale, setClientLocale } from '../../lib/i18n/client';
 import type { Locale } from '../../lib/i18n/types';
 
 export function LanguageToggle({
@@ -13,14 +13,30 @@ export function LanguageToggle({
   className?: string;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const [activeLocale, setActiveLocale] = useState<Locale>(locale);
   const [isPending, startTransition] = useTransition();
 
+  useEffect(() => {
+    setActiveLocale(getClientLocale());
+
+    const handleLocaleChange = () => setActiveLocale(getClientLocale());
+    window.addEventListener('ctn:locale-change', handleLocaleChange);
+    return () =>
+      window.removeEventListener('ctn:locale-change', handleLocaleChange);
+  }, [locale]);
+
   function select(next: Locale) {
-    if (next === locale) return;
+    if (next === activeLocale) return;
+    setActiveLocale(next);
     setClientLocale(next);
-    // The cookie only takes effect on the next request — refresh re-fetches
-    // this route's server-rendered content (site chrome included) with it.
     startTransition(() => {
+      if (pathname?.startsWith('/article/')) {
+        router.replace('/');
+        return;
+      }
+      // The cookie only takes effect on the next request — refresh re-fetches
+      // this route's server-rendered content (site chrome included) with it.
       router.refresh();
     });
   }
@@ -37,10 +53,10 @@ export function LanguageToggle({
       <button
         type="button"
         onClick={() => select('en')}
-        aria-pressed={locale === 'en'}
+        aria-pressed={activeLocale === 'en'}
         disabled={isPending}
         className={`px-2.5 py-1 transition-colors disabled:opacity-60 ${
-          locale === 'en'
+          activeLocale === 'en'
             ? 'bg-brand text-white'
             : 'hover:bg-paper-sunken text-ink-muted'
         }`}
@@ -50,10 +66,10 @@ export function LanguageToggle({
       <button
         type="button"
         onClick={() => select('kn')}
-        aria-pressed={locale === 'kn'}
+        aria-pressed={activeLocale === 'kn'}
         disabled={isPending}
         className={`border-rule border-l px-2.5 py-1 transition-colors disabled:opacity-60 ${
-          locale === 'kn'
+          activeLocale === 'kn'
             ? 'bg-brand text-white'
             : 'hover:bg-paper-sunken text-ink-muted'
         }`}

@@ -1,9 +1,16 @@
 'use client';
 
 import Link from 'next/link';
-import { useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import type { PublicBreakingNewsDto } from '@coastal-talk-news/types';
 import { getDictionary } from '../../lib/i18n/dictionaries';
+import { getClientLocale } from '../../lib/i18n/client';
 import type { Locale } from '../../lib/i18n/types';
 
 /** Reading pace, in pixels per second. */
@@ -16,10 +23,20 @@ export function BreakingTicker({
   items: PublicBreakingNewsDto[];
   locale?: Locale;
 }) {
+  const [activeLocale, setActiveLocale] = useState<Locale>(locale);
   const windowRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLUListElement>(null);
   const [copyWidth, setCopyWidth] = useState(0);
   const [copies, setCopies] = useState(2);
+
+  useEffect(() => {
+    setActiveLocale(getClientLocale());
+
+    const handleLocaleChange = () => setActiveLocale(getClientLocale());
+    window.addEventListener('ctn:locale-change', handleLocaleChange);
+    return () =>
+      window.removeEventListener('ctn:locale-change', handleLocaleChange);
+  }, [locale]);
 
   useLayoutEffect(() => {
     const viewport = windowRef.current;
@@ -41,17 +58,21 @@ export function BreakingTicker({
     observer.observe(copy);
     measure();
     return () => observer.disconnect();
-  }, [items, locale]);
+  }, [items, activeLocale]);
 
   if (items.length === 0) return null;
 
-  const label = getDictionary(locale).breakingNews.label;
+  const label = getDictionary(activeLocale).breakingNews.label;
   // An item with no Kannada headline still shows, in English, rather than
   // dropping out of the ticker for Kannada readers.
   const headlineFor = (item: PublicBreakingNewsDto) =>
-    locale === 'kn' && item.headlineKannada
+    activeLocale === 'kn' && item.headlineKannada
       ? item.headlineKannada
       : item.headline;
+  const linkFor = (item: PublicBreakingNewsDto) =>
+    activeLocale === 'kn' && item.articleUrlKannada
+      ? item.articleUrlKannada
+      : item.articleUrl;
   // Measured rather than estimated from character counts: a Kannada headline
   // and an English one of the same length are nowhere near the same width.
   const duration = copyWidth > 0 ? copyWidth / SPEED_PX_PER_SECOND : 0;
@@ -84,23 +105,26 @@ export function BreakingTicker({
                 aria-hidden={copyIndex > 0}
                 className="flex shrink-0 text-sm font-semibold"
               >
-                {items.map((item) => (
-                  <li key={item.id} className="shrink-0 pe-10">
-                    {item.articleUrl ? (
-                      <Link
-                        href={item.articleUrl}
-                        tabIndex={copyIndex > 0 ? -1 : 0}
-                        className="whitespace-nowrap transition-opacity hover:opacity-80"
-                      >
-                        {headlineFor(item)}
-                      </Link>
-                    ) : (
-                      <span className="whitespace-nowrap">
-                        {headlineFor(item)}
-                      </span>
-                    )}
-                  </li>
-                ))}
+                {items.map((item) => {
+                  const link = linkFor(item);
+                  const headline = headlineFor(item);
+
+                  return (
+                    <li key={item.id} className="shrink-0 pe-10">
+                      {link ? (
+                        <Link
+                          href={link}
+                          tabIndex={copyIndex > 0 ? -1 : 0}
+                          className="whitespace-nowrap transition-opacity hover:opacity-80"
+                        >
+                          {headline}
+                        </Link>
+                      ) : (
+                        <span className="whitespace-nowrap">{headline}</span>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             ))}
           </div>

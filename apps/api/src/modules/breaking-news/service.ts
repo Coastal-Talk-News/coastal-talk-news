@@ -14,6 +14,7 @@ export interface CreateBreakingNewsInput {
   headline: string;
   headlineKannada: string;
   articleUrl?: string;
+  articleUrlKannada?: string;
   startAt: string;
   endAt?: string | null;
 }
@@ -58,6 +59,7 @@ export async function create(
     headlineKannada: input.headlineKannada.trim(),
     // No is_active column: startAt/endAt are the only source of truth.
     articleUrl: input.articleUrl?.trim() ?? '',
+    articleUrlKannada: input.articleUrlKannada?.trim() ?? '',
     startAt,
     endAt,
   });
@@ -91,6 +93,9 @@ export async function update(
       : {}),
     ...(input.articleUrl !== undefined
       ? { articleUrl: input.articleUrl.trim() }
+      : {}),
+    ...(input.articleUrlKannada !== undefined
+      ? { articleUrlKannada: input.articleUrlKannada.trim() }
       : {}),
     ...(input.startAt !== undefined ? { startAt } : {}),
     ...(input.endAt !== undefined ? { endAt } : {}),

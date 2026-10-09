@@ -25,4 +25,5 @@ export function getClientLocale(): Locale {
  */
 export function setClientLocale(locale: Locale): void {
   document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; samesite=lax`;
+  window.dispatchEvent(new CustomEvent('ctn:locale-change'));
 }

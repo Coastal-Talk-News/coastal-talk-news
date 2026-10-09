@@ -58,6 +58,8 @@ export interface PublicBreakingNewsDto {
   headlineKannada: string | null;
   /** Empty when the item carries no outbound link. */
   articleUrl: string;
+  /** Used for Kannada readers when set; null falls back to the English URL. */
+  articleUrlKannada: string | null;
 }
 
 /**
