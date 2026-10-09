@@ -69,6 +69,7 @@ const en = {
     /** Prefixes the article link in the WhatsApp share text, e.g. "To read: <url>". */
     readLine: 'To read 👉 :',
     tagsLabel: 'Tagged',
+    recentStories: 'Recent News',
     /** Invites the reader to the WhatsApp channels; the channel links follow it. */
     channelInvite: 'To Join Coastal Talk News Whatsapp Group Click Here 👉 :',
   },
@@ -249,6 +250,7 @@ const kn: typeof en = {
     updated: 'ನವೀಕರಿಸಲಾಗಿದೆ',
     readLine: 'ಓದಲು ಈ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ 👉 :',
     tagsLabel: 'ಟ್ಯಾಗ್‌ಗಳು',
+    recentStories: 'ಇತ್ತೀಚಿನ ಸುದ್ದಿಗಳು',
     channelInvite:
       'ಕೋಸ್ಟಲ್ ಟಾಕ್ ನ್ಯೂಸ್ ವಾಟ್ಸಾಪ್ ಗ್ರೂಪ್ ಸೇರಲು ಕೆಳಗಿನ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ 👉 :',
   },

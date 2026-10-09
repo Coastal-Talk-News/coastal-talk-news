@@ -301,6 +301,53 @@ export interface ArticlesByPriorityPage {
   meta: PaginationMeta;
 }
 
+export async function getRecentArticles(
+  excludeId: string,
+  { page, limit, locale }: { page: number; limit: number; locale: Locale },
+): Promise<ArticlesByPriorityPage> {
+  const language = ARTICLE_LANGUAGE_BY_LOCALE[locale];
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    language,
+    excludeId,
+  });
+  try {
+    const { data, meta } = await fetchPublicList<PublicArticleCardDto>(
+      `/articles/recent?${params.toString()}`,
+    );
+    return { articles: data, meta };
+  } catch (error) {
+    // Keep the article page compatible while the API and web deployments
+    // roll out independently. Older APIs treat "recent" as an article key.
+    if (!(error instanceof ApiClientError) || error.status !== 404) {
+      throw error;
+    }
+
+    const home = await getHome(locale);
+    const seen = new Set<string>();
+    const articles = [...home.topStories, ...home.leadStories, ...home.featured]
+      .filter(
+        (article) =>
+          article.id !== excludeId &&
+          !seen.has(article.id) &&
+          seen.add(article.id),
+      )
+      .slice(0, limit);
+    return {
+      articles,
+      meta: {
+        page,
+        limit,
+        total: articles.length,
+        totalPages: articles.length > 0 ? 1 : 0,
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+    };
+  }
+}
+
 export async function getArticlesByPriority(
   priority: 'LEAD_STORY' | 'FEATURED',
   { page, limit, locale }: { page: number; limit: number; locale: Locale },

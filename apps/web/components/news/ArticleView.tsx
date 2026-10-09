@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import type {
+  PublicArticleCardDto,
   PublicArticleDto,
   PublicSiteSettingsDto,
 } from '@coastal-talk-news/types';
@@ -11,7 +12,9 @@ import { ArticleTags } from './ArticleTags';
 import { ArticleFigure } from './ArticleFigure';
 import { CategoryTag } from './CategoryTag';
 import { ShareLinks } from './ShareLinks';
+import { StoryCard } from './StoryCard';
 import { YoutubeEmbed } from './YoutubeEmbed';
+import { SectionHeading } from '../ui/SectionHeading';
 
 /** Saving within the hour of publishing is finishing the story, not
  * updating it, so only a later edit is called out to the reader. */
@@ -30,6 +33,7 @@ interface ArticleViewProps {
   settings: PublicSiteSettingsDto;
   locale: Locale;
   shareUrl: string;
+  recentArticles?: PublicArticleCardDto[];
 }
 
 /**
@@ -41,6 +45,7 @@ export function ArticleView({
   settings,
   locale,
   shareUrl,
+  recentArticles = [],
 }: ArticleViewProps) {
   const dictionary = getDictionary(locale);
 
@@ -140,6 +145,26 @@ export function ArticleView({
           />
         </div>
       </footer>
+
+      {recentArticles.length > 0 && (
+        <section
+          className="mt-10"
+          aria-label={dictionary.article.recentStories}
+        >
+          <SectionHeading title={dictionary.article.recentStories} />
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {recentArticles.map((recentArticle) => (
+              <StoryCard
+                key={recentArticle.id}
+                article={recentArticle}
+                showSummary
+                sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
+                locale={locale}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </article>
   );
 }

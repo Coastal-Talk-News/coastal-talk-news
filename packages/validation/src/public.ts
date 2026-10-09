@@ -236,3 +236,9 @@ export const PublicArticlesQuerySchema = Type.Object({
   language: Type.Optional(LanguageSchema),
   ...paginationQueryFields,
 });
+
+export const PublicRecentArticlesQuerySchema = Type.Object({
+  language: Type.Optional(LanguageSchema),
+  excludeId: Type.Optional(Type.String({ format: 'uuid' })),
+  ...paginationQueryFields,
+});

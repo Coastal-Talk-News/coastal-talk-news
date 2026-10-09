@@ -323,6 +323,38 @@ export function findPublishedSince(
   });
 }
 
+export function findRecentPublished(
+  db: TransactionClient,
+  excludeId: string | undefined,
+  { language }: { language?: Language },
+  page: { skip: number; take: number },
+) {
+  return db.article.findMany({
+    where: {
+      ...liveArticleWhere(),
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+      ...(language && { language }),
+    },
+    orderBy: newestFirst,
+    select: cardSelect,
+    ...page,
+  });
+}
+
+export function countRecentPublished(
+  db: TransactionClient,
+  excludeId: string | undefined,
+  { language }: { language?: Language },
+) {
+  return db.article.count({
+    where: {
+      ...liveArticleWhere(),
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+      ...(language && { language }),
+    },
+  });
+}
+
 export function findPublishedByPriority(
   db: TransactionClient,
   priority: ArticlePriority,
