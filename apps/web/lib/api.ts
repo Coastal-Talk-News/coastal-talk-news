@@ -290,10 +290,18 @@ export async function getCategoryArticles(
   { page, limit, locale }: { page: number; limit: number; locale: Locale },
 ): Promise<CategoryArticlesPage> {
   const language = ARTICLE_LANGUAGE_BY_LOCALE[locale];
+  // The category archive has a seven-article first page and a different size
+  // afterwards. Fetching page N with the API's normal page/limit offset would
+  // skip or duplicate articles because that offset assumes one fixed size.
+  const requestLimit = page === 1 ? limit : 7 + (page - 1) * 9;
   const { data, meta } = await fetchPublicList<PublicArticleCardDto>(
-    `/categories/${id}/articles?page=${page}&limit=${limit}&language=${language}`,
+    `/categories/${id}/articles?page=1&limit=${requestLimit}&language=${language}`,
   );
-  return { articles: data, meta };
+  const start = page === 1 ? 0 : 7 + (page - 2) * 9;
+  return {
+    articles: data.slice(start, start + limit),
+    meta: { ...meta, page, limit },
+  };
 }
 
 export interface ArticlesByPriorityPage {
