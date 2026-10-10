@@ -41,6 +41,16 @@ function parsePage(value: string | undefined): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
+function categoryTotalPages(total: number): number {
+  return Math.max(
+    1,
+    1 +
+      Math.ceil(
+        Math.max(0, total - FIRST_PAGE_ARTICLES) / SUBSEQUENT_PAGE_ARTICLES,
+      ),
+  );
+}
+
 async function loadCategory(params: CategoryPageProps['params']) {
   const key = decodeParam((await params).slug);
   return { key, category: await findCategory(key) };
@@ -125,12 +135,13 @@ export default async function CategoryPage({
   // A group never holds articles of its own, so its page lists its sections
   // instead and the archive query is skipped rather than fetched empty.
   const { articles, meta } = isGroup
-    ? { articles: [], meta: { page: 1, totalPages: 1 } }
+    ? { articles: [], meta: { page: 1, total: 0, totalPages: 1 } }
     : await getCategoryArticles(id, {
         page,
         limit: page === 1 ? FIRST_PAGE_ARTICLES : SUBSEQUENT_PAGE_ARTICLES,
         locale,
       });
+  const totalPages = isGroup ? 1 : categoryTotalPages(meta.total);
 
   // A page number past the end (a stale link, or someone editing the URL)
   // is a real 404, not an empty grid sitting under working pagination.
@@ -249,7 +260,7 @@ export default async function CategoryPage({
 
           <Pagination
             currentPage={meta.page}
-            totalPages={meta.totalPages}
+            totalPages={totalPages}
             href={(target) => (target <= 1 ? path : `${path}?page=${target}`)}
             locale={locale}
           />
