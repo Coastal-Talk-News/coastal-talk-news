@@ -85,6 +85,9 @@ export const CreateAdvertisementBodySchema = Type.Object(
     mediaId: writableAdvertisementFields.mediaId,
     detailMediaId: Type.Optional(writableAdvertisementFields.detailMediaId),
     description: Type.Optional(writableAdvertisementFields.description),
+    descriptionKannada: Type.Optional(
+      writableAdvertisementFields.descriptionKannada,
+    ),
     destinationUrl: Type.Optional(writableAdvertisementFields.destinationUrl),
     displayOrder: Type.Optional(writableAdvertisementFields.displayOrder),
     placement: Type.Optional(writableAdvertisementFields.placement),
