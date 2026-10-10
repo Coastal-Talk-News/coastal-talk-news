@@ -27,7 +27,8 @@ export const dynamic = 'force-dynamic';
 // One big lead card plus two rows of three — matches the grid the rest of
 // the site already uses for a "cards" section (see the homepage's Top
 // Stories grid).
-const ARTICLES_PER_PAGE = 7;
+const FIRST_PAGE_ARTICLES = 7;
+const SUBSEQUENT_PAGE_ARTICLES = 9;
 
 interface CategoryPageProps {
   /** The section's slug — or, on links made before slugs existed, its id. */
@@ -127,7 +128,7 @@ export default async function CategoryPage({
     ? { articles: [], meta: { page: 1, totalPages: 1 } }
     : await getCategoryArticles(id, {
         page,
-        limit: ARTICLES_PER_PAGE,
+        limit: page === 1 ? FIRST_PAGE_ARTICLES : SUBSEQUENT_PAGE_ARTICLES,
         locale,
       });
 

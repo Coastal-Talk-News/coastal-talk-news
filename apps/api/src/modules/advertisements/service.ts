@@ -28,6 +28,7 @@ export interface CreateAdvertisementInput {
   description?: RichTextContent | null;
   destinationUrl?: string | null;
   displayOrder?: number;
+  descriptionKannada?: RichTextContent | null;
   placement?: AdPlacement;
   fitMode?: AdFitMode;
   zoom?: number;
@@ -132,6 +133,18 @@ function descriptionWrite(
   };
 }
 
+function descriptionKannadaWrite(
+  description: RichTextContent | null | undefined,
+): Partial<repository.AdvertisementWriteData> {
+  if (description === undefined) {
+    return {};
+  }
+  return {
+    descriptionKannada: description ?? Prisma.DbNull,
+    descriptionTextKannada: description ? extractPlainText(description) : null,
+  };
+}
+
 export async function listForCms(
   { db }: AdvertisementServiceDeps,
   pagination: PaginationParams,
@@ -186,6 +199,10 @@ export async function create(
     description: input.description ?? Prisma.DbNull,
     descriptionText: input.description
       ? extractPlainText(input.description)
+      : null,
+    descriptionKannada: input.descriptionKannada ?? Prisma.DbNull,
+    descriptionTextKannada: input.descriptionKannada
+      ? extractPlainText(input.descriptionKannada)
       : null,
   });
 }
@@ -279,6 +296,7 @@ export async function update(
       ...(input.startAt !== undefined ? { startAt } : {}),
       ...(input.endAt !== undefined ? { endAt } : {}),
       ...descriptionWrite(input.description),
+      ...descriptionKannadaWrite(input.descriptionKannada),
     });
 
     const orphanedKeys = await releaseMedia(tx, replaced);

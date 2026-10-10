@@ -81,6 +81,8 @@ export interface PublicAdvertisementDto extends AdImageCrop {
 export interface PublicAdvertisementDetailDto extends PublicAdvertisementDto {
   detailImage: MediaSummaryDto | null;
   description: RichTextContent | null;
+  /** Kannada copy; the reader falls back to English when either is empty. */
+  descriptionKannada: RichTextContent | null;
   destinationUrl: string | null;
   /** Server-trimmed excerpt for meta tags, so the page walks nothing itself. */
   metaDescription: string | null;

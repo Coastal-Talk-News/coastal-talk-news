@@ -64,11 +64,10 @@ export function MastheadAd({
   locale = 'en',
 }: MastheadAdProps) {
   const [ad] = advertisements;
-  if (!ad) return null;
-
   const { advertisement } = getDictionary(locale).common;
   const isInline = variant === 'inline';
-  const box = slotBox(ad);
+  if (!ad && !isInline) return null;
+  const box = ad ? slotBox(ad) : UNIT_SLOT;
   const aspect = box.width / box.height;
 
   return (
@@ -88,30 +87,32 @@ export function MastheadAd({
           : undefined
       }
     >
-      <Link
-        href={adHref(ad.id)}
-        rel="sponsored"
-        prefetch={false}
-        aria-label={`${advertisement}: ${ad.advertiserName}`}
-        className="block w-full min-w-0 overflow-hidden rounded-sm transition-opacity hover:opacity-90"
-        style={{
-          aspectRatio: `${box.width} / ${box.height}`,
-          ...(isInline
-            ? {}
-            : { maxWidth: `calc(${BAND_MAX_HEIGHT} * ${aspect})` }),
-        }}
-      >
-        <AdImage
-          image={ad.image}
-          alt={ad.advertiserName}
-          label={advertisement}
-          priority
-          sizes={isInline ? `${UNIT_SLOT.width}px` : '100vw'}
-          className="h-full w-full object-contain"
-          style={adImageTransform(ad)}
-          backdrop={ad.fitMode === 'FIT_BACKGROUND'}
-        />
-      </Link>
+      {ad && (
+        <Link
+          href={adHref(ad.id)}
+          rel="sponsored"
+          prefetch={false}
+          aria-label={`${advertisement}: ${ad.advertiserName}`}
+          className="block w-full min-w-0 overflow-hidden rounded-sm transition-opacity hover:opacity-90"
+          style={{
+            aspectRatio: `${box.width} / ${box.height}`,
+            ...(isInline
+              ? {}
+              : { maxWidth: `calc(${BAND_MAX_HEIGHT} * ${aspect})` }),
+          }}
+        >
+          <AdImage
+            image={ad.image}
+            alt={ad.advertiserName}
+            label={advertisement}
+            priority
+            sizes={isInline ? `${UNIT_SLOT.width}px` : '100vw'}
+            className="h-full w-full object-contain"
+            style={adImageTransform(ad)}
+            backdrop={ad.fitMode === 'FIT_BACKGROUND'}
+          />
+        </Link>
+      )}
     </aside>
   );
 }

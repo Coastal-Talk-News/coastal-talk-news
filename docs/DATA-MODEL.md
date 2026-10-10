@@ -167,7 +167,8 @@ display, but it is never persisted — recompute it on every read.
 
 `id`, `media_id` (FK → Media Asset), `detail_media_id` (FK → Media Asset, nullable),
 `advertiser_name`, `destination_url` (nullable), `description` (Tiptap JSON, nullable),
-`description_text` (nullable), `display_order`, `placement`, `zoom`, `offset_x`,
+`description_kannada` (Tiptap JSON, nullable), `description_text` (nullable),
+`description_text_kannada` (nullable), `display_order`, `placement`, `zoom`, `offset_x`,
 `offset_y`, `start_at`, `end_at`, `created_at`, `updated_at`
 
 There is **no `is_active` database field**, for the same reason as Breaking News. The
@@ -223,6 +224,9 @@ the Tiptap document beneath it, and `destination_url` — now optional — becom
 website" button rather than the banner's own href. Every banner links to that page
 instead of straight out to the advertiser. `description_text` is a plain-text mirror of
 `description`, written on save so listings and meta tags never load the document itself.
+`description_kannada` is optional Kannada copy for the same page. The reader uses the
+selected language's document and falls back to the other document when that language is
+empty; `description_text_kannada` is its plain-text mirror.
 Advertisements sit in one fixed "Advertisement" section that is hardcoded on the reader
 site — it is **not** a Category row and never appears in category navigation.
 

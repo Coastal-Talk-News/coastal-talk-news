@@ -255,7 +255,9 @@ export function findActiveAdvertisement(
       ...adCardSelect,
       destinationUrl: true,
       description: true,
+      descriptionKannada: true,
       descriptionText: true,
+      descriptionTextKannada: true,
       detailMedia: mediaSelect,
     },
   });

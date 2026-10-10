@@ -312,9 +312,12 @@ model Advertisement {
   destinationUrl  String?     @map("destination_url")
   /// Tiptap document, rendered only on the ad's own page.
   description     Json?
+  /// Kannada version of the ad-page copy; falls back to description when empty.
+  descriptionKannada Json? @map("description_kannada")
   /// Plain-text mirror of description, so listings and meta tags never have to
   /// load and walk the document.
   descriptionText String?     @map("description_text")
+  descriptionTextKannada String? @map("description_text_kannada")
   /// Position within its own placement zone, ascending - set only by the CMS
   /// drag-to-reorder action (PATCH .../order), never by hand. Top and Sidebar
   /// are ordered independently: this column is compared only against other

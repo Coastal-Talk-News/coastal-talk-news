@@ -218,8 +218,12 @@ export function toAdvertisementDetail(
     ...toAdvertisement(advertisement, toPublicUrl),
     detailImage: toMedia(advertisement.detailMedia, toPublicUrl),
     description: (advertisement.description as RichTextContent | null) ?? null,
+    descriptionKannada:
+      (advertisement.descriptionKannada as RichTextContent | null) ?? null,
     destinationUrl: advertisement.destinationUrl,
-    metaDescription: toMetaDescription(advertisement.descriptionText),
+    metaDescription: toMetaDescription(
+      advertisement.descriptionText ?? advertisement.descriptionTextKannada,
+    ),
   };
 }
 

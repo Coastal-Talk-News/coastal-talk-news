@@ -30,12 +30,17 @@ export async function generateMetadata({
   ]);
   if (!advertisement) return { title: 'Advertisement not found' };
 
+  const description =
+    locale === 'kn'
+      ? (advertisement.descriptionKannada ?? advertisement.description)
+      : (advertisement.description ?? advertisement.descriptionKannada);
+
   return buildMetadata({
     settings,
     locale,
     origin,
     title: advertisement.advertiserName,
-    description: advertisement.metaDescription,
+    description: description ? advertisement.metaDescription : null,
     image: advertisement.detailImage ?? advertisement.image,
     path: `/advertisement/${advertisement.id}`,
   });
@@ -57,6 +62,10 @@ export default async function AdvertisementPage({
   // The detail creative is the point of this page; the banner stands in for it
   // when the advertiser only supplied the one image.
   const image = advertisement.detailImage ?? advertisement.image;
+  const description =
+    locale === 'kn'
+      ? (advertisement.descriptionKannada ?? advertisement.description)
+      : (advertisement.description ?? advertisement.descriptionKannada);
 
   return (
     <article className="max-w-[44rem] min-[1120px]:max-w-[52rem] py-6 pb-24 sm:py-8 sm:pb-8">
@@ -118,9 +127,9 @@ export default async function AdvertisementPage({
         />
       </figure>
 
-      {advertisement.description && (
+      {description && (
         <div className="mt-6">
-          <ArticleBody content={advertisement.description} />
+          <ArticleBody content={description} />
         </div>
       )}
 
