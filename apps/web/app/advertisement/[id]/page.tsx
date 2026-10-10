@@ -10,12 +10,33 @@ import { getDictionary } from '../../../lib/i18n/dictionaries';
 import { getLocale } from '../../../lib/i18n/server';
 import { buildMetadata } from '../../../lib/seo';
 import { getOrigin } from '../../../lib/site-url';
+import type { RichTextContent } from '@coastal-talk-news/types';
 
 // "Running" is computed from start_at/end_at at request time, not stored.
 export const dynamic = 'force-dynamic';
 
 interface AdvertisementPageProps {
   params: Promise<{ id: string }>;
+}
+
+function hasContent(
+  content: RichTextContent | null,
+): content is RichTextContent {
+  return Boolean(content?.content.length);
+}
+
+function localizedDescription(
+  locale: 'en' | 'kn',
+  english: RichTextContent | null,
+  kannada: RichTextContent | null,
+): RichTextContent | null {
+  const preferred = locale === 'kn' ? kannada : english;
+  const fallback = locale === 'kn' ? english : kannada;
+  return hasContent(preferred)
+    ? preferred
+    : hasContent(fallback)
+      ? fallback
+      : null;
 }
 
 export async function generateMetadata({
@@ -30,10 +51,11 @@ export async function generateMetadata({
   ]);
   if (!advertisement) return { title: 'Advertisement not found' };
 
-  const description =
-    locale === 'kn'
-      ? (advertisement.descriptionKannada ?? advertisement.description)
-      : (advertisement.description ?? advertisement.descriptionKannada);
+  const description = localizedDescription(
+    locale,
+    advertisement.description,
+    advertisement.descriptionKannada,
+  );
 
   return buildMetadata({
     settings,
@@ -62,10 +84,11 @@ export default async function AdvertisementPage({
   // The detail creative is the point of this page; the banner stands in for it
   // when the advertiser only supplied the one image.
   const image = advertisement.detailImage ?? advertisement.image;
-  const description =
-    locale === 'kn'
-      ? (advertisement.descriptionKannada ?? advertisement.description)
-      : (advertisement.description ?? advertisement.descriptionKannada);
+  const description = localizedDescription(
+    locale,
+    advertisement.description,
+    advertisement.descriptionKannada,
+  );
 
   return (
     <article className="max-w-[44rem] min-[1120px]:max-w-[52rem] py-6 pb-24 sm:py-8 sm:pb-8">
