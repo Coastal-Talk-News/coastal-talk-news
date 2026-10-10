@@ -221,9 +221,7 @@ export function toAdvertisementDetail(
     descriptionKannada:
       (advertisement.descriptionKannada as RichTextContent | null) ?? null,
     destinationUrl: advertisement.destinationUrl,
-    metaDescription: toMetaDescription(
-      advertisement.descriptionText ?? advertisement.descriptionTextKannada,
-    ),
+    metaDescription: toMetaDescription(advertisement.descriptionText),
   };
 }
 

@@ -25,20 +25,6 @@ function hasContent(
   return Boolean(content?.content.length);
 }
 
-function localizedDescription(
-  locale: 'en' | 'kn',
-  english: RichTextContent | null,
-  kannada: RichTextContent | null,
-): RichTextContent | null {
-  const preferred = locale === 'kn' ? kannada : english;
-  const fallback = locale === 'kn' ? english : kannada;
-  return hasContent(preferred)
-    ? preferred
-    : hasContent(fallback)
-      ? fallback
-      : null;
-}
-
 export async function generateMetadata({
   params,
 }: AdvertisementPageProps): Promise<Metadata> {
@@ -51,11 +37,9 @@ export async function generateMetadata({
   ]);
   if (!advertisement) return { title: 'Advertisement not found' };
 
-  const description = localizedDescription(
-    locale,
-    advertisement.description,
-    advertisement.descriptionKannada,
-  );
+  const description = hasContent(advertisement.description)
+    ? advertisement.description
+    : null;
 
   return buildMetadata({
     settings,
@@ -84,11 +68,9 @@ export default async function AdvertisementPage({
   // The detail creative is the point of this page; the banner stands in for it
   // when the advertiser only supplied the one image.
   const image = advertisement.detailImage ?? advertisement.image;
-  const description = localizedDescription(
-    locale,
-    advertisement.description,
-    advertisement.descriptionKannada,
-  );
+  const description = hasContent(advertisement.description)
+    ? advertisement.description
+    : null;
 
   return (
     <article className="max-w-[44rem] min-[1120px]:max-w-[52rem] py-6 pb-24 sm:py-8 sm:pb-8">
