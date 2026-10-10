@@ -146,6 +146,8 @@ export interface AdvertisementDto {
   detailImage: MediaSummaryDto | null;
   /** Long-form copy for the ad's own page. */
   description: RichTextContent | null;
+  /** Kannada copy for the ad's own page; the reader falls back to English. */
+  descriptionKannada: RichTextContent | null;
   /** Null when the advertiser has no site of their own to link to. */
   destinationUrl: string | null;
   /** Position within its own placement zone, ascending. Set only by dragging
@@ -170,6 +172,7 @@ export interface CreateAdvertisementRequest {
   mediaId: Id;
   detailMediaId?: Id | null;
   description?: RichTextContent | null;
+  descriptionKannada?: RichTextContent | null;
   destinationUrl?: string | null;
   /** Omit to append to the end of the zone; set only by the reorder call. */
   displayOrder?: number;

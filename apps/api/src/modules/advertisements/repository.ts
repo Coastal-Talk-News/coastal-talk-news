@@ -114,7 +114,9 @@ export interface AdvertisementWriteData {
   detailMediaId: string | null;
   /** Prisma.DbNull clears the column; a plain null would be rejected. */
   description: object | typeof Prisma.DbNull;
+  descriptionKannada: object | typeof Prisma.DbNull;
   descriptionText: string | null;
+  descriptionTextKannada: string | null;
   destinationUrl: string | null;
   displayOrder: number;
   placement: AdPlacement;

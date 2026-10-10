@@ -18,6 +18,7 @@ export interface AdvertisementEntity {
   advertiserName: string;
   destinationUrl: string | null;
   description: unknown;
+  descriptionKannada: unknown;
   displayOrder: number;
   placement: AdPlacement;
   fitMode: AdFitMode;
@@ -68,6 +69,7 @@ export function toAdvertisementDto(
       ? toMediaSummary(item.detailMedia, toPublicUrl)
       : null,
     description: toRichText(item.description),
+    descriptionKannada: toRichText(item.descriptionKannada),
     destinationUrl: item.destinationUrl,
     displayOrder: item.displayOrder,
     // FOOTER exists in the DB enum (another developer's in-progress work,

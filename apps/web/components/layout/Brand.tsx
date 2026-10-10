@@ -76,7 +76,7 @@ export function Brand({
     tone === 'inverse' ? 'text-night-muted' : 'text-ink-subtle';
   const ringColor = tone === 'inverse' ? 'ring-white/15' : 'ring-rule';
   const name = {
-    className: `${nameColor} -ml-[0.04em] block font-serif leading-tight font-bold whitespace-nowrap uppercase`,
+    className: `${nameColor} -ml-[0.04em] block font-serif leading-tight font-bold whitespace-nowrap tracking-normal uppercase`,
     style: { fontSize: NAME_SIZE[size] },
   };
 

@@ -33,6 +33,7 @@ interface FormValues {
   image: MediaSummaryDto | null;
   detailImage: MediaSummaryDto | null;
   description: RichTextContent | null;
+  descriptionKannada: RichTextContent | null;
   destinationUrl: string;
   placement: AdPlacement;
   /** Top only; every other placement is always FIT_SHRINK server-side. */
@@ -86,6 +87,7 @@ function toValues(
       image: null,
       detailImage: null,
       description: null,
+      descriptionKannada: null,
       destinationUrl: '',
       placement: defaultPlacement,
       fitMode: DEFAULT_AD_FIT_MODE,
@@ -103,6 +105,7 @@ function toValues(
     image: item.image,
     detailImage: item.detailImage,
     description: item.description,
+    descriptionKannada: item.descriptionKannada,
     destinationUrl: item.destinationUrl ?? '',
     placement: item.placement,
     fitMode: item.fitMode,
@@ -172,6 +175,8 @@ export function AdvertisementSheet({
       (initial.current.detailImage?.id ?? null) ||
     JSON.stringify(values.description) !==
       JSON.stringify(initial.current.description) ||
+    JSON.stringify(values.descriptionKannada) !==
+      JSON.stringify(initial.current.descriptionKannada) ||
     trimmedUrl !== initial.current.destinationUrl.trim() ||
     values.placement !== initial.current.placement ||
     values.fitMode !== initial.current.fitMode ||
@@ -235,6 +240,9 @@ export function AdvertisementSheet({
       mediaId: values.image.id,
       detailMediaId: values.detailImage?.id ?? null,
       description: isEmptyDoc(values.description) ? null : values.description,
+      descriptionKannada: isEmptyDoc(values.descriptionKannada)
+        ? null
+        : values.descriptionKannada,
       destinationUrl: trimmedUrl,
       placement: values.placement,
       fitMode: values.fitMode,
@@ -505,7 +513,7 @@ export function AdvertisementSheet({
         ))}
 
         <Field
-          label="More information"
+          label="More information (English)"
           htmlFor="advertisement-description"
           optional
           hint="Shown on the advertisement's own page, under the image."
@@ -516,6 +524,26 @@ export function AdvertisementSheet({
               placeholder="Offer details, opening hours, address, anything the reader should know."
               onChange={(description) =>
                 setValues((current) => ({ ...current, description }))
+              }
+            />
+          </div>
+        </Field>
+
+        <Field
+          label="More information (Kannada)"
+          htmlFor="advertisement-description-kannada"
+          optional
+          hint="Shown for Kannada readers. If empty, the English information is used."
+        >
+          <div id="advertisement-description-kannada">
+            <TiptapEditor
+              content={values.descriptionKannada}
+              placeholder="ಕನ್ನಡದಲ್ಲಿ ಜಾಹೀರಾತಿನ ವಿವರಗಳನ್ನು ಬರೆಯಿರಿ."
+              onChange={(descriptionKannada) =>
+                setValues((current) => ({
+                  ...current,
+                  descriptionKannada,
+                }))
               }
             />
           </div>

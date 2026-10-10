@@ -85,6 +85,7 @@ export const PublicAdvertisementDetailSchema = Type.Object({
   ...publicAdvertisementFields,
   detailImage: Type.Union([MediaSummarySchema, Type.Null()]),
   description: Type.Union([ArticleContentSchema, Type.Null()]),
+  descriptionKannada: Type.Union([ArticleContentSchema, Type.Null()]),
   destinationUrl: Type.Union([Type.String(), Type.Null()]),
   metaDescription: Type.Union([Type.String(), Type.Null()]),
 });

@@ -37,7 +37,7 @@ export function ArticleSeoFields({
   const siteName = useSiteName();
   const detailsRef = useRef<HTMLDetailsElement>(null);
 
-  // The section starts collapsed; a slug problem must not hide inside it.
+  // A slug problem must not hide inside the section if the editor collapsed it.
   useEffect(() => {
     if (slugError && detailsRef.current) detailsRef.current.open = true;
   }, [slugError]);
@@ -54,7 +54,7 @@ export function ArticleSeoFields({
   return (
     <section className="border-hairline rounded-card space-y-3 border bg-surface p-5 shadow-sm">
       <h2 className="text-ink text-sm font-semibold">Additional Settings</h2>
-      <details ref={detailsRef}>
+      <details ref={detailsRef} open>
         <summary className="text-ink-muted cursor-pointer text-sm font-medium">
           SEO Settings{' '}
           <span className="text-ink-subtle text-xs font-normal">

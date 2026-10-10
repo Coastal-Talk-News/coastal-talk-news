@@ -39,6 +39,7 @@ const advertisementFields = {
   image: MediaSummarySchema,
   detailImage: Type.Union([MediaSummarySchema, Type.Null()]),
   description: Type.Union([ArticleContentSchema, Type.Null()]),
+  descriptionKannada: Type.Union([ArticleContentSchema, Type.Null()]),
   destinationUrl: Type.Union([Type.String(), Type.Null()]),
   displayOrder: Type.Integer(),
   placement: AdPlacementSchema,
@@ -60,6 +61,7 @@ const writableAdvertisementFields = {
   mediaId: Type.String({ format: 'uuid' }),
   detailMediaId: Type.Union([Type.String({ format: 'uuid' }), Type.Null()]),
   description: Type.Union([ArticleContentSchema, Type.Null()]),
+  descriptionKannada: Type.Union([ArticleContentSchema, Type.Null()]),
   // '' is how a cleared link arrives from the form, so it has to pass
   // alongside a real URL — the uri check alone would make a link unremovable.
   destinationUrl: Type.Union([
