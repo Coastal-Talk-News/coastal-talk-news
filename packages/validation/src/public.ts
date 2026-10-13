@@ -71,6 +71,8 @@ export const PublicBreakingNewsSchema = Type.Object({
 const publicAdvertisementFields = {
   id: Type.String(),
   advertiserName: Type.String(),
+  destinationUrl: Type.Union([Type.String(), Type.Null()]),
+  showMoreInformation: Type.Boolean(),
   placement: AdPlacementSchema,
   image: MediaSummarySchema,
   fitMode: AdFitModeSchema,

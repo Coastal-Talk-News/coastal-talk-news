@@ -63,13 +63,14 @@ export interface PublicBreakingNewsDto {
 }
 
 /**
- * What a banner needs and nothing more. Every ad links to its own page, so the
- * advertiser's URL and copy stay out of the site payload that each and every
- * page render carries.
+ * What a banner needs and nothing more. The CMS chooses whether it links to
+ * the ad's own page or directly to the advertiser.
  */
 export interface PublicAdvertisementDto extends AdImageCrop {
   id: Id;
   advertiserName: string;
+  destinationUrl: string | null;
+  showMoreInformation: boolean;
   placement: AdPlacement;
   /** Masthead and Top only; always FIT_SHRINK for Sidebar. Independent of
    *  the inherited zoom/offsetX/offsetY - see AdFitMode. */

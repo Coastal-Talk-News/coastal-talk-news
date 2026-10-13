@@ -89,8 +89,17 @@ export function MastheadAd({
     >
       {ad && (
         <Link
-          href={adHref(ad.id)}
-          rel="sponsored"
+          href={adHref(ad)}
+          target={
+            ad.showMoreInformation === false && ad.destinationUrl
+              ? '_blank'
+              : undefined
+          }
+          rel={
+            ad.showMoreInformation === false && ad.destinationUrl
+              ? 'noopener noreferrer sponsored'
+              : 'sponsored'
+          }
           prefetch={false}
           aria-label={`${advertisement}: ${ad.advertiserName}`}
           className="block w-full min-w-0 overflow-hidden rounded-sm transition-opacity hover:opacity-90"

@@ -17,6 +17,7 @@ export interface AdvertisementEntity {
   id: string;
   advertiserName: string;
   destinationUrl: string | null;
+  showMoreInformation: boolean;
   description: unknown;
   descriptionKannada: unknown;
   displayOrder: number;
@@ -71,6 +72,7 @@ export function toAdvertisementDto(
     description: toRichText(item.description),
     descriptionKannada: toRichText(item.descriptionKannada),
     destinationUrl: item.destinationUrl,
+    showMoreInformation: item.showMoreInformation,
     displayOrder: item.displayOrder,
     // FOOTER exists in the DB enum (another developer's in-progress work,
     // not wired to any application code) but never actually appears here -

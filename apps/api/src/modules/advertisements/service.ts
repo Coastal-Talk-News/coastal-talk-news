@@ -27,6 +27,7 @@ export interface CreateAdvertisementInput {
   detailMediaId?: string | null;
   description?: RichTextContent | null;
   destinationUrl?: string | null;
+  showMoreInformation?: boolean;
   displayOrder?: number;
   descriptionKannada?: RichTextContent | null;
   placement?: AdPlacement;
@@ -98,6 +99,17 @@ async function assertPlacementCapacity(
 function normalizeUrl(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
+}
+
+function assertDestinationForExternalAd(
+  showMoreInformation: boolean,
+  destinationUrl: string | null,
+): void {
+  if (!showMoreInformation && !destinationUrl) {
+    throw new BadRequestError(
+      'destinationUrl is required when showMoreInformation is false.',
+    );
+  }
 }
 
 /**
@@ -178,13 +190,19 @@ export async function create(
   assertWindow(startAt, endAt);
 
   const placement: AdPlacement = input.placement ?? 'SIDEBAR';
+  const destinationUrl = normalizeUrl(input.destinationUrl);
+  assertDestinationForExternalAd(
+    input.showMoreInformation ?? true,
+    destinationUrl,
+  );
   await assertPlacementCapacity(db, placement, { startAt, endAt });
 
   return repository.create(db, {
     advertiserName: input.advertiserName.trim(),
     mediaId: input.mediaId,
     detailMediaId: input.detailMediaId ?? null,
-    destinationUrl: normalizeUrl(input.destinationUrl),
+    destinationUrl,
+    showMoreInformation: input.showMoreInformation ?? true,
     // Appended to the end of the zone unless a position was given explicitly
     // - the CMS form never sends one, only the drag-to-reorder call does.
     displayOrder:
@@ -255,6 +273,13 @@ export async function update(
     input.detailMediaId === undefined
       ? undefined
       : (input.detailMediaId ?? null);
+  const destinationUrl =
+    input.destinationUrl !== undefined
+      ? normalizeUrl(input.destinationUrl)
+      : existing.destinationUrl;
+  const showMoreInformation =
+    input.showMoreInformation ?? existing.showMoreInformation;
+  assertDestinationForExternalAd(showMoreInformation, destinationUrl);
 
   const replaced: Array<string | null> = [];
   if (input.mediaId !== undefined && input.mediaId !== existing.media.id) {
@@ -284,8 +309,9 @@ export async function update(
         : {}),
       ...(input.mediaId !== undefined ? { mediaId: input.mediaId } : {}),
       ...(detailMediaId !== undefined ? { detailMediaId } : {}),
-      ...(input.destinationUrl !== undefined
-        ? { destinationUrl: normalizeUrl(input.destinationUrl) }
+      ...(input.destinationUrl !== undefined ? { destinationUrl } : {}),
+      ...(input.showMoreInformation !== undefined
+        ? { showMoreInformation }
         : {}),
       ...(displayOrder !== undefined ? { displayOrder } : {}),
       ...(input.placement !== undefined ? { placement: input.placement } : {}),

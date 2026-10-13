@@ -40,8 +40,17 @@ export function AdShowcase({ advertisements, locale = 'en' }: AdShowcaseProps) {
               }}
             >
               <Link
-                href={adHref(ad.id)}
-                rel="sponsored"
+                href={adHref(ad)}
+                target={
+                  ad.showMoreInformation === false && ad.destinationUrl
+                    ? '_blank'
+                    : undefined
+                }
+                rel={
+                  ad.showMoreInformation === false && ad.destinationUrl
+                    ? 'noopener noreferrer sponsored'
+                    : 'sponsored'
+                }
                 prefetch={false}
                 aria-label={`${dictionary.common.advertisement}: ${ad.advertiserName}`}
                 className="group block"

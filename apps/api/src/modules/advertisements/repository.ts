@@ -118,6 +118,7 @@ export interface AdvertisementWriteData {
   descriptionText: string | null;
   descriptionTextKannada: string | null;
   destinationUrl: string | null;
+  showMoreInformation: boolean;
   displayOrder: number;
   placement: AdPlacement;
   fitMode: AdFitMode;

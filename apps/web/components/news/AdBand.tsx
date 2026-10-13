@@ -106,8 +106,17 @@ export function AdBand({
                 style={slotStyle(box)}
               >
                 <Link
-                  href={adHref(ad.id)}
-                  rel="sponsored"
+                  href={adHref(ad)}
+                  target={
+                    ad.showMoreInformation === false && ad.destinationUrl
+                      ? '_blank'
+                      : undefined
+                  }
+                  rel={
+                    ad.showMoreInformation === false && ad.destinationUrl
+                      ? 'noopener noreferrer sponsored'
+                      : 'sponsored'
+                  }
                   // A band of ads would otherwise prefetch a page each as it
                   // scrolls into view, for a click most readers never make.
                   prefetch={false}

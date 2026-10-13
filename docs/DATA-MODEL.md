@@ -166,7 +166,8 @@ display, but it is never persisted — recompute it on every read.
 ### Advertisement
 
 `id`, `media_id` (FK → Media Asset), `detail_media_id` (FK → Media Asset, nullable),
-`advertiser_name`, `destination_url` (nullable), `description` (Tiptap JSON, nullable),
+`advertiser_name`, `destination_url` (nullable), `show_more_information`,
+`description` (Tiptap JSON, nullable),
 `description_kannada` (Tiptap JSON, nullable), `description_text` (nullable),
 `description_text_kannada` (nullable), `display_order`, `placement`, `zoom`, `offset_x`,
 `offset_y`, `start_at`, `end_at`, `created_at`, `updated_at`
@@ -179,6 +180,10 @@ backend derives the active state from the schedule:
 
 The computed `is_active` value may be included in API responses so the CMS can separate
 active advertisements from inactive/expired ones.
+
+When `show_more_information` is true, reader-site ad links open the advertisement page
+at `/advertisement/{id}` and the detail image/copy fields are available. When false,
+`destination_url` is required and ad links open it in a new tab.
 
 `placement` chooses one of three reader-site ad zones, each sold separately:
 

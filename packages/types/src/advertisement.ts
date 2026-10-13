@@ -150,6 +150,9 @@ export interface AdvertisementDto {
   descriptionKannada: RichTextContent | null;
   /** Null when the advertiser has no site of their own to link to. */
   destinationUrl: string | null;
+  /** When true, the ad opens its own detail page; otherwise it opens the
+   * advertiser URL in a new tab. */
+  showMoreInformation: boolean;
   /** Position within its own placement zone, ascending. Set only by dragging
    *  to reorder in the CMS - Top and Sidebar are ordered independently. */
   displayOrder: number;
@@ -174,6 +177,7 @@ export interface CreateAdvertisementRequest {
   description?: RichTextContent | null;
   descriptionKannada?: RichTextContent | null;
   destinationUrl?: string | null;
+  showMoreInformation?: boolean;
   /** Omit to append to the end of the zone; set only by the reorder call. */
   displayOrder?: number;
   /** Defaults to SIDEBAR server-side when omitted. */

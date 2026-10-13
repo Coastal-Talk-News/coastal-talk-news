@@ -10,12 +10,17 @@ const ZONE_PLACEMENT: Record<AdZone, PublicAdvertisementDto['placement']> = {
 };
 
 /**
- * Every creative links to the ad's own page rather than straight out to the
- * advertiser, because that page is where the detail image, the copy and the
- * advertiser's own link live.
+ * The CMS decides whether an ad opens its detail page or the advertiser's URL.
  */
-export function adHref(id: string): string {
-  return `/advertisement/${id}`;
+export function adHref(
+  ad: Pick<
+    PublicAdvertisementDto,
+    'id' | 'destinationUrl' | 'showMoreInformation'
+  >,
+): string {
+  return ad.showMoreInformation === false && ad.destinationUrl
+    ? ad.destinationUrl
+    : `/advertisement/${ad.id}`;
 }
 
 /**
