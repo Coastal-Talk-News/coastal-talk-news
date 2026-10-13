@@ -44,6 +44,7 @@ interface TiptapEditorProps {
   content: RichTextContent | null;
   onChange: (content: RichTextContent) => void;
   placeholder?: string;
+  disabled?: boolean;
 }
 
 function countWords(text: string): number {
@@ -404,6 +405,7 @@ export function TiptapEditor({
   content,
   onChange,
   placeholder = 'Start writing your article content here…',
+  disabled = false,
 }: TiptapEditorProps) {
   const [preview, setPreview] = useState(false);
 
@@ -458,16 +460,22 @@ export function TiptapEditor({
     // which reports the editor's own content back to the form as an edit —
     // and on a saved article that fires before the loaded body has been put
     // in, so the form would overwrite the article with an empty document.
-    editor.setEditable(!preview, false);
+    editor.setEditable(!preview && !disabled, false);
     // Picture nodes draw their controls from the editable flag, and setEditable
     // without an update announces nothing they could react to.
     editor.view.dispatch(editor.state.tr);
-  }, [editor, preview]);
+  }, [editor, preview, disabled]);
 
   if (!editor) return null;
 
   return (
-    <div className="ring-hairline focus-within:ring-accent overflow-hidden rounded-lg ring-1 transition-shadow focus-within:ring-2">
+    <div
+      aria-disabled={disabled}
+      className={cn(
+        'ring-hairline focus-within:ring-accent overflow-hidden rounded-lg ring-1 transition-shadow focus-within:ring-2',
+        disabled && 'pointer-events-none opacity-60',
+      )}
+    >
       <Toolbar editor={editor} preview={preview} onPreviewChange={setPreview} />
       {/* Preview borrows the reader site's serif and line height so the copy
           is judged the way it will be read, not in the editor's own UI font. */}

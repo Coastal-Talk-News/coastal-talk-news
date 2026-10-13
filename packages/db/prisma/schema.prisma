@@ -310,6 +310,9 @@ model Advertisement {
   advertiserName  String      @map("advertiser_name")
   /// Optional: an advertiser may have no website of their own to link to.
   destinationUrl  String?     @map("destination_url")
+  /// Whether readers should open the ad's own detail page instead of the
+  /// advertiser URL. Existing ads retain the internal-page behaviour.
+  showMoreInformation Boolean @default(true) @map("show_more_information")
   /// Tiptap document, rendered only on the ad's own page.
   description     Json?
   /// Kannada version of the ad-page copy; falls back to description when empty.

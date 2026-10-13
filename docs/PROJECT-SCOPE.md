@@ -358,14 +358,15 @@ active Breaking News.
 ### Advertisements
 
 Fields: advertiser name, banner image, detail image (optional), description (optional
-rich text), destination URL (optional), placement, start/end datetime. Order within a
+rich text), destination URL (optional), more-information toggle, placement, start/end datetime. Order within a
 placement is not a field the admin fills in — see below.
 
-**Every advertisement has its own page** on the reader site at `/advertisement/{id}`,
-with all of them listed at `/advertisements`. A banner in any zone links to that page
-rather than straight out to the advertiser; the advertiser's own URL is a button on the
-page. Advertisements form one fixed "Advertisement" section, hardcoded on the reader site
-rather than stored as a Category, so it never appears in category navigation.
+When the more-information toggle is on, an advertisement has its own page on the reader
+site at `/advertisement/{id}`; its detail image and copy fields are available and banners
+link to that page. When the toggle is off, the destination URL is required and banners
+open it in a new tab. Advertisements form one fixed "Advertisement" section, hardcoded
+on the reader site rather than stored as a Category, so it never appears in category
+navigation.
 
 **`placement` chooses the ad's zone: Masthead, Top or Right Side (Sidebar).** The CMS
 create/edit form offers all three (default Right Side). Masthead is the single premium

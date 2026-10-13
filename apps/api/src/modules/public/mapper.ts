@@ -163,6 +163,8 @@ export function withNavChildren(
 interface AdvertisementRow {
   id: string;
   advertiserName: string;
+  destinationUrl: string | null;
+  showMoreInformation: boolean;
   placement: AdPlacement;
   fitMode: AdFitMode;
   zoom: number;
@@ -178,6 +180,8 @@ export function toAdvertisement(
   return {
     id: advertisement.id,
     advertiserName: advertisement.advertiserName,
+    destinationUrl: advertisement.destinationUrl,
+    showMoreInformation: advertisement.showMoreInformation,
     // FOOTER exists in the DB enum (another developer's in-progress work,
     // not wired to any application code) but never actually appears here -
     // nothing creates one, and the response schema only allows the three

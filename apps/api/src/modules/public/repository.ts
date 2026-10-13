@@ -224,6 +224,8 @@ export function findActiveBreakingNews(db: TransactionClient, now: Date) {
 const adCardSelect = {
   id: true,
   advertiserName: true,
+  destinationUrl: true,
+  showMoreInformation: true,
   placement: true,
   fitMode: true,
   zoom: true,
@@ -253,7 +255,6 @@ export function findActiveAdvertisement(
     where: { id, ...activeWindowWhere(now) },
     select: {
       ...adCardSelect,
-      destinationUrl: true,
       description: true,
       descriptionKannada: true,
       descriptionText: true,

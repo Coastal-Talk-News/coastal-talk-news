@@ -13,6 +13,7 @@ import { DateTimeField } from '@coastal-talk-news/ui/date-time-field';
 import { Field } from '@coastal-talk-news/ui/field';
 import { Input } from '@coastal-talk-news/ui/input';
 import { Sheet } from '@coastal-talk-news/ui/sheet';
+import { Toggle } from '@coastal-talk-news/ui/toggle';
 import { ADVERTISER_NAME_MAX } from '@coastal-talk-news/validation/limits';
 import { ImagePlus, Link as LinkIcon, X } from 'lucide-react';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -34,6 +35,7 @@ interface FormValues {
   detailImage: MediaSummaryDto | null;
   description: RichTextContent | null;
   destinationUrl: string;
+  showMoreInformation: boolean;
   placement: AdPlacement;
   /** Top only; every other placement is always FIT_SHRINK server-side. */
   fitMode: AdFitMode;
@@ -87,6 +89,7 @@ function toValues(
       detailImage: null,
       description: null,
       destinationUrl: '',
+      showMoreInformation: true,
       placement: defaultPlacement,
       fitMode: DEFAULT_AD_FIT_MODE,
       crop: DEFAULT_CROP,
@@ -104,6 +107,7 @@ function toValues(
     detailImage: item.detailImage,
     description: item.description,
     destinationUrl: item.destinationUrl ?? '',
+    showMoreInformation: item.showMoreInformation,
     placement: item.placement,
     fitMode: item.fitMode,
     crop: { zoom: item.zoom, offsetX: item.offsetX, offsetY: item.offsetY },
@@ -173,6 +177,7 @@ export function AdvertisementSheet({
     JSON.stringify(values.description) !==
       JSON.stringify(initial.current.description) ||
     trimmedUrl !== initial.current.destinationUrl.trim() ||
+    values.showMoreInformation !== initial.current.showMoreInformation ||
     values.placement !== initial.current.placement ||
     values.fitMode !== initial.current.fitMode ||
     values.crop.zoom !== initial.current.crop.zoom ||
@@ -218,24 +223,37 @@ export function AdvertisementSheet({
     : !windowValid
       ? 'End must be after start.'
       : undefined;
+  const destinationError =
+    touched && !values.showMoreInformation && !trimmedUrl
+      ? 'Link URL is required when the information page is off.'
+      : undefined;
 
   const canSubmit =
     Boolean(trimmedTitle) &&
     Boolean(values.image) &&
     windowValid &&
+    (!values.showMoreInformation && !trimmedUrl ? false : true) &&
     !chosenIsFull &&
     (isDirty || !editing);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setTouched(true);
-    if (!canSubmit || !values.image || !startIso || !endIso) return;
+    if (
+      !canSubmit ||
+      !values.image ||
+      !startIso ||
+      !endIso ||
+      (!values.showMoreInformation && !trimmedUrl)
+    )
+      return;
     onSubmit({
       advertiserName: trimmedTitle,
       mediaId: values.image.id,
       detailMediaId: values.detailImage?.id ?? null,
       description: isEmptyDoc(values.description) ? null : values.description,
       destinationUrl: trimmedUrl,
+      showMoreInformation: values.showMoreInformation,
       placement: values.placement,
       fitMode: values.fitMode,
       ...values.crop,
@@ -510,10 +528,32 @@ export function AdvertisementSheet({
           optional
           hint="Shown on the advertisement's own page, under the image."
         >
+          <div className="border-hairline mb-3 flex items-center justify-between rounded-lg border p-3">
+            <div>
+              <p className="text-ink text-sm font-medium">
+                Show more information page
+              </p>
+              <p className="text-ink-subtle text-xs">
+                Redirect users to the advertisement details page for more
+                information about the advertisement.
+              </p>
+            </div>
+            <Toggle
+              checked={values.showMoreInformation}
+              onCheckedChange={(showMoreInformation) =>
+                setValues((current) => ({
+                  ...current,
+                  showMoreInformation,
+                }))
+              }
+              aria-label="Show more information page"
+            />
+          </div>
           <div id="advertisement-description">
             <TiptapEditor
               content={values.description}
               placeholder="Offer details, opening hours, address, anything the reader should know."
+              disabled={!values.showMoreInformation}
               onChange={(description) =>
                 setValues((current) => ({ ...current, description }))
               }
@@ -525,12 +565,18 @@ export function AdvertisementSheet({
           label="Link URL"
           htmlFor="advertisement-link"
           optional
-          hint="Where the ad page's button sends readers. Leave empty if the advertiser has no website."
+          hint={
+            values.showMoreInformation
+              ? "Optional button destination on the advertisement's own page."
+              : 'Readers will open this URL in a new tab.'
+          }
         >
           <Input
             id="advertisement-link"
             type="url"
             value={values.destinationUrl}
+            invalid={Boolean(destinationError)}
+            disabled={values.showMoreInformation}
             placeholder="https://"
             icon={<LinkIcon className="size-4" aria-hidden />}
             onChange={(event) =>
@@ -540,6 +586,11 @@ export function AdvertisementSheet({
               }))
             }
           />
+          {destinationError && (
+            <p role="alert" className="text-danger-text text-xs">
+              {destinationError}
+            </p>
+          )}
         </Field>
 
         <Field
