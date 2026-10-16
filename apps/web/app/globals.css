@@ -301,6 +301,15 @@
   animation-iteration-count: infinite;
 }
 
+/* Keep the fixed invite noticeable on the intentionally scaled mobile canvas
+   without changing its proportions or turning it into a wide banner. */
+@media (pointer: coarse) {
+  [data-social-channel-notifier] {
+    transform: scale(1.25);
+    transform-origin: bottom right;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-marquee {
     animation: none;
