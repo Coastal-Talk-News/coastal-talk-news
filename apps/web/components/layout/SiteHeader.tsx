@@ -51,7 +51,10 @@ export function SiteHeader({
           where the nav collapses into the menu button, not just on the
           widest screens. */}
       <div className="border-rule hidden border-b md:block">
-        <div className="text-ink-muted mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-xs">
+        <div
+          data-site-utility
+          className="text-ink-muted mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2 text-xs"
+        >
           <p>{formatLongDate(new Date(), locale)}</p>
           <div className="flex items-center gap-3">
             {utilityLinks.map((link) => (

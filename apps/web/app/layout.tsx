@@ -10,7 +10,6 @@ import {
 import type { ReactNode } from 'react';
 import GoogleAdSenseScript from '../components/adsense/GoogleAdSenseScript';
 import { BreakingTicker } from '../components/layout/BreakingTicker';
-import { SocialChannelNotifier } from '../components/layout/SocialChannelNotifier';
 import { AdBand } from '../components/news/AdBand';
 import { AdColumn } from '../components/news/AdColumn';
 import { StickyRail } from '../components/news/StickyRail';
@@ -164,7 +163,6 @@ export default async function RootLayout({
           locale={locale}
         />
         <SiteFooter site={site} locale={locale} />
-        <SocialChannelNotifier settings={site.settings} locale={locale} />
       </body>
     </html>
   );

@@ -84,14 +84,6 @@ export const SOCIAL_BRAND: Record<Platform, string> = {
   whatsapp: 'bg-[#25d366]',
 };
 
-export const SOCIAL_RING: Record<Platform, string> = {
-  facebook: 'ring-[#1877f2]',
-  instagram: 'ring-[#d62976]',
-  youtube: 'ring-[#ff0000]',
-  x: 'ring-ink',
-  whatsapp: 'ring-[#25d366]',
-};
-
 export const SOCIAL_LABELS: Record<Platform, string> = {
   facebook: 'Facebook',
   instagram: 'Instagram',
@@ -146,7 +138,7 @@ export function SocialLinks({
   const buttonTone = (platform: Platform) =>
     tone === 'inverse'
       ? 'bg-white/10 text-white hover:bg-white hover:text-night'
-      : `bg-paper-sunken text-ink-muted hover:text-white ${SOCIAL_BRAND_HOVER[platform]}`;
+      : `${SOCIAL_BRAND[platform]} text-white hover:opacity-85 ${SOCIAL_BRAND_HOVER[platform]}`;
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>

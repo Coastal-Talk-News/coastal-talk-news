@@ -72,16 +72,6 @@ const en = {
     recentStories: 'Recent News',
     /** Invites the reader to the WhatsApp channels; the channel links follow it. */
     channelInvite: 'To Join Coastal Talk News Whatsapp Group Click Here 👉 :',
-    channelNotifierTitle: 'Join our WhatsApp channel',
-    channelNotifierDescription: 'Get instant updates and breaking news.',
-    channelNotifierCta: 'Join channel',
-    channelNotifierClose: 'Close WhatsApp channel invite',
-    channelNotifierOpen: 'Open WhatsApp channel invite',
-    socialNotifierTitle: 'Stay connected with us',
-    socialNotifierDescription: 'Follow us for updates and breaking news.',
-    socialNotifierCta: (network: string) => `Open ${network}`,
-    socialNotifierClose: 'Close social link invite',
-    socialNotifierOpen: 'Open social link invite',
   },
   category: {
     noStoriesTitle: 'No stories here yet',
@@ -263,18 +253,6 @@ const kn: typeof en = {
     recentStories: 'ಇತ್ತೀಚಿನ ಸುದ್ದಿಗಳು',
     channelInvite:
       'ಕೋಸ್ಟಲ್ ಟಾಕ್ ನ್ಯೂಸ್ ವಾಟ್ಸಾಪ್ ಗ್ರೂಪ್ ಸೇರಲು ಕೆಳಗಿನ ಲಿಂಕ್ ಕ್ಲಿಕ್ ಮಾಡಿ 👉 :',
-    channelNotifierTitle: 'ನಮ್ಮ ವಾಟ್ಸಾಪ್ ಚಾನೆಲ್ ಸೇರಿ',
-    channelNotifierDescription:
-      'ತಕ್ಷಣದ ಸುದ್ದಿಗಳು ಮತ್ತು ಬ್ರೇಕಿಂಗ್ ನ್ಯೂಸ್ ಪಡೆಯಿರಿ.',
-    channelNotifierCta: 'ಚಾನೆಲ್ ಸೇರಿ',
-    channelNotifierClose: 'ವಾಟ್ಸಾಪ್ ಚಾನೆಲ್ ಆಹ್ವಾನ ಮುಚ್ಚಿ',
-    channelNotifierOpen: 'ವಾಟ್ಸಾಪ್ ಚಾನೆಲ್ ಆಹ್ವಾನ ತೆರೆಯಿರಿ',
-    socialNotifierTitle: 'ನಮ್ಮೊಂದಿಗೆ ಸಂಪರ್ಕದಲ್ಲಿರಿ',
-    socialNotifierDescription:
-      'ತಾಜಾ ಸುದ್ದಿಗಳು ಮತ್ತು ಬ್ರೇಕಿಂಗ್ ನ್ಯೂಸ್‌ಗಾಗಿ ನಮ್ಮನ್ನು ಅನುಸರಿಸಿ.',
-    socialNotifierCta: (network: string) => `${network} ತೆರೆಯಿರಿ`,
-    socialNotifierClose: 'ಸಾಮಾಜಿಕ ಲಿಂಕ್ ಆಹ್ವಾನ ಮುಚ್ಚಿ',
-    socialNotifierOpen: 'ಸಾಮಾಜಿಕ ಲಿಂಕ್ ಆಹ್ವಾನ ತೆರೆಯಿರಿ',
   },
   category: {
     noStoriesTitle: 'ಇಲ್ಲಿ ಇನ್ನೂ ಯಾವುದೇ ಸುದ್ದಿ ಇಲ್ಲ',

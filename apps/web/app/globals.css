@@ -301,13 +301,33 @@
   animation-iteration-count: infinite;
 }
 
-/* Keep the fixed invite noticeable on the intentionally scaled mobile canvas
-   without changing its proportions or turning it into a wide banner. */
+/* The reader keeps a desktop-width canvas on touch devices by product
+   decision. Give only the compact utility strip enough scale to remain easy
+   to read and tap after the browser scales that canvas down. */
 @media (pointer: coarse) {
-  [data-social-channel-notifier] {
-    transform: scale(1.25);
-    transform-origin: bottom right;
+  [data-site-utility] {
+    gap: 1rem;
+    padding-block: 0.75rem;
+    font-size: 1.125rem;
   }
+
+  [data-site-utility] svg {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  [data-site-utility] .size-7 {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  [data-site-utility] [role='group'] {
+    font-size: 1.125rem;
+  }
+}
+
+[data-site-utility] {
+  font-weight: 600;
 }
 
 @media (prefers-reduced-motion: reduce) {
