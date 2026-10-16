@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { PublicSiteSettingsDto } from '@coastal-talk-news/types';
 import type { Locale } from '../../lib/i18n/types';
 
-type Platform = 'facebook' | 'instagram' | 'youtube' | 'x' | 'whatsapp';
+export type Platform = 'facebook' | 'instagram' | 'youtube' | 'x' | 'whatsapp';
 
 /** Glyphs shared with the article share row, so both read as one icon set. */
 export const FACEBOOK_ICON_PATH =
@@ -17,7 +17,7 @@ export const WHATSAPP_ICON_PATH =
 // Hand-drawn rather than pulled from an icon library — four glyphs don't
 // justify a new dependency, and every other icon in this app (search,
 // hamburger, hero placeholder) is already inline SVG.
-const ICON_PATHS: Record<Platform, ReactNode> = {
+export const ICON_PATHS: Record<Platform, ReactNode> = {
   facebook: <path d={FACEBOOK_ICON_PATH} />,
   instagram: (
     <>
@@ -66,15 +66,33 @@ const ICON_PATHS: Record<Platform, ReactNode> = {
 // Full class names, not built from a colour: Tailwind only generates classes it
 // can find written out in the source. Each fills with the network's own colour
 // on hover, matching the article share row.
-const BRAND_HOVER: Record<Platform, string> = {
+export const SOCIAL_BRAND_HOVER: Record<Platform, string> = {
   facebook: 'hover:bg-[#1877f2]',
-  instagram: 'hover:bg-[#e1306c]',
+  instagram:
+    'hover:bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_25%,#d62976_50%,#962fbf_75%,#4f5bd5_100%)]',
   youtube: 'hover:bg-[#ff0000]',
   x: 'hover:bg-ink',
   whatsapp: 'hover:bg-[#1da851]',
 };
 
-const LABELS: Record<Platform, string> = {
+export const SOCIAL_BRAND: Record<Platform, string> = {
+  facebook: 'bg-[#1877f2]',
+  instagram:
+    'bg-[linear-gradient(135deg,#feda75_0%,#fa7e1e_25%,#d62976_50%,#962fbf_75%,#4f5bd5_100%)]',
+  youtube: 'bg-[#ff0000]',
+  x: 'bg-ink',
+  whatsapp: 'bg-[#25d366]',
+};
+
+export const SOCIAL_RING: Record<Platform, string> = {
+  facebook: 'ring-[#1877f2]',
+  instagram: 'ring-[#d62976]',
+  youtube: 'ring-[#ff0000]',
+  x: 'ring-ink',
+  whatsapp: 'ring-[#25d366]',
+};
+
+export const SOCIAL_LABELS: Record<Platform, string> = {
   facebook: 'Facebook',
   instagram: 'Instagram',
   youtube: 'YouTube',
@@ -128,7 +146,7 @@ export function SocialLinks({
   const buttonTone = (platform: Platform) =>
     tone === 'inverse'
       ? 'bg-white/10 text-white hover:bg-white hover:text-night'
-      : `bg-paper-sunken text-ink-muted hover:text-white ${BRAND_HOVER[platform]}`;
+      : `bg-paper-sunken text-ink-muted hover:text-white ${SOCIAL_BRAND_HOVER[platform]}`;
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
@@ -138,8 +156,8 @@ export function SocialLinks({
           href={link.href}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={LABELS[link.platform]}
-          title={LABELS[link.platform]}
+          aria-label={SOCIAL_LABELS[link.platform]}
+          title={SOCIAL_LABELS[link.platform]}
           className={`${buttonTone(link.platform)} grid size-7 shrink-0 place-items-center rounded-full transition-colors`}
         >
           <svg
